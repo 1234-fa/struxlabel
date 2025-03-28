@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Error - Page Not Found</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .error-container {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            text-align: left;
+        }
+
+        .error-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .error-title {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        h5 {
+            font-size: 2.5rem;
+            color: #e74c3c;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 1rem;
+            color: #161515;
+            margin: 0;
+        }
+
+        p {
+            color: #666;
+            font-size: 1.2em;
+            margin: 5px 0 15px;
+        }
+
+        .back-home {
+            font-size: 1.1em;
+            font-weight: normal;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-home a {
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .back-home a:hover {
+            color: #0056b3;
+        }
+
+        img {
+            width: 300px;
+            height: auto;
+        }
+
+        @media (max-width: 600px) {
+            .error-container {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .error-title {
+                justify-content: center;
+            }
+
+            img {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-title">
+                <h5>404</h5><h1>Error</h1>
+            </div>
+            <p>Oops! Looks like this page doesn’t exist.</p>
+            <div class="back-home">
+                <span>Back to</span> <a href="/">Home</a>
+            </div>
+        </div>
+        <img src="/logo.png" alt="Error Image">
+    </div>
+</body>
+</html>
