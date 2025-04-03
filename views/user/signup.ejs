@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Page</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('https://www.shutterstock.com/image-illustration/clothes-on-grunge-background-shelf-600nw-1891025299.jpg') no-repeat center center/cover;
+        }
+
+        .container {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .signup-box {
+            padding: 40px;
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .signup-box h2 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .google-signup {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+
+        .google-signup img {
+            width: 20px;
+            margin-right: 10px;
+        }
+        .google-signup a {
+            text-decoration: none;
+            color: white;
+        }
+
+        .google-signup:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 15px 0;
+            color: white;
+            font-size: 14px;
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .error {
+        color: red;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+        .input-box input {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-box input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .signup-btn {
+    background: #007bff;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+    display: block;
+    margin: 0 auto; /* Centers the button */
+}
+
+.signup-btn:hover {
+    background: #0056b3;
+}
+
+        .login-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: white;
+        }
+
+        .login-text a {
+            color: rgb(116, 95, 235);
+            text-decoration: none;
+        }
+
+        .image-box {
+            width: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-box img {
+            width: 80%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .alert-danger{
+        color: red;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .signup-box {
+                width: 100%;
+            }
+
+            .image-box {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="signup-box">
+            <h2>Create an Account</h2>
+            <div class="google-signup">
+                <a href="/auth/google"><img src="img/google.png" alt="Google Logo">
+                    Sign up with Google</a>
+            </div>
+            <div class="divider">_____________ or _____________</div>
+            <form id="signupForm" action="/signup" method="POST">
+                <div class="input-box">
+                    <input type="text" placeholder="Enter your name" id="username" name="name">
+                    <span class="error" id="nameError"></span>
+                </div>
+                <div class="input-box">
+                    <input type="email" placeholder="Enter your email" id="usermail" name="email">
+                    <span class="error" id="emailError"></span>
+                </div>
+                <div class="input-box">
+                    <input type="text" placeholder="Enter your phone number" id="number" name="phone">
+                    <span class="error" id="phoneError"></span>
+                </div>
+                <div class="input-box">
+                    <input type="password" placeholder="Create a password" id="password" name="password">
+                    <span class="error" id="passwordError"></span>
+                </div>
+                <div class="input-box">
+                    <input type="password" placeholder="Confirm password" id="cpassword" name="cpassword">
+                    <span class="error" id="cpasswordError"></span>
+                </div>
+
+                <%if(locals.message && message.length>0){%>
+                    <div class="alert-danger">
+                        <%=message%>
+                    </div>
+                    <%}%>
+
+                <button type="submit" class="signup-btn">Sign Up</button>
+            </form>
+            <div class="login-text">
+                Already have an account? <a href="/login">Login here</a>!
+            </div>
+        </div>
+        <div class="image-box">
+            <img src="logo.png" alt="Signup Illustration">
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById("signupForm").addEventListener("submit", function (event) {
+            let isValid = true;
+    
+            // Clear previous errors
+            document.querySelectorAll(".error").forEach(e => e.innerText = "");
+    
+            // Name Validation
+            let name = document.getElementById("username").value.trim();
+            if (name === "") {
+                document.getElementById("nameError").innerText = "Name is required.";
+                isValid = false;
+            }
+    
+            // Email Validation
+            let email = document.getElementById("usermail").value.trim();
+            let emailPattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+            if (!emailPattern.test(email)) {
+                document.getElementById("emailError").innerText = "Enter a valid email.";
+                isValid = false;
+            }
+    
+            // Phone Number Validation
+            let phone = document.getElementById("number").value.trim();
+            let phonePattern = /^[0-9]{10}$/;
+            if (!phonePattern.test(phone)) {
+                document.getElementById("phoneError").innerText = "Phone number must be 10 digits.";
+                isValid = false;
+            }
+    
+            // Password Validation
+            let password = document.getElementById("password").value;
+            if (password.length < 6) {
+                document.getElementById("passwordError").innerText = "Password must be at least 6 characters.";
+                isValid = false;
+            }
+    
+            // Confirm Password Validation
+            let cpassword = document.getElementById("cpassword").value;
+            if (cpassword !== password) {
+                document.getElementById("cpasswordError").innerText = "Passwords do not match.";
+                isValid = false;
+            }
+    
+            // If form is invalid, prevent submission
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
