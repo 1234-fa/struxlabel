@@ -1,0 +1,358 @@
+<%- include("../../views/partials/admin/header") %>
+
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css"/>
+  <style>
+    .form-label { margin-bottom: 8px; }
+    .form-control {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: #fff;
+      border: 1px solid #007bff;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    .pagination-container { text-align: center; }
+    .pagination a, .pagination .current-page {
+      display: inline-block;
+      padding: 5px 10px;
+      margin: 0 2px;
+      border: 1px solid #ddd;
+      text-decoration: none;
+      color: #333;
+    }
+    .pagination a:hover { background-color: #f5f5f5; }
+    .error-message { color: red; }
+    
+    /* Modal Styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 400px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    }
+    .close {
+      float: right;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <section class="content-main">
+    <div class="content-header">
+      <h2 class="content-title card-title">Category</h2>
+    </div>
+    
+    <header class="card-header d-flex justify-content-between align-items-center mb-20">
+      <form action="/admin/category/" method="get" class="d-inline">
+        <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px;">
+          <input type="text" class="form-control border-0 rounded-pill" placeholder="Search categories" name="search"/>
+          <button class="btn" type="submit">Search</button>
+        </div>
+      </form>
+      <button class="btn btn-primary" onclick="openModal()">Add Category</button>
+    </header>
+    
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Offer Price</th>
+                <th>Offer</th>
+                <th>Status</th>
+                <th>List/Unlist</th>
+                <th>Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+                <%cat.reverse().forEach((category,index)=>{%>
+              <tr>
+                <td></td>
+                <td class="text-start"><%=category.name%></td>
+                <td class="text-start"><%=category.description%></td>
+                <td>
+                    <%if(category.categoryOffer){%>
+                        <%=category.categoryOffer%>
+                        <%}else{%>
+                            0%
+                    <%}%>
+                </td>
+                <td class="text-start">
+                    <%if(!category.categoryOffer || category.categoryOffer === 0){%>
+                  <button class="btn btn-info" style="width: 100px">
+                    <a href="#" class="text-white" onclick="addOffer('<%=category._id%>')">Add Offer</a>
+                  </button>
+                  <%}else{%>
+                  <button class="btn btn-info" style="width: 100px">
+                    <a href="#" class="text-white" onclick="removeOffer('<%=category._id%>')">Remove</a>
+                  </button>
+                  <%}%>
+                </td>
+                <td class="text-start">
+                  <span class="badge rounded-pill alert-success" style="width: 60px">Listed</span>
+                  <span class="badge rounded-pill alert-danger" style="width: 60px">Unlisted</span>
+                </td>
+                <td class="text-start">
+                  <button class="btn btn-danger" style="width: 70px">
+                    <a href="#" class="text-white">Unlist</a>
+                  </button>
+                  <button class="btn btn-success" style="width: 70px">
+                    <a href="#" class="text-white">List</a>
+                  </button>
+                </td>
+                <td class="text-start">
+                  <a href="#" class="btn btn-info text-white">Edit</a>
+                </td>
+              </tr>
+              <%})%>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="pagination-container">
+      <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+      <% } %> <% for (let i = 1; i <= totalPages; i++) { %> <% if (i ===
+      currentPage) { %>
+      <span class="current-page"><%= i %></span>
+      <% } else { %>
+      <a href="?page=<%= i %>"><%= i %></a>
+      <% } %> <% } %> <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+      <% } %>
+    </div>
+  </section>
+  
+  <!-- Modal -->
+  <div id="categoryModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3>Add Category</h3>
+      <form method="post" action="/admin/addCategory" onsubmit="return handleFormSubmit(event)">
+        <div class="mb-4">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" id="name" class="form-control" />
+          <div id="name-error" class="error-message"></div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Description</label>
+          <textarea name="description" id="descriptionId" class="form-control" ></textarea>
+          <div id="description-error" class="error-message"></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Create category</button>
+      </form>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    function handleFormSubmit(event) {
+    event.preventDefault(); // Prevent default submission
+
+    if (!validateForm()) {
+        return false; // Stop submission if validation fails
+    }
+
+    const name = document.getElementById("name").value.trim();
+    const description = document.getElementById("descriptionId").value.trim();
+
+    fetch('/admin/addCategory', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, description })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        location.reload(); // Reload on success
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: "Oops",
+            text: error.message || "An error occurred while adding the category"
+        });
+    });
+}
+function validateForm() {
+  clearErrorMessages();
+  let isValid = true;
+
+  const nameField = document.getElementById("name");
+  const descriptionField = document.getElementById("descriptionId");
+
+  const name = nameField.value.trim();
+  const description = descriptionField.value.trim();
+
+  // Name Validation
+  if (name === "") {
+    displayErrorMessage("name-error", "Name is required.");
+    isValid = false;
+  } else if (name.length < 3) {
+    displayErrorMessage("name-error", "Name must be at least 3 characters long.");
+    isValid = false;
+  } else if (!/^[A-Za-z\s]+$/.test(name)) {
+    displayErrorMessage("name-error", "Name can only contain letters and spaces.");
+    isValid = false;
+  }
+
+  // Description Validation
+  if (description === "") {
+    displayErrorMessage("description-error", "Description is required.");
+    isValid = false;
+  } else if (description.length < 10) {
+    displayErrorMessage("description-error", "Description must be at least 10 characters long.");
+    isValid = false;
+  } else if (!/^[A-Za-z0-9\s.,'-]+$/.test(description)) {
+    displayErrorMessage("description-error", "Description contains invalid characters.");
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+function displayErrorMessage(id, message) {
+  const errorElement = document.getElementById(id);
+  if (errorElement) {
+    errorElement.innerText = message;
+    errorElement.style.color = "red";
+    errorElement.style.marginTop = "5px";
+    errorElement.style.fontSize = "14px";
+  }
+}
+
+function clearErrorMessages() {
+  document.getElementById("name-error").innerText = "";
+  document.getElementById("description-error").innerText = "";
+}
+
+// Event Listeners to Clear Errors in Real Time
+document.getElementById("name").addEventListener("input", () => {
+  document.getElementById("name-error").innerText = "";
+});
+
+document.getElementById("descriptionId").addEventListener("input", () => {
+  document.getElementById("description-error").innerText = "";
+});
+
+function openModal() { document.getElementById("categoryModal").style.display = "flex"; }
+function closeModal() { document.getElementById("categoryModal").style.display = "none"; }
+
+async function addOffer(categoryId){
+    const {value:amount}=await Swal.fire({
+        title:"Offer n percentage",
+        input:"number",
+        inputLabel:"percentage",
+        inputPlaceholder:"%",
+    })
+
+    if(amount){
+        try {
+            const response=await fetch("/admin/addCategoryOffer",{
+                method:"post",
+                headers:{
+                    'content-type':"application/json",
+                },
+                body:JSON.stringify({
+                    percentage:amount,
+                    categoryId:categoryId,
+                })
+            });
+            const data=await response.json();
+            if(response.ok && data.status===true){
+                Swal.fire(
+                    "Offer added",
+                    "The offer has been added",
+                    "success"
+                ).then(()=>{
+                    location.reload();
+                })
+            }else{
+                Swal.fire("Failed",data.message || "Add offer failed", "error")
+            }
+        } catch (error) {
+            Swal.fire(
+                "Error",
+                "An error occured while adding the offer",
+                "error"
+            );
+            console.log("Error adding offer",error)
+        }
+    }
+}
+
+async function removeOffer(categoryId) {
+    try {
+        const response=await fetch('/admin/removeCategoryOffer',{
+            method:'POST',
+            headers:{
+                'content-type':"application/json",
+            },
+            body: JSON.stringify({
+                categoryId:categoryId
+            })
+        })
+        const data=await response.json();
+
+        if(response.ok && data.status===true){
+            Swal.fire(
+                "Offer removed",
+                "The offer has been removed",
+                "success"
+            ).then(()=>{
+                location.reload();
+            })
+        }else{
+            Swal.fire("Failed",data.message || "Removing Offer failed","error");
+        }
+
+    } catch (error) {
+        Swal.fire(
+            "Error",
+            "An error occur while removing an offer",
+        );
+        console.error("Error removing offer",error);
+    }
+}
+  </script>
+  
+<%- include("../../views/partials/admin/footer") %>
