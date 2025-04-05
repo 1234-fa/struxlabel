@@ -27,7 +27,7 @@ const login= async (req,res)=>{
         }
     } catch (error) {
         console.log("admin login error",error)
-        return res.redirect('/pageerror')  
+        return res.redirect('/pageerro')  
     }
 }
 

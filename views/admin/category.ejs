@@ -61,6 +61,13 @@
       font-size: 20px;
       cursor: pointer;
     }
+    .modal > div {
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 
@@ -121,19 +128,25 @@
                   <%}%>
                 </td>
                 <td class="text-start">
+                    <%if(category.isListed){%>
                   <span class="badge rounded-pill alert-success" style="width: 60px">Listed</span>
+                  <%}else{%>
                   <span class="badge rounded-pill alert-danger" style="width: 60px">Unlisted</span>
+                  <%}%>
                 </td>
                 <td class="text-start">
+                    <%if(category.isListed){%>
                   <button class="btn btn-danger" style="width: 70px">
-                    <a href="#" class="text-white">Unlist</a>
+                    <a href="/admin/listCategory?id=<%=category._id%>" class="text-white">Unlist</a>
                   </button>
+                  <%}else{%>
                   <button class="btn btn-success" style="width: 70px">
-                    <a href="#" class="text-white">List</a>
+                    <a href="/admin/unlistCategory?id=<%=category._id%>" class="text-white">List</a>
                   </button>
+                  <%}%>
                 </td>
                 <td class="text-start">
-                  <a href="#" class="btn btn-info text-white">Edit</a>
+                    <a href="#" class="btn btn-info text-white" onclick="openEditModal('<%=category._id%>', '<%=category.name%>', '<%=category.description%>')">Edit</a>
                 </td>
               </tr>
               <%})%>
@@ -178,6 +191,35 @@
       </form>
     </div>
   </div>
+
+
+<!-- Edit Category Modal -->
+<div id="categoryEditModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; 
+    width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000;">
+  <div style="background: white; padding: 30px; border-radius: 8px; width: 400px; position: relative;">
+    <h4>Edit Category</h4>
+    <form id="editCategoryForm" onsubmit="handleEditFormSubmit(event)">
+      <input type="hidden" id="editCategoryId">
+      <div class="mb-3">
+        <label for="editCategoryName" class="form-label">Name</label>
+        <input type="text" id="editCategoryName" class="form-control" >
+        <div id="edit-name-error" class="text-danger mt-1"></div>
+      </div>
+      <div class="mb-3">
+        <label for="editCategoryDescription" class="form-label">Description</label>
+        <textarea id="editCategoryDescription" class="form-control" rows="3" ></textarea>
+        <div id="edit-description-error" class="text-danger mt-1"></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script>
@@ -353,6 +395,89 @@ async function removeOffer(categoryId) {
         console.error("Error removing offer",error);
     }
 }
-  </script>
+
+
+
+
+function openEditModal(id, name, description) {
+  document.getElementById("editCategoryId").value = id;
+  document.getElementById("editCategoryName").value = name;
+  document.getElementById("editCategoryDescription").value = description;
+  clearEditErrors();
+  document.getElementById("categoryEditModal").style.display = "flex";
+}
+
+function closeEditModal() {
+  document.getElementById("categoryEditModal").style.display = "none";
+}
+
+function clearEditErrors() {
+  document.getElementById("edit-name-error").innerText = "";
+  document.getElementById("edit-description-error").innerText = "";
+}
+
+function validateEditForm() {
+  clearEditErrors();
+  let isValid = true;
+
+  const name = document.getElementById("editCategoryName").value.trim();
+  const description = document.getElementById("editCategoryDescription").value.trim();
+
+  if (name === "") {
+    document.getElementById("edit-name-error").innerText = "Name is required.";
+    isValid = false;
+  } else if (name.length < 3) {
+    document.getElementById("edit-name-error").innerText = "At least 3 characters.";
+    isValid = false;
+  } else if (!/^[A-Za-z\s]+$/.test(name)) {
+    document.getElementById("edit-name-error").innerText = "Only letters and spaces allowed.";
+    isValid = false;
+  }
+
+  if (description === "") {
+    document.getElementById("edit-description-error").innerText = "Description is required.";
+    isValid = false;
+  } else if (description.length < 10) {
+    document.getElementById("edit-description-error").innerText = "Min 10 characters required.";
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+function handleEditFormSubmit(event) {
+  event.preventDefault();
+
+  if (!validateEditForm()) return;
+
+  const id = document.getElementById("editCategoryId").value;
+  const name = document.getElementById("editCategoryName").value.trim();
+  const description = document.getElementById("editCategoryDescription").value.trim();
+
+  fetch(`/admin/editCategory/${id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name, description })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === true) {
+      Swal.fire("Success", "Category updated successfully", "success")
+        .then(() => location.reload());
+    } else {
+      Swal.fire("Error", data.message || "Update failed", "error");
+    }
+  })
+  .catch(err => {
+    console.error("Edit error:", err);
+    Swal.fire("Error", "Something went wrong", "error");
+  });
+}
+
+
+
+</script>
   
 <%- include("../../views/partials/admin/footer") %>

@@ -24,7 +24,7 @@ const categoryInfo = async (req, res) => {
 
     } catch (error) {
         console.error("Error in categoryInfo:", error);
-        res.redirect('/errorpage');
+        res.redirect('/pageerror');
     }
 };
 
@@ -108,8 +108,55 @@ const removeCategoryOffer = async (req, res) => {
     }
   };
 
+const getlistCategory=async (req,res)=>{
+    try {
+        const id=req.query.id;
+        await Category.updateOne({_id:id},{$set: {isListed:false}});
+        res.redirect('/admin/category')
+    } catch (error) {
+        res.redirect('/pageerror')
+    }
+}
 
 
+const getunlistCategory=async (req,res)=>{
+    try {
+        const id=req.query.id;
+        await Category.updateOne({_id:id},{$set:{isListed:true}});
+        res.redirect('/admin/category');
+    } catch (error) {
+        res.redirect('/pageerror');
+    }
+}
 
+const editCategory = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const { name, description } = req.body;
+  
+      const existingCategory = await Category.findOne({ name });
+  
+      if (existingCategory && existingCategory._id.toString() !== id) {
+        return res.status(400).json({ status: false, message: "Category name already exists" });
+      }
+  
+      const updatedCategory = await Category.findByIdAndUpdate(
+        id,
+        { name, description },
+        { new: true }
+      );
+  
+      if (updatedCategory) {
+        return res.status(200).json({ status: true, message: "Category updated successfully" });
+      } else {
+        return res.status(404).json({ status: false, message: "Category not found" });
+      }
+    } catch (error) {
+      console.error("Edit Category Error:", error);
+      return res.status(500).json({ status: false, message: "Internal server error" });
+    }
+  };
 
-module.exports = { categoryInfo, addCategory , addCategoryOffer , removeCategoryOffer};
+ 
+
+module.exports = { categoryInfo, addCategory , addCategoryOffer , removeCategoryOffer , getlistCategory , getunlistCategory , editCategory};
