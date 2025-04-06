@@ -44,7 +44,7 @@ router.get('/products', adminAuth, productController.getProductPage);
 router.get('/addProducts',adminAuth,productController.getAddProduct);
 router.post('/addProducts',adminAuth,uploads.array("images[]",4),productController.addProducts);
 router.post('/addProductOffer',adminAuth,productController.addProductOffer);
-router.post('/removerProductOffer',adminAuth,productController.removeProductOffer)
+router.post('/removeProductOffer',adminAuth,productController.removeProductOffer)
 
 
 

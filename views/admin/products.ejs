@@ -48,13 +48,13 @@
 
                 </td>
                 <td>
-                <%if(locals.data[i].productOffer===0){>
-                    <button class="btn btn-info" onclick="addOffer('<%=data[i]._id%>')" style="width: 100px;">
-                        <a href="#" class="text-white">Add Offer</a>
+                <% if (locals.data[i].productOffer === 0) { %>
+                    <button class="btn btn-info text-white" onclick="addOffer('<%=data[i]._id%>')" style="width: 100px;">
+                        Add Offer
                     </button>
                 <%}else{%>
-                    <button class="btn btn-info" onclick="removerOffer('<%=data[i]._id%>')" style="width: 100px;">
-                        <a href="#" class="text-white">Remove</a>
+                    <button class="btn btn-info text-white" onclick="removerOffer('<%=data[i]._id%>')" style="width: 100px;">
+                        Remove
                     </button>
                 <%}%>
                 </td>
@@ -104,30 +104,45 @@
 
 <script>
     async function addOffer(productId) {
-        const {value:amount} = await Swal.fire({
-            title:'Offer in percentage',
-            input:'Number',
-            inputLabel:'percemtage',
-            inputPlaceholder:'%'
-        })
-        $.ajax({
-            url:"/admin/addProductOffer",
-            method:'POST',
-            data:{
-                percentage:amount,
-                productId:productId
-            },
-            success:(response)=>{
-                if(response.status===true){
-                    location.reload()
-                    Swal.fire('Offer Added','The offer has been removed','success');
-                }else{
-                    alert('Failed');
-                }
-            }
-        })
+    const { value: amount } = await Swal.fire({
+        title: 'Offer in percentage',
+        input: 'number',
+        inputLabel: 'Percentage',
+        inputPlaceholder: '%',
+        inputAttributes: {
+            min: 1,
+            max: 100,
+            step: 1
+        },
+        showCancelButton: true
+    });
+
+    if (!amount || isNaN(amount) || amount <= 0 || amount > 100) {
+        Swal.fire("Invalid input", "Please enter a valid percentage between 1 and 100", "warning");
+        return;
     }
 
+    $.ajax({
+        url: "/admin/addProductOffer",
+        method: 'POST',
+        data: {
+            percentage: amount,
+            productId: productId
+        },
+        success: (response) => {
+            if (response.status === true) {
+                Swal.fire('Offer Added', 'The offer has been successfully added', 'success')
+                    .then(() => location.reload());
+            } else {
+                Swal.fire('Failed', response.message || 'Unable to add offer', 'error');
+            }
+        },
+        error: (err) => {
+            console.error(err);
+            Swal.fire("Error", "Something went wrong", "error");
+        }
+    });
+}
     function removerOffer(productId){
         try{
             Swal.fire({
