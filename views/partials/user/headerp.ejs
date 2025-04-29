@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>LOST AND FOUND</title>
+    <meta name="description" content="Lost and Found Web App">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="#" type="image/x-icon">
+
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.6/dist/sweetalert2.min.css">
+    <script src="https://kit.fontawesome.com/16d4885483.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/elegant-icons.css">
+    <link rel="stylesheet" href="css/magnific-popup.css">
+    <link rel="stylesheet" href="css/nice-select.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/slicknav.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/admin-assets/css/main.css">
+
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+
+        .navbar, .navbar-aside {
+            background-color: white;
+        }
+
+        .menu-item a.menu-link {
+            color: #310505;
+        }
+
+        .menu-item a.menu-link:hover,
+        .menu-item a.menu-link.active {
+            background-color: #6e7e6e;
+            color: #ffffff;
+        }
+
+        .dropdown-menu {
+            background-color: #bb9aaf;
+        }
+
+        .dropdown-item:hover {
+            background-color: #33053d;
+            color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="screen-overlay"></div>
+
+    <aside class="navbar-aside" id="offcanvas_aside">
+        <div class="aside-top d-flex justify-content-between align-items-center">
+            <a href="/" class="brand-wrap d-flex align-items-center text-decoration-none">
+                <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 4px;">
+                    <img src="/img/logo.png" alt="Logo" style="width: 100%; height: auto;">
+                </div>
+                <span style="font-size: 14px; color: black;">LOST AND FOUND</span>
+            </a>
+            <button class="btn btn-icon btn-aside-minimize">
+                <i class="text-muted material-icons md-menu_open"></i>
+            </button>
+        </div>
+
+        <nav>
+            <ul class="menu-aside">
+                <li class="menu-item"><a class="menu-link" href="/view-orders"><i class="icon material-icons md-home"></i><span class="text">My Orders</span></a></li>
+                <li class="menu-item"><a class="menu-link" href="/userProfile"><i class="icon material-icons md-person"></i><span class="text">Profile Information</span></a></li>
+                <li class="menu-item"><a class="menu-link" href="/address"><i class="icon material-icons md-place"></i><span class="text">Manage Address</span></a></li>
+                <li class="menu-item"><a class="menu-link" href="/myCoupens"><i class="icon material-icons md-stars"></i><span class="text">My Coupons</span></a></li>
+                <li class="menu-item"><a class="menu-link" href="/myReviewandRating"><i class="icon material-icons md-rate_review"></i><span class="text">My Rating and Review</span></a></li>
+                <li class="menu-item"><a class="menu-link" href="/wallet"><i class="icon material-icons md-account_balance_wallet"></i><span class="text">My Wallet</span></a></li>
+                <li class="menu-item"><a class="menu-link" href="/logout"><i class="icon material-icons md-exit_to_app"></i><span class="text">Logout</span></a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-wrap">
+        <header class="main-header navbar">
+            <div class="col-search"></div>
+            <div class="col-nav">
+                <button class="btn btn-icon btn-mobile me-auto" data-trigger="#offcanvas_aside">
+                    <i class="material-icons md-apps"></i>
+                </button>
+                <ul class="nav">
+                    <li class="dropdown nav-item">
+                        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownAccount" aria-expanded="false">
+                            <img class="img-xs rounded-circle" src="/img/adminimg.png" alt="User">
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownAccount">
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger" href="/logout"><i class="material-icons md-exit_to_app"></i>Logout</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </header>
+
+        <!-- Main content goes here -->
+
+    </main>
+</body>
+
+</html>

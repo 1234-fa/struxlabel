@@ -1,0 +1,87 @@
+<%- include("../../views/partials/user/header") %>
+
+<main class="place-order-page py-5">
+  <div class="container">
+    <h2 class="mb-4">Place Your Order</h2>
+    <div class="row">
+      <!-- Delivery Address -->
+      <div class="col-md-6 mb-4">
+        <div class="card p-3">
+          <h4 class="mb-3">Select Delivery Address</h4>
+          <% if (addresses && addresses.length > 0) { %>
+            <% addresses.forEach((address, index) => { %>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="selectedAddress" id="address<%= index %>" value="<%= address._id %>" <%= index === 0 ? 'checked' : '' %>>
+                <label class="form-check-label" for="address<%= index %>">
+                  <strong><%= address.name %></strong><br>
+                  <%= address.house %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %><br>
+                  Phone: <%= address.phone %>
+                </label>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p>No address found. Please add one.</p>
+          <% } %>
+
+          <a href="/add-address" class="btn btn-outline-primary mt-3">+ Add New Address</a>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="col-md-6">
+        <div class="card p-3">
+          <h4 class="mb-3">Order Summary</h4>
+          <% cartItems.forEach(item => { %>
+            <% if (item.product) { %>
+              <div class="d-flex mb-3">
+                <img src="/uploads/re-image/<%= item.product.productImages[0] %>" alt="Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                <div>
+                  <h5><%= item.product.productName %></h5>
+                  <p class="mb-1">Brand: <%= item.product.brand %></p>
+                  <p class="mb-1">Qty: <%= item.quantity %></p>
+                  <div class="d-flex align-items-center">
+                    <strong class="me-2">₹<%= item.totalPrice %></strong>
+                    <del class="text-muted">₹<%= item.product.regularPrice * item.quantity %></del>
+                  </div>
+                  <small class="text-success">
+                    You save ₹<%= (item.product.regularPrice - item.product.salePrice) * item.quantity %>
+                  </small>
+                </div>
+              </div>
+            <% } %>
+          <% }) %>
+
+          <hr>
+          <div class="d-flex justify-content-between">
+            <strong>Total Amount:</strong>
+            <strong>₹<%= totalAmount %></strong>
+          </div>
+
+          <form action="/payment-cart" method="POST" class="mt-4">
+            <input type="hidden" name="selectedAddressId" value="">
+            <button type="submit" class="btn btn-success w-100">Continue to Payment</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const addressRadios = document.querySelectorAll('input[name="selectedAddress"]');
+    const hiddenInput = document.querySelector('input[name="selectedAddressId"]');
+
+    addressRadios.forEach(radio => {
+      radio.addEventListener("change", () => {
+        hiddenInput.value = radio.value;
+      });
+
+      if (radio.checked) {
+        hiddenInput.value = radio.value;
+      }
+    });
+  });
+</script>
+
+<%- include("../../views/partials/user/footer") %>

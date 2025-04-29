@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Men Fashion</title>
+    <title>LOST AND FOUND</title>
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,10 +20,10 @@ body {
     background-color: #ffffff;
 }
 .navbar {
-    background-color: #8da7ab;
+    background-color: white;
 }
 .navbar-aside {
-    background-color: #b0d5de;
+    background-color: white;
 }
 .menu-item a.menu-link {
     color: #310505;
@@ -48,12 +48,18 @@ body {
 <body>
     <div class="screen-overlay"></div>
     <aside class="navbar-aside" id="offcanvas_aside">
-        <div class="aside-top">
-            <a href="#" class="brand-wrap">
-                <img src="/img/logo.png"  class="logo" alt="Men Fashion Dashboard">
+        <div class="aside-top" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="#" class="brand-wrap" style="display: flex; align-items: center; text-decoration: none;">
+                <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 4px;">
+                    <img src="/img/logo.png" alt="Men Fashion Dashboard"
+                         style="width: 100%; height: auto; display: block;">
+                </div>
+                <span style="font-size: 14px; color: black;">LOST AND FOUND</span>
             </a>
             <div>
-                <button class="btn btn-icon btn-aside-minimize"> <i class="text-muted material-icons md-menu_open"></i> </button>
+                <button class="btn btn-icon btn-aside-minimize">
+                    <i class="text-muted material-icons md-menu_open"></i>
+                </button>
             </div>
         </div>
         <nav>
@@ -70,7 +76,7 @@ body {
 
                 </li>
                 <li class="menu-item">
-                    <a class="menu-link" href="/admin/category"> <i class="icon material-icons md-person"></i>
+                    <a class="menu-link" href="/admin/category"> <i class="icon material-icons md-category"></i>
                         <span class="text">Category</span>
                     </a>
 
@@ -79,11 +85,11 @@ body {
                     <a class="menu-link" href="/admin/brands"> <i class="icon material-icons md-stars"></i>
                         <span class="text">Brands</span> </a>
                 </li>
-                <li class="menu-item">
+                <!-- <li class="menu-item">
                     <a class="menu-link" href="/admin/addProducts"> <i class="icon material-icons md-add_box"></i>
                         <span class="text">Add product</span>
                     </a>
-                </li>
+                </li> -->
                 <li class="menu-item">
                     <a class="menu-link" href="/admin/products"> <i class="icon material-icons md-shopping_bag"></i>
                         <span class="text">Products</span>
@@ -115,7 +121,7 @@ body {
                 <button class="btn btn-icon btn-mobile me-auto" data-trigger="#offcanvas_aside"> <i class="material-icons md-apps"></i> </button>
                 <ul class="nav">
                     <li class="dropdown nav-item">
-                        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownAccount" aria-expanded="false"> <img class="img-xs rounded-circle" src="/admin-assets/imgs/people/avatar2.jpg" alt="User"></a>
+                        <a class="dropdown-toggle" data-bs-toggle="dropdown" href="#" id="dropdownAccount" aria-expanded="false"> <img class="img-xs rounded-circle" src="/img/adminimg.png" alt="User"></a>
                         <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownAccount">
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item text-danger" href="/admin/logout"><i class="material-icons md-exit_to_app"></i>Logout</a>

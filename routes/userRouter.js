@@ -1,24 +1,96 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controller/userController');
+const userController = require('../controller/user/userController');
+const profileController = require('../controller/user/profileController');
+const productController = require('../controller/user/productController');
+const orderController = require('../controller/user/orderController');
+const cartController =  require('../controller/user/cartController');
+const wishlistController = require('../controller/user/wishlistController')
 const passport = require('passport');
+const multer=require('multer');
+const profileUpload = require('../helpers/profileUpload');
+const { userAuth, adminAuth } = require('../middlewares/auth');
 
 
-router.get('/', userController.loadHomepage);
+
 router.get('/pagenotfound', userController.pageNotFound);
 router.get('/login',userController.loadlogin);
 router.post('/login',userController.login);
-router.get('/logout',userController.logout);
+router.get('/logout',userAuth,userController.logout);
 router.get('/signup',userController.loadsignup);
 router.post('/signup',userController.signup);
 router.post('/verify-otp',userController.verifyOtp);
 router.post('/resend-otp',userController.resendOtp);
 
 
+router.get('/', userController.loadHomepage);
+router.get('/shop',userAuth,userController.loadShoppingPage)
+router.get('/filter',userAuth,userController.filterProduct)
+router.get('/filterPrice',userAuth,userController.filterByPrice);
+router.post('/search',userAuth,userController.searchProducts);
+router.get('/load-more-products',userAuth,userController.loadMoreProducts)
+
+
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}));
 router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signup'}),(req,res)=>{
     res.redirect('/')
 })
+
+
+router.get('/forgot-password',userAuth,profileController.getForgotPassPage)
+router.post('/forgot-email-valid',userAuth,profileController.forgotEmailValid)
+router.post('verify-passForgot-otp',userAuth,profileController.verifyForgotpassOtp);
+router.get('/reset-password',userAuth,profileController.getResetPassPage)
+router.post('/reset-password',userAuth,profileController.resetPassword)
+router.get('/userProfile',userAuth,profileController.userProfile);
+router.get('/change-email',userAuth,profileController.changeEmail)
+router.post('/change-email', userAuth, profileController.changeEmailvalid);
+router.post('/verify-email-otp',userAuth, profileController.verifyEmailOtp);
+router.post('/verify-new-email-otp',userAuth ,profileController.verifyNewEmailOtp)
+router.post('/update-email',userAuth, profileController.updateEmail);
+router.get('/change-password',userAuth , profileController.changePassword);
+router.post('/change-password',userAuth , profileController.changePasswordvalid);
+router.post('/verify-changepassword-otp',userAuth,profileController.verifychangepassOtp)
+router.post('/upload-profile-image', userAuth,profileUpload.single('profileImage'), profileController .uploadProfileImage);
+router.post('/update-profile',userAuth, profileController.updateProfile);
+
+
+router.get('/address',userAuth,profileController.getAddress);
+router.get('/addAddress',userAuth,profileController.addAddress);
+router.post('/addAddressinorder',userAuth,profileController.addAddressOrder);
+router.post('/addAddress',userAuth,profileController.postAddAddress);
+router.get('/editAddress/:id', userAuth, profileController.getEditAddress);
+router.post('/editAddress/:id', userAuth,profileController.postEditAddress);
+router.get('/deleteAddress/:id', userAuth, profileController.deleteAddress);
+
+
+router.get('/productDetails',userAuth,productController.productDetails)
+
+
+router.get('/cart', userAuth, cartController.getCartPage);
+router.post('/add-to-cart', userAuth, cartController.addToCart);
+router.post('/remove-from-cart/:id',userAuth,cartController.removeCartItem);
+
+
+
+router.get('/orderOfCart',userAuth,orderController.getOrderPage);
+router.get('/order', userAuth,orderController.getSingleOrderPage);
+router.post('/place-order',userAuth,orderController.postPlaceOrder);
+router.post('/payment', userAuth,orderController.getPaymentPage);
+router.get('/order-success',userAuth,orderController.orderSuccess);
+router.get('/order-success-cart',userAuth, orderController.orderSuccessCart)
+router.get('/view-orders', userAuth, orderController.viewOrders);
+router.post('/payment-cart',userAuth ,orderController.loadPaymentPagecart)
+router.post("/place-order-cart", userAuth ,orderController.placeOrderFromCart);
+router.post('/cancel-order/:orderId', userAuth, orderController.cancelOrder);
+router.post('/cancel-product/:orderId/:productId', userAuth,orderController.cancelProduct);
+router.post('/return-order/:orderId', userAuth,orderController.returnOrder);
+router.get('/download-invoice/:orderId', userAuth,orderController.downloadInvoice)
+
+
+router.get('/wishlist', userAuth , wishlistController.getWishlist);
+router.get('/addToWishlist', userAuth , wishlistController.addToWishlist);
+router.get('/removeFromWishlist', userAuth, wishlistController.removeFromWishlist);
 
 
 module.exports = router;

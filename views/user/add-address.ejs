@@ -1,0 +1,186 @@
+<%- include("../../views/partials/user/headerp") %>
+
+<style>
+  .address-form-wrapper {
+    margin-left: 250px; /* Adjust if you have a sidebar */
+    padding: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .address-form-wrapper {
+      margin-left: 0;
+      padding: 15px;
+    }
+  }
+
+  .card {
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    background: #fff;
+  }
+
+  .text-danger {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: block;
+  }
+</style>
+
+<div class="address-form-wrapper">
+  <div class="card">
+    <h3 style="color: #046963; margin-bottom: 30px;">Create User Address</h3>
+    <form id="addressForm" method="POST" action="/addAddress">
+
+      <div class="row mb-3">
+        <div class="form-group col-md-4">
+            <label for="addressType">Address Type:</label>
+            <select class="form-control" id="addressType" name="addressType" required>
+              <option value="" disabled selected>Select address type</option>
+              <option value="Home">Home</option>
+              <option value="Work">Work</option>
+              <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="name">Name:</label>
+          <input type="text" class="form-control" id="name" name="name" >
+        </div>
+        <div class="form-group col-md-4">
+          <label for="city">City:</label>
+          <input type="text" class="form-control" id="city" name="city" >
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="form-group col-md-4">
+          <label for="landMark">Landmark:</label>
+          <input type="text" class="form-control" id="landMark" name="landMark" >
+        </div>
+        <div class="form-group col-md-4">
+          <label for="state">State:</label>
+          <input type="text" class="form-control" id="state" name="state" >
+        </div>
+        <div class="form-group col-md-4">
+          <label for="pincode">Pincode:</label>
+          <input type="number" class="form-control" id="pincode" name="pincode" >
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="form-group col-md-4">
+          <label for="phone">Phone:</label>
+          <input type="number" class="form-control" id="phone" name="phone" >
+        </div>
+        <div class="form-group col-md-6">
+            <label for="altphone">Alternate Phone:</label>
+            <input type="text" class="form-control" id="altphone" name="altphone">
+          </div>
+      </div>
+
+      <div id="formErrors" class="mb-3"></div>
+
+      <button type="submit" class="btn btn-success">Submit</button>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById("addressForm").addEventListener("submit", function (event) {
+    // Prevent form submission
+    event.preventDefault();
+    
+    // Run validation
+    if (validateForm()) {
+      // Submit if valid
+      this.submit();
+    }
+  });
+
+  function validateForm() {
+    let isValid = true;
+
+    // Clear previous errors
+    const errorElements = document.querySelectorAll('.text-danger');
+    errorElements.forEach(el => el.remove());
+
+    // Get field values
+    const addressType = document.getElementById('addressType').value.trim();
+    const name = document.getElementById('name').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const landMark = document.getElementById('landMark').value.trim();
+    const state = document.getElementById('state').value.trim();
+    const pincode = document.getElementById('pincode').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const altphone = document.getElementById('altphone').value.trim();
+
+    const namePattern = /^[A-Za-z\s]+$/;
+    const pinPattern = /^\d{6}$/;
+    const phonePattern = /^\d{10}$/;
+
+    // Helper to show error
+    const showError = (fieldId, message) => {
+      const inputField = document.getElementById(fieldId);
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'text-danger mt-1';
+      errorDiv.style.color = 'red';
+      errorDiv.innerText = message;
+      inputField.parentNode.appendChild(errorDiv);
+      isValid = false;
+    };
+
+    // Validation rules
+    if (addressType === "") {
+      showError("addressType", "Please select address type.");
+    }
+    if (name === "") {
+      showError("name", "Name is required.");
+    } else if (!namePattern.test(name)) {
+      showError("name", "Name must contain letters only.");
+    }
+
+    if (city === "") {
+      showError("city", "City is required.");
+    } else if (!namePattern.test(city)) {
+      showError("city", "City must contain letters only.");
+    }
+
+    if (landMark === "") {
+      showError("landMark", "Landmark is required.");
+    } else if (!namePattern.test(landMark)) {
+      showError("landMark", "Landmark must contain letters only.");
+    }
+
+    if (state === "") {
+      showError("state", "State is required.");
+    } else if (!namePattern.test(state)) {
+      showError("state", "State must contain letters only.");
+    }
+
+    if (pincode === "") {
+      showError("pincode", "Pincode is required.");
+    } else if (!pinPattern.test(pincode)) {
+      showError("pincode", "Pincode must be a 6-digit number.");
+    }
+
+    if (phone === "") {
+      showError("phone", "Phone number is required.");
+    } else if (!phonePattern.test(phone)) {
+      showError("phone", "Phone number must be 10 digits.");
+    }
+
+    if (altphone === "") {
+      showError("altphone", "Alternate phone number is required.");
+    } else if (!phonePattern.test(altphone)) {
+      showError("altphone", "Alternate phone must be 10 digits.");
+    } else if (phone === altphone) {
+      showError("altphone", "Alternate phone must be different from phone.");
+    }
+
+    return isValid;
+  }
+</script>
+
+<%- include("../../views/partials/user/footerp") %>

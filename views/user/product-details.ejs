@@ -1,0 +1,409 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+  }
+
+  .main {
+    padding: 40px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 20px;
+  }
+
+  .breadcrumb {
+    font-size: 14px;
+    margin-bottom: 25px;
+    color: #6c757d;
+  }
+
+  .breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  .product-detail-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .product-detail {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  .detail-gallery img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #eaeaea;
+    background: #fff;
+    padding: 10px;
+  }
+
+  .slider-nav-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.thumbnail-item {
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.thumbnail-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+  .slider-nav-thumbnails img:hover {
+    border-color: #007bff;
+  }
+
+  .title-detail {
+    font-size: 28px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 15px;
+  }
+
+  .product-detail-rating {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .product-price-cover {
+  background-color: white;
+  padding: 14px 16px;
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  width: max-content;
+}
+
+.price-info {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.current-price {
+  font-size: 22px;
+  color: #136c3c;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.original-price {
+  font-size: 16px;
+  color: #aa6a6a;
+  text-decoration: line-through;
+}
+
+.offer-info {
+  margin-left: 30px;
+  margin-top: 2px;
+}
+
+.offer-percent {
+  background-color: #43a047;
+  color: white;
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.no-offer {
+  color: #757575;
+  font-size: 13px;
+  font-style: italic;
+}
+
+  .short-desc {
+    font-size: 16px;
+    color: #444;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .product_sort_info {
+    list-style: none;
+    padding-left: 0;
+    font-size: 15px;
+    margin-bottom: 25px;
+    color: #555;
+  }
+
+  .product_sort_info li {
+    margin-bottom: 10px;
+  }
+
+  .detail-extralink {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .detail-qty {
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 12px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .detail-qty a {
+    color: #000;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  .qty-val {
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .product-extra-link2 button {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.product-extra-link2 button:hover {
+  background-color: #0056b3;
+}
+
+.action-btn {
+  color: #dc3545;
+  font-size: 22px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.action-btn:hover {
+  color: #a71d2a;
+}
+
+
+  @media screen and (max-width: 768px) {
+    .product-detail {
+      padding: 20px;
+    }
+
+    .detail-extralink {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .detail-gallery {
+      margin-bottom: 30px;
+    }
+
+    .title-detail {
+      font-size: 24px;
+    }
+  }
+</style>
+
+<main class="main">
+  <section class="product-detail-wrapper">
+    <div class="container">
+      <div class="product-detail accordion-detail">
+        <div class="row mb-50">
+          <div class="col-md-6 col-sm-12 col-xs-12">
+            <div class="detail-gallery">
+              <div class="product-image-slider">
+                <% if (product.productImages && product.productImages.length > 0) { %>
+                  <figure class="border-radius-10">
+                    <img id="mainProductImage" src="/uploads/re-image/<%= product.productImages[0] %>" alt="product-image">
+                  </figure>
+                <% } else { %>
+                  <figure class="border-radius-10">
+                    <img src="/images/default.jpg" alt="default-image">
+                  </figure>
+                <% } %>
+              </div>
+              <div class="slider-nav-thumbnails">
+                <% if (product.productImages && product.productImages.length > 0) { %>
+                  <% for (let i = 0; i < product.productImages.length; i++) { %>
+                    <div class="thumbnail-item">
+                      <img class="thumbnail-img" data-src="/uploads/re-image/<%= product.productImages[i] %>" src="/uploads/re-image/<%= product.productImages[i] %>" alt="Product Image <%= i + 1 %>">
+                    </div>
+                  <% } %>
+                <% } else { %>
+                  <!-- Show default placeholder thumbnail -->
+                  <div class="thumbnail-item">
+                    <img src="/images/no-image-available.png" alt="No product images available">
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-sm-12 col-xs-12">
+            <div class="detail-info">
+              <h2 class="title-detail"><%= product.productName %></h2>
+              <div class="product-detail-rating">
+                <div class="pro-details-brand">
+                  <span> Brands: <a href="#"><%= product.brand %></a></span>
+                </div>
+                <div class="product-rate-cover text-end">
+                  <span class="font-small ml-5 text-muted"> (25 reviews)</span>
+                </div>
+              </div>
+              <div class="product-price-cover">
+                <div class="price-info">
+                  <span class="current-price">₹<%= product.salePrice %></span>
+                  <span class="original-price">₹<%= product.regularPrice %></span>
+                </div>
+                <div class="offer-info">
+                  <% if (!totalOffer) { %>
+                    <div class="no-offer">No offers available</div>
+                  <% } else { %>
+                    <div class="offer-percent"><%= totalOffer %>% OFF</div>
+                  <% } %>
+                </div>
+              </div>
+              <div class="short-desc">
+                <p><%= product.description %></p>
+              </div>
+              <ul class="product_sort_info">
+                <li><i class="fi-rs-crown"></i> 1 Year Brand Warranty</li>
+                <li><i class="fi-rs-refresh"></i> 30 Day Return Policy</li>
+                <li><i class="fi-rs-credit-card"></i> Cash on Delivery available</li>
+              </ul>
+              <div class="detail-extralink">
+                <div class="detail-qty">
+                  <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
+                  <span class="qty-val" id="quantity">1</span>
+                  <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
+                </div>
+                <div class="product-extra-link2">
+                  <%if(quantity<=0){%>
+                    <%}else{%>
+
+                  <!-- Add to Cart + Wishlist -->
+                  <div class="d-flex align-items-center mb-2">
+                    <form action="/add-to-cart" method="POST">
+                      <input type="hidden" name="productId" value="<%= product._id %>">
+                      <input type="hidden" name="quantity" value="1">
+                      <button type="submit" class="button button-add-to-cart">Add to Cart</button>
+                    </form>
+                    <a aria-label="Add To Wishlist" class="action-btn hover-up ms-3" href="#">
+                      <i class="fi-rs-heart"></i>
+                    </a>
+                  </div>
+                
+                  <!-- Order Now button below -->
+                  <div style="background-color: #ffffff; border-radius: 6px; padding: 12px 24px; display: inline-block; transition: background-color 0.3s ease; cursor: pointer; text-align: center;">
+                    <a href="/order?id=<%= product._id %>" 
+                       class="text-green fw-semibold" 
+                       style="text-decoration: none; font-size: 16px; display: inline-block; width: 100%;">
+                      Buy Now
+                    </a>
+                  </div>
+                  <%}%>
+                </div>
+              </div>
+              <ul class="product-meta">
+                <li>Tags: <a href="#"><%= category.name %></a></li>
+                <li>Availability:<% if (quantity > 0) { %>
+                  <span class="in-stock text-success ml-2"><%= quantity %> Items in Stock</span>
+                  <% } else { %>
+                    <span class="text-danger ml-2">Out of Stock</span>
+                  <% } %>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Similar Products Section -->
+<section class="product spad">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-12">
+              <h3 class="mb-4">Similar Products</h3>
+          </div>
+      </div>
+      <div class="row product__filter">
+        <% if (similarProducts && similarProducts.length > 0) { %>
+          <% similarProducts.forEach(function(item) { %>
+              <div class="col-lg-3 col-md-4 col-12 col-sm-6">
+                  <div class="product-cart-wrap mb-30">
+                      <div class="product-img-action-wrap">
+                          <div class="product-img product-img-zoom">
+                              <a href="/productDetails?id=<%= item._id %>">
+                                  <img class="default-img" src="/uploads/re-image/<%= item.productImages[0] %>" alt="<%= item.productName %>">
+                              </a>
+                          </div>
+                          <a href="/addToWishlist?id=<%= item._id %>" class="wishlist-btn">
+                              <i class="fas fa-heart"></i>
+                          </a>
+                      </div>
+                      <div class="product-content-wrap">
+                          <h6><%= item.productName %></h6>
+                          <h5>₹ <%= item.salePrice %></h5>
+                          <a href="/addToCart?id=<%= item._id %>">Add to cart</a>
+                      </div>
+                  </div>
+              </div>
+          <% }); %>
+      <% } else { %>
+          <div class="col-12">
+              <p>No similar products found.</p>
+          </div>
+      <% } %>
+      </div>
+  </div>
+</section>
+
+<script>
+  const mainImage = document.getElementById('mainProductImage');
+  const thumbnails = document.querySelectorAll('.thumbnail-img');
+
+  thumbnails.forEach(thumbnail => {
+    thumbnail.addEventListener('click', function() {
+      const newSrc = this.getAttribute('data-src');
+      mainImage.setAttribute('src', newSrc);
+    });
+  });
+</script>
+
+<%- include("../../views/partials/user/footer") %>

@@ -1,0 +1,72 @@
+<%- include("../../views/partials/user/headerp") %>
+
+<section class="content-main mt-80 mb-80">
+    <div class="card mx-auto card-login col-4">
+        <div class="card-body">
+            <h4 class="card-title mb-4">Verify OTP</h4>
+            <form method="post" action="/verify-new-email-otp">
+                <div class="mb-3">
+                    <input class="form-control" id="otp" name="otp" placeholder="Enter OTP" type="text" required>
+                </div>
+
+                <div class="mb-4">
+                    <button type="submit" class="btn btn-primary w-100">Verify</button>
+                </div>
+
+                <div class="text-center">
+                    <div class="otp-timer mb-2">
+                        <span id="otpTimer">OTP Expires in: 1:00</span>
+                    </div>
+                    <button type="button" onclick="resendOTP()" class="btn btn-link p-0">Resend OTP</button>
+                </div>
+
+                <% if (locals.message && message.length > 0) { %>
+                    <div class="alert alert-danger mt-3 text-center">
+                        <%= message %>
+                    </div>
+                <% } %>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+ function startOTPTimer(durationInSeconds) {
+   let timer = durationInSeconds;
+   const timerElement = document.getElementById('otpTimer');
+   const countdown = setInterval(function () {
+     const minutes = Math.floor(timer / 60);
+     const seconds = timer % 60;
+
+     timerElement.textContent = `OTP Expires in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+     if (--timer < 0) {
+       clearInterval(countdown);
+       timerElement.textContent = 'OTP Expired';
+     }
+   }, 1000);
+ }
+
+ function resendOTP() {
+   $.ajax({
+     type: 'POST',
+     url: '/resend-new-email-otp', // Make sure this route exists in your backend
+     success: function (response) {
+       if (response.success) {
+         startOTPTimer(60); // Restart timer
+       } else {
+         alert('Failed to resend OTP. Please try again.');
+       }
+     },
+     error: function () {
+       alert('Error occurred while resending OTP. Please try again.');
+     }
+   });
+ }
+
+ // Start the OTP timer when the page loads
+ startOTPTimer(60);
+</script>
+
+<%- include("../../views/partials/user/footerp") %>

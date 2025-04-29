@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+
 const userSchema = new Schema({
     name: {
         type: String,
@@ -17,6 +18,10 @@ const userSchema = new Schema({
         unique: true,
         sparse: true,
         default: null
+    },
+    profileImage: {
+        type: String,
+        default: 'img/profile_Picture.png'
     },
     googleId: {
         type: String,

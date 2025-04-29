@@ -1,22 +1,24 @@
 const express=require('express');
 const router=express.Router();
-const adminController = require('../controller/adminController');
-const customerController=require('../controller/customerController')
-const categoryController=require('../controller/categoryController');
-const brandController=require('../controller/brandController');
-const productController=require('../controller/productController');
+const adminController = require('../controller/admin/adminController');
+const customerController=require('../controller/admin/customerController')
+const categoryController=require('../controller/admin/categoryController');
+const brandController=require('../controller/admin/brandController');
+const productController=require('../controller/admin/productController');
+const bannerController=require('../controller/admin/bannerController');
+const orderController=require('../controller/admin/orderController')
 const {userAuth,adminAuth}=require('../middlewares/auth');
 const multer=require('multer');
-const storage=require('../helpers/multer');
+const uploads=require('../helpers/multer');
 const productSchema = require('../models/productSchema');
-const uploads= multer({storage:storage});
+// const uploads= multer({storage:storage});
 
 
-router.get('/pageerror',adminController.pageerror)
-router.get('/login',adminController.loadlogin);
-router.post('/login',adminController.login);
-router.get('/',adminAuth,adminController.loaddashboard);
-router.get('/logout',adminController.logout);
+router.get('/pageerror', adminController.pageerror);
+router.get('/login', adminController.loadlogin);
+router.post('/login', adminController.login);
+router.get('/', adminAuth, adminController.loaddashboard);
+router.get('/logout', adminController.logout);
 
 
 router.get('/users', adminAuth, customerController.customerInfo);
@@ -45,7 +47,22 @@ router.get('/addProducts',adminAuth,productController.getAddProduct);
 router.post('/addProducts',adminAuth,uploads.array("images[]",4),productController.addProducts);
 router.post('/addProductOffer',adminAuth,productController.addProductOffer);
 router.post('/removeProductOffer',adminAuth,productController.removeProductOffer)
+router.get('/blockProduct',adminAuth,productController.blockProduct);
+router.get('/unblockProduct',adminAuth,productController.unblockProduct);
+router.get('/editProduct',adminAuth,productController.getEditProduct);
+router.post('/editProduct/:id', adminAuth, uploads.array('images', 4), productController.editProduct);
+router.post('/deleteImage', adminAuth, productController.deleteSingleImage);
 
+
+router.get('/banner',adminAuth,bannerController.getBannerPage)
+router.get('/addBanner',adminAuth,bannerController.getAddBannerPage);
+router.post('/addBanner',adminAuth,uploads.single("image"),bannerController.addBanner)
+router.get('/deleteBanner',adminAuth,bannerController.deleteBanner);
+
+
+
+router.get('/orderList', adminAuth, orderController.getAllOrders);
+router.post('/update-order-status/:orderId', adminAuth, orderController.updateOrderStatus);
 
 
 module.exports=router;

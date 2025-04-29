@@ -1,64 +1,80 @@
-const mongoose=require('mongoose');
-const {Schema}=mongoose;
-const {v4:uuidv4, stringify}=require('uuid');
-const { schema } = require('./userSchema');
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+const { v4: uuidv4 } = require('uuid');
 
-const orderSchema=new Schema({
-orderId:{
-    type:String,
-    default:()=>uuidv4(),
-    unique:true
-},
-orderedItems:[{
-    product:{
-        type:Schema.Types.ObjectId,
-        ref:'Product',
-        required:true
+const orderSchema = new Schema({
+  orderId: {
+    type: String,
+    default: () => uuidv4(),
+    unique: true,
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  orderedItems: [{
+    product: {
+      type: Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true,
     },
-    quantity:{
-        type:Number,
-        required:true
+    quantity: {
+      type: Number,
+      required: true,
     },
-    price:{
-        type:Number,
-        default:0
-    }
-}],
-totalPrice:{
-    type:Number,
-    default:0
-},
-discoind:{
-    type:Number,
-    default:0
-},
-finalamount:{
-    type:Number,
-    default:0
-},
-address:{
-    type:Schema.Types.ObjectId,
-    ref:'User',
-    required:true
-},
-invoideDate:{
-    type:Date
-},
-status:{
-    type:String,
-    require:true,
-    enum:['pending','peocessing','shipped','deliverd','cancled','Return Request','Returned']
-},
-createdOn:{
-    type:Date,
-    default:Date.now,
-    required:true
-},
-coupenApplied:{
-    type:Boolean,
-    default:true
-}
-})
+    price: {
+      type: Number,
+      default: 0,
+    },
+  }],
+  totalPrice: {
+    type: Number,
+    default: 0,
+  },
+  discount: {
+    type: Number,
+    default: 0,
+  },
+  finalAmount: {
+    type: Number,
+    default: 0,
+  },
+  address: {
+    addressType: { type: String, required: true },
+    name: { type: String, required: true },
+    city: { type: String, required: true },
+    landMark: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: String, required: true },
+    phone: { type: String, required: true },
+    altphone: { type: String },
+  },
+  invoiceDate: {
+    type: Date,
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ['pending', 'processing','placed', 'shipped', 'delivered', 'cancelled', 'Return Request', 'returned'],
+    lowercase: true,
+  },
+  createdOn: {
+    type: Date,
+    default: Date.now,
+    required: true,
+  },
+  coupenApplied: {
+    type: Boolean,
+    default: false,
+  },
+  paymentMethod: {
+    type: String,
+    required: true,
+    enum: ['credit_card', 'paypal', 'cash_on_delivery'],
+  },
+}, {
+  timestamps: true  
+});
 
-
-module.exports=mongoose.model('Order',orderSchema)
+module.exports = mongoose.model('Order', orderSchema);

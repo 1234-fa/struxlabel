@@ -1,0 +1,153 @@
+<%- include("../../views/partials/user/header") %>
+
+<style>
+  .cart-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .cart-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+    width: 100%;
+    max-width: 400px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    padding: 15px;
+    align-items: flex-start;
+  }
+
+  .cart-card img {
+    width: 120px;
+    height: auto;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .cart-card img:hover {
+    transform: scale(1.03);
+  }
+
+  .cart-info {
+    flex: 1;
+  }
+
+  .cart-info h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+
+  .cart-info p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .cart-total-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 30px;
+  }
+
+  .cart-total {
+    background-color: #f9f9f9;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    max-width: 300px;
+    text-align: right;
+  }
+
+  .cart-total h4 {
+    margin-bottom: 15px;
+    font-size: 20px;
+    color: #333;
+  }
+
+  .cart-total .btn {
+    width: 100%;
+    padding: 10px 0;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  @media screen and (max-width: 768px) {
+    .cart-card {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .cart-card img {
+      width: 100%;
+      max-width: 250px;
+    }
+
+    .cart-info {
+      width: 100%;
+    }
+
+    .cart-total-wrapper {
+      justify-content: center;
+    }
+
+    .cart-total {
+      width: 100%;
+      max-width: 100%;
+      text-align: center;
+    }
+
+    .cart-total .btn {
+      width: auto;
+    }
+  }
+</style>
+
+<main class="main">
+  <section class="cart-section">
+    <div class="container">
+      <h2>Your Shopping Cart</h2>
+
+      <% if (cartItems.length === 0) { %>
+        <p>Your cart is empty.</p>
+        <a href="/shop" class="btn btn-primary mt-3">Continue Shopping</a>
+      <% } else { %>
+        <div class="cart-grid">
+          <% cartItems.forEach(item => { %>
+            <div class="cart-card">
+              <a href="/productDetails?id=<%= item.productId._id %>">
+                <img src="/uploads/re-image/<%= item.productId.productImages[0] %>" alt="Product Image">
+              </a>
+              <div class="cart-info">
+                <h3><%= item.productId.productName %></h3>
+                <p><strong>Brand:</strong> <%= item.productId.brand %></p>
+                <p><strong>Price:</strong> ₹<%= item.productId.salePrice %></p>
+                <p><strong>Quantity:</strong> <%= item.quantity %></p>
+                <p><strong>Total:</strong> ₹<%= item.totalPrice %></p>
+                <form action="/remove-from-cart/<%= item._id %>" method="POST" onsubmit="return confirm('Are you sure you want to remove this item?')">
+                  <button type="submit" class="delete-btn">Remove</button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+        <div class="cart-total-wrapper">
+          <div class="cart-total">
+            <h4>Total: ₹<%= total %></h4>
+            <a href="/orderOfCart" class="btn btn-success mt-3">Proceed to Checkout</a>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </section>
+</main>
+
+<%- include('../../views/partials/user/footer') %>

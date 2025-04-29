@@ -1,0 +1,12 @@
+<%- include("../partials/user/headerp") %>
+
+<div class="container text-center mt-5">
+  <h2 class="text-success">Order Cancelled Successfully</h2>
+  <p>Your order ID <strong><%= orderId %></strong> has been cancelled.</p>
+  <% if (reason) { %>
+    <p><strong>Reason:</strong> <%= reason %></p>
+  <% } %>
+  <a href="/order" class="btn btn-primary mt-3">Back to My Orders</a>
+</div>
+
+<%- include("../partials/user/footerp") %>

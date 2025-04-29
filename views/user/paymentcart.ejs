@@ -1,0 +1,94 @@
+<%- include("../../views/partials/user/header") %>
+
+<div class="container mt-5 mb-5">
+  <div class="row">
+    <!-- Payment Methods -->
+    <div class="col-md-7">
+      <h4 class="mb-4">Choose Payment Method</h4>
+      <form action="/place-order-cart" method="POST">
+        <!-- Hidden Fields -->
+        <!-- Address Fields -->
+        <input type="hidden" name="selected[addressType]" value="<%= selected.addressType %>">
+        <input type="hidden" name="selected[name]" value="<%= selected.name %>">
+        <input type="hidden" name="selected[city]" value="<%= selected.city %>">
+        <input type="hidden" name="selected[landMark]" value="<%= selected.landMark %>">
+        <input type="hidden" name="selected[state]" value="<%= selected.state %>">
+        <input type="hidden" name="selected[pincode]" value="<%= selected.pincode %>">
+        <input type="hidden" name="selected[phone]" value="<%= selected.phone %>">
+        <input type="hidden" name="selected[altphone]" value="<%= selected.altphone %>">
+        <input type="hidden" name="totalAmount" value="<%= totalAmount %>">
+
+        <% cartItems.forEach(item => { %>
+          <input type="hidden" name="cartItems[]" value="<%= item._id %>">
+        <% }) %>
+
+        <!-- Payment Options -->
+        <div class="card p-3 mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="credit_card" checked>
+            <label class="form-check-label" for="creditCard">Credit/Debit Card</label>
+          </div>
+        </div>
+
+        <div class="card p-3 mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="paymentMethod" id="upi" value="upi">
+            <label class="form-check-label" for="upi">UPI</label>
+          </div>
+        </div>
+
+        <div class="card p-3 mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="paymentMethod" id="netBanking" value="net_banking">
+            <label class="form-check-label" for="netBanking">Net Banking</label>
+          </div>
+        </div>
+
+        <div class="card p-3 mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cash_on_delivery">
+            <label class="form-check-label" for="cod">Cash on Delivery</label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Continue</button>
+      </form>
+    </div>
+
+    
+    <!-- Order Summary -->
+    <div class="col-md-5">
+      <h4 class="mb-4">Order Summary</h4>
+      <div class="card p-4 shadow-sm">
+        <% cartItems.forEach(item => { %>
+          <% if (item.productId) { %>
+            <div class="mb-3 border-bottom pb-2">
+              <p><strong>Product:</strong> <%= item.productId.productName %></p>
+              <% if (item.productId.productImages && item.productId.productImages[0]) { %>
+                <img src="/uploads/re-image/<%= item.productId.productImages[0] %>" alt="Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
+              <% } else { %>
+                <img src="/uploads/re-image/default-image.png" alt="Default Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
+              <% } %>
+              <p><strong>Qty:</strong> <%= item.quantity %></p>
+              <p><strong>Price (each):</strong> ₹<%= item.productId.salePrice %></p>
+              <p><strong>Total:</strong> ₹<%= item.totalPrice %></p>
+            </div>
+          <% } %>
+        <% }) %>
+        <hr>
+    
+        <!-- Displaying the Address -->
+        <h5 class="mb-3">Shipping Address</h5>
+        <p><strong>Name:</strong> <%= selected.name %></p>
+        <p><strong>Address:</strong> <%= selected.landMark %>, <%= selected.city %>, <%= selected.state %> - <%= selected.pincode %></p>
+        <p><strong>Phone:</strong> <%= selected.phone %></p>
+        <p><strong>Alternate Phone:</strong> <%= selected.altphone %></p>
+    
+        <hr>
+        <p><strong>Grand Total:</strong> ₹<%= totalAmount %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("../../views/partials/user/footer") %>

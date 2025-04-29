@@ -1,0 +1,170 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container mt-5">
+  <h2>All Orders</h2>
+
+  <form method="GET" action="/admin/orderList" class="mb-3">
+    <div class="d-flex">
+      <input type="text" class="form-control me-2" name="search" placeholder="Search orders by User, Order ID, or Product" value="<%= searchTerm || '' %>">
+      <button type="submit" class="btn btn-primary">Search</button>
+      <% if (searchTerm) { %> 
+        <a href="/admin/orderList" class="btn btn-danger ms-2">Clear Search</a>
+      <% } %>
+    </div>
+  </form>
+
+
+
+  <table class="table table-bordered mt-3">
+    <thead class="table-dark">
+      <tr>
+        <th>Order ID</th>
+        <th>User</th>
+        <th>Items</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Shipping Address</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% orders.forEach((order, index) => { %>
+        <!-- Main Row -->
+        <tr>
+          <td><%= order.orderId %></td>
+          <td><%= order.user?.name || 'Unknown' %></td>
+          <td>
+            <ul>
+              <% order.orderedItems.forEach(item => { %>
+                <li><%= item.product.name %> x <%= item.quantity %></li>
+              <% }) %>
+            </ul>
+          </td>
+          <td>₹<%= order.finalAmount %></td>
+          <td><%= order.status %></td>
+          <td>
+            <strong>Name:</strong> <%= order.address?.name || 'N/A' %><br>
+            <strong>City:</strong> <%= order.address?.city || 'N/A' %><br>
+            <strong>State:</strong> <%= order.address?.state || 'N/A' %><br>
+            <strong>Pincode:</strong> <%= order.address?.pincode || 'N/A' %><br>
+            <strong>Contact:</strong> <%= order.address?.phone || 'N/A' %>
+          </td>
+          <td>
+            <form action="/admin/update-order-status/<%= order._id %>" method="POST" class="d-flex mb-2">
+              <select name="status" class="form-select form-select-sm me-2">
+                <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
+                <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>
+                <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
+              </select>
+              <button type="submit" class="btn btn-sm btn-primary">Update</button>
+            </form>
+
+            <button class="btn btn-sm btn-secondary toggle-details" data-index="<%= index %>">
+              View Details
+            </button>
+          </td>
+        </tr>
+
+        <!-- Hidden Details Row -->
+        <tr id="details-<%= index %>" class="details-row" style="display: none; background-color: #f9f9f9;">
+          <td colspan="7">
+            <strong>User Info:</strong><br>
+            Name: <%= order.user?.name || 'N/A' %><br>
+            Email: <%= order.user?.email || 'N/A' %><br>
+            <hr>
+
+            <strong>Shipping Address:</strong><br>
+            <%= order.address?.name %>, <%= order.address?.city %>, <%= order.address?.state %><br>
+            Pincode: <%= order.address?.pincode %><br>
+            Phone: <%= order.address?.phone %><br>
+            Alternative Phone: <%= order.address?.altphone || 'N/A' %><br>
+            <hr>
+
+            <strong>Product Details:</strong>
+            <ul>
+              <% order.orderedItems.forEach(item => { %>
+                <li>
+                  <strong>Name:</strong> <%= item.product ? item.product.productName : 'No name available' %><br>
+                  <strong>Description:</strong> <%= item.product ? item.product.description || 'No description' : 'No description' %><br>
+                  <strong>Price:</strong> ₹<%= item.price.toFixed(2) %> <br>
+                  <strong>Quantity:</strong> <%= item.quantity %><br>
+                  <strong>Image:</strong><br>
+                  <img src="/uploads/re-image/<%= item.product.productImages[0] %>" alt="Product" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
+                  <br><br>
+                </li>
+              <% }) %>
+            </ul>
+            <hr>
+
+            <strong>Order Info:</strong><br>
+            Order ID: <%= order.orderId %><br>
+            Status: <%= order.status %><br>
+            Total Amount: ₹<%= order.finalAmount %><br>
+            Ordered At: <%= order.createdAt?.toLocaleString() || 'N/A' %>
+          </td>
+        </tr>
+
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Pagination Controls -->
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      <% if (currentPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+      <% } %>
+
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+          <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+        </li>
+      <% } %>
+
+      <% if (currentPage < totalPages) { %>
+        <li class="page-item">
+          <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
+</div>
+
+<!-- Toggle Details Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const toggleButtons = document.querySelectorAll('.toggle-details');
+
+    toggleButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const index = button.getAttribute('data-index');
+        const detailsRow = document.getElementById(`details-${index}`);
+        
+        if (detailsRow.style.display === 'none') {
+          detailsRow.style.display = 'table-row';
+          button.textContent = 'Hide Details';
+        } else {
+          detailsRow.style.display = 'none';
+          button.textContent = 'View Details';
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .details-row td {
+    padding: 20px;
+  }
+</style>

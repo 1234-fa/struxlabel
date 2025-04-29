@@ -1,0 +1,53 @@
+<%- include("../../views/partials/user/headerp") %>
+
+<div class="container-fluid mt-4">
+  <div class="row">
+    <!-- Empty div to match sidebar width -->
+    <div class="col-md-3">
+      <!-- Sidebar is already included in your layout -->
+    </div>
+
+    <!-- Main content -->
+    <div class="col-md-9">
+      <div class="row">
+        <% if (addresses.length > 0) { %>
+          <% addresses.forEach((address, index) => { %>
+            <div class="col-md-6 mb-4">
+              <div class="card h-100 shadow">
+                <div class="card-header bg-primary text-white">
+                  <h6 class="mb-0">Address <%= index + 1 %> - <%= address.addressType %></h6>
+                </div>
+                <div class="card-body">
+                  <p><strong>Name:</strong> <%= address.name %></p>
+                  <p><strong>City:</strong> <%= address.city %></p>
+                  <p><strong>Landmark:</strong> <%= address.landMark %></p>
+                  <p><strong>State:</strong> <%= address.state %></p>
+                  <p><strong>Pincode:</strong> <%= address.pincode %></p>
+                  <p><strong>Phone:</strong> <%= address.phone %></p>
+                  <p><strong>Alt Phone:</strong> <%= address.altphone %></p>
+                  <div class="d-flex justify-content-between mt-3">
+                    <a href="/editAddress/<%= address._id %>" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="/deleteAddress/<%= address._id %>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this address')">Delete</a>                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="col-12 text-center">
+            <div class="card p-4">
+              <p>No address added yet.</p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col text-center">
+          <a href="/addAddress" class="btn btn-success">Add New Address</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("../../views/partials/user/footerp") %>

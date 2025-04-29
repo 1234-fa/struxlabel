@@ -36,15 +36,16 @@ const productSchema = new Schema({
     required: true
   },
   size: {
-    type: [String], // optional based on your use case
+    type: [String],
     default: []
   },
   color: {
     type: String,
     required: true
   },
-  productImages: { // ✅ fixed typo
+  productImages: {
     type: [String],
+    default:[],
     required: true
   },
   isBlocked: { // ✅ fixed typo

@@ -1,0 +1,178 @@
+<%- include("../../views/partials/user/headerp") %>
+
+<style>
+  .address-form-wrapper {
+    margin-left: 250px; /* Adjust if you have a sidebar */
+    padding: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .address-form-wrapper {
+      margin-left: 0;
+      padding: 15px;
+    }
+  }
+
+  .card {
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    background: #fff;
+  }
+
+  .text-danger {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: block;
+  }
+</style>
+
+<div class="address-form-wrapper">
+  <div class="card">
+    <h3 style="color: #046963; margin-bottom: 30px;">Create User Address</h3>
+    <form id="addressForm" method="POST" action="/editAddress/<%= address._id %>">
+        <div class="row mb-3">
+          <div class="form-group col-md-4">
+            <label for="addressType">Address Type:</label>
+            <select class="form-control" id="addressType" name="addressType" required>
+              <option value="" disabled>Select address type</option>
+              <option value="Home" <%= address.addressType === "Home" ? "selected" : "" %>>Home</option>
+              <option value="Work" <%= address.addressType === "Work" ? "selected" : "" %>>Work</option>
+              <option value="Other" <%= address.addressType === "Other" ? "selected" : "" %>>Other</option>
+            </select>
+          </div>
+          <div class="form-group col-md-4">
+            <label for="name">Name:</label>
+            <input type="text" class="form-control" id="name" name="name" value="<%= address.name %>" required>
+          </div>
+          <div class="form-group col-md-4">
+            <label for="city">City:</label>
+            <input type="text" class="form-control" id="city" name="city" value="<%= address.city %>" required>
+          </div>
+        </div>
+      
+        <div class="row mb-3">
+          <div class="form-group col-md-4">
+            <label for="landMark">Landmark:</label>
+            <input type="text" class="form-control" id="landMark" name="landMark" value="<%= address.landMark %>" required>
+          </div>
+          <div class="form-group col-md-4">
+            <label for="state">State:</label>
+            <input type="text" class="form-control" id="state" name="state" value="<%= address.state %>" required>
+          </div>
+          <div class="form-group col-md-4">
+            <label for="pincode">Pincode:</label>
+            <input type="number" class="form-control" id="pincode" name="pincode" value="<%= address.pincode %>" required>
+          </div>
+        </div>
+      
+        <div class="row mb-3">
+          <div class="form-group col-md-4">
+            <label for="phone">Phone:</label>
+            <input type="number" class="form-control" id="phone" name="phone" value="<%= address.phone %>" required>
+          </div>
+          <div class="form-group col-md-6">
+            <label for="altPhone">Alternate Phone:</label>
+            <input type="number" class="form-control" id="altPhone" name="altPhone" value="<%= address.altphone %>">
+          </div>
+        </div>
+      
+        <div id="formErrors" class="mb-3"></div>
+      
+        <button type="submit" class="btn btn-success">Submit</button>
+      </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('addressForm').addEventListener('submit', function (event) {
+    if (!validateForm()) {
+      event.preventDefault();
+    }
+  });
+
+  function validateForm() {
+    let isValid = true;
+    const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
+    const formErrors = document.getElementById('formErrors');
+    formErrors.innerHTML = ''; // clear previous errors
+
+    // Clear previous inline errors
+    requiredFields.forEach((field) => {
+      const existingError = document.getElementById(field + '-error');
+      if (existingError) existingError.remove();
+    });
+
+    requiredFields.forEach((field) => {
+      const input = document.getElementById(field);
+      const inputValue = input.value.trim();
+      if (inputValue === "") {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = "text-danger";
+        errorDiv.textContent = "This field is required.";
+        errorDiv.id = field + "-error";
+        input.parentNode.appendChild(errorDiv);
+        isValid = false;
+      }
+    });
+
+    const namePattern = /^[A-Za-z\s]+$/;
+    const pincodePattern = /^\d{6}$/;
+    const phonePattern = /^\d{10}$/;
+
+    const name = document.getElementById('name').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const landMark = document.getElementById('landMark').value.trim();
+    const state = document.getElementById('state').value.trim();
+    const pincode = document.getElementById('pincode').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const altPhone = document.getElementById('altPhone').value.trim();
+
+    if (name && !namePattern.test(name)) {
+      showFieldError('name', 'Name should contain alphabets only.');
+      isValid = false;
+    }
+    if (city && !namePattern.test(city)) {
+      showFieldError('city', 'City should contain alphabets only.');
+      isValid = false;
+    }
+    if (landMark && !namePattern.test(landMark)) {
+      showFieldError('landMark', 'Landmark should contain alphabets only.');
+      isValid = false;
+    }
+    if (state && !namePattern.test(state)) {
+      showFieldError('state', 'State should contain alphabets only.');
+      isValid = false;
+    }
+    if (pincode && !pincodePattern.test(pincode)) {
+      showFieldError('pincode', 'Pincode should be a 6-digit number.');
+      isValid = false;
+    }
+    if (phone && !phonePattern.test(phone)) {
+      showFieldError('phone', 'Phone number should be a 10-digit number.');
+      isValid = false;
+    }
+    if (altPhone && !phonePattern.test(altPhone)) {
+      showFieldError('altPhone', 'Alternate phone number should be a 10-digit number.');
+      isValid = false;
+    }
+    if (phone && altPhone && phone === altPhone) {
+      showFieldError('altPhone', 'Alternate number must be different from phone number.');
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  function showFieldError(fieldId, message) {
+    const input = document.getElementById(fieldId);
+    const errorDiv = document.createElement('div');
+    errorDiv.className = "text-danger";
+    errorDiv.textContent = message;
+    errorDiv.id = fieldId + '-error';
+    input.parentNode.appendChild(errorDiv);
+  }
+</script>
+
+<%- include("../../views/partials/user/footerp") %>

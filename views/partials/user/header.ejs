@@ -1,27 +1,24 @@
 <!DOCTYPE html>
 <html lang="zxx">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="description" content="Male_Fashion Template">
-    <meta name="keywords" content="Male_Fashion, unica, creative, html">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Male-Fashion | Template</title>
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
-    rel="stylesheet">
-
-    <!-- Css Styles -->
-    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
-    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
-    <link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
-    <link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
-    <link rel="stylesheet" href="css/nice-select.css" type="text/css">
-    <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
-    <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+   <meta charset="UTF-8">
+   <meta name="description" content="Male_Fashion Template">
+   <meta name="keywords" content="Male_Fashion, unica, creative, html">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <title>Male-Fashion</title>
+   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
+   rel="stylesheet">
+   <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+   <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
+   <link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
+   <link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
+   <link rel="stylesheet" href="css/nice-select.css" type="text/css">
+   <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
+   <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
+   <link rel="stylesheet" href="css/style.css" type="text/css">
+   <link rel="stylesheet" href="./user-assets/css/maind134.css">
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
     <style>
         .header__nav__option {
@@ -37,6 +34,24 @@
 .dropdown {
     position: relative;
     display: inline-block;
+}
+
+.header__logo {
+    display: flex;
+    align-items: center;
+}
+
+.header__logo img {
+    width: 40px;   /* Adjust size as needed */
+    height: 40px;  /* Square shape */
+    object-fit: cover;
+    margin-right: 8px;
+}
+
+.header__logo span {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
 }
 
 .dropdown-content {
@@ -80,14 +95,15 @@
             <div class="row">
                 <div class="col-lg-3 col-md-3">
                     <div class="header__logo">
-                        <a href="./index.html"><img src="img/logo.png" alt=""></a>
+                        <a href="/"><img src="img/logo.png" alt=""></a>
+                        <span>LOST AND FOUND</span>
                     </div>
                 </div>
                 <div class="col-lg-6 col-md-6">
                     <nav class="header__menu mobile-menu">
                         <ul>
                             <!-- <li><a href="./shop.html">Shop</a></li> -->
-                            <li><a href="#">Men</a>
+                            <li><a href="/shop">Men</a>
                                 <ul class="dropdown">
                                     <li><a href="./about.html">About Us</a></li>
                                     <li><a href="./shop-details.html">Shop Details</a></li>
@@ -105,8 +121,8 @@
                 <div class="col-lg-3 col-md-3">
                     <div class="header__nav__option">
                         <a href="#" class="search-switch"><img src="img/icon/search.png" alt=""></a>
-                        <a href="#"><img src="img/icon/heart.png" alt=""></a>
-                        <a href="#"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
+                        <a href="/wishlist"><img src="img/icon/heart.png" alt=""></a>
+                        <a href="/cart"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
                         <% if (user) { %>
                             <div class="dropdown">
                                 <a href="#" class="sign-in-link"><%= user.name %></a>

@@ -9,7 +9,7 @@ const bannerSchema=new Schema({
     },
     title:{
         type:String,
-        required:ture
+        required:true
     },
     description:{
         type:String,
@@ -22,7 +22,7 @@ const bannerSchema=new Schema({
         type:Date,
         required:true
     },
-    enddate:{
+    endDate:{
         type:String,
         required:true
     }

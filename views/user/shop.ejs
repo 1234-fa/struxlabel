@@ -1,0 +1,314 @@
+<%- include("../../views/partials/user/shopheader") %>
+
+<style>
+  .main-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .shop-topbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+  }
+
+  .search-form {
+    display: flex;
+    background-color: #eef1f4;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .search-input {
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    flex: 1;
+    background: transparent;
+    outline: none;
+  }
+
+  .search-button {
+    background: #00b894;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .search-button:hover {
+    background: #019875;
+  }
+
+  .product-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 20px;
+  }
+
+  .sidebar {
+    background: #fafafa;
+    padding: 20px;
+    border-radius: 10px;
+    height: fit-content;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .filter-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+  }
+
+  .filter-content ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+  }
+
+  .filter-item {
+    margin-bottom: 10px;
+  }
+
+  .filter-item a {
+    text-decoration: none;
+    color: #555;
+    font-size: 14px;
+  }
+
+  .filter-item a:hover {
+    color: #00b894;
+  }
+
+  .price-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .price-button {
+    background: #f1f1f1;
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+
+  .price-button:hover {
+    background: #00b894;
+    color: white;
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  .product-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    text-align: center;
+    transition: transform 0.3s;
+    padding: 10px;
+  }
+
+  .product-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .product-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .product-name {
+    font-size: 16px;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .product-brand {
+    font-size: 13px;
+    color: #888;
+  }
+
+  .product-price {
+    margin: 8px 0;
+    font-size: 15px;
+    color: #00b894;
+    font-weight: bold;
+  }
+
+  .product-regular {
+    font-size: 13px;
+    color: #aaa;
+    text-decoration: line-through;
+    margin-left: 5px;
+  }
+
+  .add-to-cart-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #0984e3;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    margin-top: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .add-to-cart-btn:hover {
+    background-color: #0767c4;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0 0;
+    gap: 10px;
+  }
+
+  .pagination a {
+    background: #f1f1f1;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #555;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+
+  .pagination a:hover, .pagination .active {
+    background: #00b894;
+    color: white;
+  }
+
+  @media(max-width: 768px) {
+    .product-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+      order: 2;
+    }
+
+    .shop-topbar {
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="main-container">
+  <section class="shop-topbar">
+    <form action="/search" method="POST" class="search-form">
+      <input type="text" name="query" placeholder="Search products..." class="search-input" />
+      <button type="submit" class="search-button">Search</button>
+    </form>
+  </section>
+
+  <div class="product-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Categories -->
+      <div class="filter-section">
+        <div class="filter-title">Categories</div>
+        <div class="filter-content">
+          <ul>
+            <% for(let i=0; i<category.length; i++) { %>
+              <li class="filter-item">
+                <a href="/filter?category=<%= category[i]._id %>"><%= category[i].name %></a>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Brands -->
+      <div class="filter-section">
+        <div class="filter-title">Brands</div>
+        <div class="filter-content">
+          <ul>
+            <% for(let i=0; i<brand.length; i++) { %>
+              <li class="filter-item">
+                <a href="/filter?brand=<%= brand[i]._id %>"><%= brand[i].brandName %></a>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div class="filter-section">
+        <div class="filter-title">Filter by Price</div>
+        <div class="filter-content">
+          <div class="price-options">
+            <a href="/filterPrice?gt=0&lt=500"><button type="button" class="price-button">Under ₹500</button></a>
+            <a href="/filterPrice?gt=500&lt=1000"><button type="button" class="price-button">₹500 - ₹1000</button></a>
+            <a href="/filterPrice?gt=1000&lt=1500"><button type="button" class="price-button">₹1000 - ₹1500</button></a>
+            <a href="/filterPrice?gt=1500&lt=100000"><button type="button" class="price-button">Above ₹1500</button></a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Products -->
+    <main class="products-grid">
+      <% for(let i=0; i<products.length; i++) { %>
+        <div class="product-card">
+          <a href="/productDetails?id=<%= products[i]._id %>">
+            <img src="/uploads/re-image/<%= products[i].productImages[0] %>" alt="<%= products[i].productName %>" class="product-image" />
+            <div class="product-name"><%= products[i].productName %></div>
+            <div class="product-brand"><%= products[i].brand %></div>
+            <div class="product-price">
+              ₹<%= products[i].salePrice.toLocaleString('en-IN') %>
+              <span class="product-regular">₹<%= products[i].regularPrice.toLocaleString('en-IN') %></span>
+            </div>
+          </a>
+          <button class="add-to-cart-btn" onclick="">Add to Cart</button>
+        </div>
+      <% } %>
+    </main>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <% if (currentPage > 1) { %>
+      <a href="/shop?page=<%= currentPage - 1 %>">Prev</a>
+    <% } %>
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="/shop?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+    <% if (currentPage < totalPages) { %>
+      <a href="/shop?page=<%= currentPage + 1 %>">Next</a>
+    <% } %>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<%- include("../../views/partials/user/footer") %>
+
+<script>
+  $(document).ready(function () {
+    $('.filter-title').click(function() {
+      $(this).next('.filter-content').slideToggle(200);
+    });
+  });
+</script>

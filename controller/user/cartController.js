@@ -1,0 +1,130 @@
+const Cart = require('../../models/cartSchema');
+const Product = require('../../models/productSchema');
+const User = require('../../models/userSchema');
+const Wishlist = require('../../models/wishlistSchema')
+
+const getCartPage = async (req, res) => {
+  try {
+    const userId = req.session.user;
+
+    if (!userId) return res.redirect('/login');
+
+    let cart = await Cart.findOne({ userId }).populate('items.productId');
+
+    if (!cart || cart.items.length === 0) {
+      return res.render('cart', {
+        cartItems: [],
+        total: 0,
+        user: req.session.user || null,
+        isLoggedIn: !!req.session.user
+      });
+    }
+
+    let total = 0;
+    cart.items.forEach(item => {
+      total += item.totalPrice;
+    });
+
+    res.render('cart', {
+      cartItems: cart.items,
+      total,
+      user: req.session.user || null,
+      isLoggedIn: !!req.session.user
+    });
+
+  } catch (err) {
+    console.error("Error loading cart page:", err);
+    res.redirect('/pageNotFound');
+  }
+};
+
+const addToCart = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) return res.redirect('/login');
+
+    const { productId, quantity } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).send("Product not found");
+
+    let cart = await Cart.findOne({ userId });
+
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
+    }
+
+    const existingItemIndex = cart.items.findIndex(
+      item => item.productId.toString() === productId
+    );
+
+    const qty = parseInt(quantity) || 1;
+    const itemPrice = product.salePrice;
+
+    if (existingItemIndex > -1) {
+      cart.items[existingItemIndex].quantity += qty;
+      cart.items[existingItemIndex].totalPrice =
+        cart.items[existingItemIndex].quantity * itemPrice;
+    } else {
+      cart.items.push({
+        productId: product._id,
+        quantity: qty,
+        totalPrice: itemPrice * qty
+      });
+    }
+
+    await cart.save();
+
+    let wishlist = await Wishlist.findOne({ userId });
+
+    if (!wishlist) {
+      wishlist = new Wishlist({ userId, products: [] });
+      await wishlist.save();
+    }
+
+    if (wishlist && Array.isArray(wishlist.products)) {
+      const productIndex = wishlist.products.findIndex(item => item.productId.toString() === productId);
+
+      if (productIndex > -1) {
+        console.log(`Removing product from wishlist: ${productId}`); 
+        wishlist.products.splice(productIndex, 1);
+        await wishlist.save();
+      } else {
+        console.log(`Product not found in wishlist: ${productId}`);
+      }
+    } else {
+      console.log("Wishlist products is not an array or no wishlist found."); 
+    }
+
+    // await Wishlist.updateOne({userId},{$pull:{items:{productId:product._id}}});
+
+    res.redirect('/cart');
+
+  } catch (err) {
+    console.error("Error adding to cart:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+
+
+const removeCartItem = async (req, res) => {
+    try {
+      const cartItemId = req.params.id; 
+      await Cart.updateOne(
+        { userId: req.session.user._id },
+        { $pull: { items: { _id: cartItemId } } }
+      );
+  
+      res.redirect('/cart');
+    } catch (err) {
+      console.error('Error removing item:', err);
+      res.status(500).send("Something went wrong");
+    }
+};
+
+module.exports = {
+  getCartPage,
+  addToCart,
+  removeCartItem
+};

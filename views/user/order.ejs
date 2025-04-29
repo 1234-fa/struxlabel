@@ -1,0 +1,272 @@
+<%- include("../../views/partials/user/header") %>
+
+<div class="container mt-5">
+  <h2 class="mb-4">Review Your Order</h2>
+
+  <div class="row">
+    <!-- Delivery Address -->
+    <div class="col-md-6 mb-4">
+      <div class="card p-3">
+        <h4 class="mb-3">Select Delivery Address</h4>
+        <% if (addresses && addresses.length > 0) { %>
+          <% addresses.forEach((address, index) => { %>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="selectedAddress" id="address<%= index %>" value="<%= address._id %>" <%= index === 0 ? 'checked' : '' %>>
+              <label class="form-check-label" for="address<%= index %>">
+                <strong><%= address.name %></strong><br>
+                <%= address.house %>, <%= address.city %>, <%= address.state %> - <%= address.pincode %><br>
+                Phone: <%= address.phone %>
+              </label>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p>No address found. Please add one.</p>
+        <% } %>
+
+        <!-- Trigger Modal -->
+        <button class="btn btn-outline-primary mt-3" onclick="openAddressForm()">+ Add New Address</button>
+      </div>
+    </div>
+
+    <!-- Product Summary -->
+    <div class="col-md-6 mb-4">
+      <div class="card p-4 shadow-sm d-flex flex-column align-items-start">
+        <% if (item.product) { %>
+          <div class="d-flex mb-3">
+            <img src="/uploads/re-image/<%= item.product.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 100px; height: 100px; object-fit: cover;">
+            <div>
+              <h5><%= item.product.productName %></h5>
+              <p class="mb-1">Brand: <%= item.product.brand %></p>
+              <p class="mb-1">Qty: <%= item.quantity %></p>
+              <div class="d-flex align-items-center">
+                <strong class="me-2">₹<%= item.totalPrice %></strong>
+                <del class="text-muted">₹<%= item.product.regularPrice * item.quantity %></del>
+              </div>
+              <small class="text-success">
+                You save ₹<%= (item.product.regularPrice - item.product.salePrice) * item.quantity %>
+              </small>
+            </div>
+          </div>
+
+          <form action="/payment" method="POST" class="w-100">
+            <input type="hidden" name="productId" value="<%= item.product._id %>">
+            <input type="hidden" name="quantity" value="<%= item.quantity %>">
+            <input type="hidden" name="totalPrice" value="<%= item.totalPrice %>">
+            <input type="hidden" id="selectedAddressInput" name="selectedAddress" value="">
+            <button type="submit" class="btn btn-success w-100 mt-3">Proceed to Payment</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Address Modal -->
+<div id="addressModal" class="modal-overlay" style="display: none;">
+  <div class="modal-content card address-form-wrapper position-relative">
+    <span class="close-btn" onclick="closeAddressForm()">×</span>
+    <h3 style="color: #046963; margin-bottom: 30px;">Create User Address</h3>
+    <form id="addressForm" method="POST" action="/addAddressinorder">
+      <div class="row mb-3">
+        <div class="form-group col-md-4">
+          <label for="addressType">Address Type:</label>
+          <select class="form-control" id="addressType" name="addressType" required>
+            <option value="" disabled selected>Select address type</option>
+            <option value="Home">Home</option>
+            <option value="Work">Work</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="name">Name:</label>
+          <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="city">City:</label>
+          <input type="text" class="form-control" id="city" name="city">
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="form-group col-md-4">
+          <label for="landMark">Landmark:</label>
+          <input type="text" class="form-control" id="landMark" name="landMark">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="state">State:</label>
+          <input type="text" class="form-control" id="state" name="state">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="pincode">Pincode:</label>
+          <input type="number" class="form-control" id="pincode" name="pincode">
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="form-group col-md-4">
+          <label for="phone">Phone:</label>
+          <input type="number" class="form-control" id="phone" name="phone">
+        </div>
+        <div class="form-group col-md-6">
+          <label for="altPhone">Alternate Phone:</label>
+          <input type="text" class="form-control" id="altPhone" name="altphone">
+        </div>
+      </div>
+
+      <div id="formErrors" class="mb-3"></div>
+
+      <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+  </div>
+</div>
+
+<style>
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    max-width: 900px;
+    width: 100%;
+    position: relative;
+  }
+
+  .close-btn {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+  }
+
+  .close-btn:hover {
+    color: #000;
+  }
+
+  .text-danger {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: block;
+  }
+</style>
+
+<script>
+    function openAddressForm() {
+      document.getElementById('addressModal').style.display = 'flex';
+    }
+  
+    function closeAddressForm() {
+      document.getElementById('addressModal').style.display = 'none';
+    }
+  
+    document.getElementById('addressForm').addEventListener('submit', function (event) {
+      if (!validateForm()) {
+        event.preventDefault();
+      }
+    });
+  
+    function showFieldError(field, message) {
+      const input = document.getElementById(field);
+      const errorDiv = document.createElement('div');
+      errorDiv.className = "text-danger";
+      errorDiv.textContent = message;
+      errorDiv.id = field + "-error";
+      input.parentNode.appendChild(errorDiv);
+    }
+  
+    function validateForm() {
+      let isValid = true;
+      const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
+      const formErrors = document.getElementById('formErrors');
+      formErrors.innerHTML = '';
+  
+      requiredFields.forEach((field) => {
+        const existingError = document.getElementById(field + '-error');
+        if (existingError) existingError.remove();
+        const input = document.getElementById(field);
+        const value = input.value.trim();
+        if (!value) {
+          showFieldError(field, 'This field is required.');
+          isValid = false;
+        }
+      });
+  
+      const namePattern = /^[A-Za-z\s]+$/;
+      const pincodePattern = /^\d{6}$/;
+      const phonePattern = /^\d{10}$/;
+  
+      const name = document.getElementById('name').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const landMark = document.getElementById('landMark').value.trim();
+      const state = document.getElementById('state').value.trim();
+      const pincode = document.getElementById('pincode').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const altPhone = document.getElementById('altPhone').value.trim();
+  
+      if (name && !namePattern.test(name)) {
+        showFieldError('name', 'Name should contain alphabets only.');
+        isValid = false;
+      }
+      if (city && !namePattern.test(city)) {
+        showFieldError('city', 'City should contain alphabets only.');
+        isValid = false;
+      }
+      if (landMark && !namePattern.test(landMark)) {
+        showFieldError('landMark', 'Landmark should contain alphabets only.');
+        isValid = false;
+      }
+      if (state && !namePattern.test(state)) {
+        showFieldError('state', 'State should contain alphabets only.');
+        isValid = false;
+      }
+      if (pincode && !pincodePattern.test(pincode)) {
+        showFieldError('pincode', 'Pincode should be a 6-digit number.');
+        isValid = false;
+      }
+      if (phone && !phonePattern.test(phone)) {
+        showFieldError('phone', 'Phone number should be a 10-digit number.');
+        isValid = false;
+      }
+      if (altPhone && !phonePattern.test(altPhone)) {
+        showFieldError('altPhone', 'Alternate phone should be a 10-digit number.');
+        isValid = false;
+      }
+      if (phone && altPhone && phone === altPhone) {
+        showFieldError('altPhone', 'Alternate number must be different.');
+        isValid = false;
+      }
+  
+      return isValid;
+    }
+  
+    // Set selected address before submitting the payment form
+    const paymentForm = document.querySelector('form[action="/payment"]');
+    if (paymentForm) {
+      paymentForm.addEventListener('submit', function (event) {
+        const selected = document.querySelector('input[name="selectedAddress"]:checked');
+        if (selected) {
+          document.getElementById('selectedAddressInput').value = selected.value;
+        } else {
+          event.preventDefault();
+          alert("Please select a delivery address before proceeding.");
+        }
+      });
+    }
+  </script>
+
+<%- include("../../views/partials/user/footer") %>

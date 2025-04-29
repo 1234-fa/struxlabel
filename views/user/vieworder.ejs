@@ -1,0 +1,302 @@
+<%- include("../../views/partials/user/headerp") %>
+
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-md-3"><!-- Sidebar --></div>
+
+    <div class="col-md-9">
+      <h4 class="text-center mb-4">My Orders</h4>
+
+      <% if (orders.length === 0) { %>
+        <div class="alert alert-warning text-center fs-6">No orders placed yet.</div>
+      <% } else { %>
+        <% orders.forEach(order => { %>
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white py-2 px-3 small">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <strong>Order ID:</strong> <%= order.orderId %><br>
+                  <strong>Status:</strong> 
+                  <span class="<%= (order.status === 'cancelled' || order.status === 'returned') ? 'text-danger' : '' %>">
+                    <%= order.status.charAt(0).toUpperCase() + order.status.slice(1).replaceAll("_", " ") %>
+                  </span>                </div>
+                <div class="text-end">
+                  <strong>Date:</strong> <%= new Date(order.invoiceDate).toLocaleDateString() %><br>
+                  <strong>Total:</strong> ₹<%= order.finalAmount.toFixed(2) %>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body small">
+              <div class="row">
+                <!-- Ordered Items -->
+                <div class="col-md-7 border-end">
+                  <h6 class="mb-2">Ordered Items:</h6>
+                  <% order.orderedItems.forEach(item => { %>
+                    <% if (item.product) { %>
+                      <div class="d-flex align-items-center border-bottom py-2">
+                        <img src="/uploads/re-image/<%= item.product.productImages[0] %>" alt="Product" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
+                        <div>
+                          <strong><%= item.product.name %></strong><br>
+                          Qty: <%= item.quantity %> | Price: ₹<%= item.price.toFixed(2) %> | Total: ₹<%= (item.quantity * item.price).toFixed(2) %>
+                        </div>
+                      </div>
+                    <% } else { %>
+                      <div class="border-bottom py-2 text-danger">
+                        <strong>Product not available</strong><br>
+                        Qty: <%= item.quantity %> | Price: ₹<%= item.price.toFixed(2) %> | Total: ₹<%= (item.quantity * item.price).toFixed(2) %>
+                      </div>
+                    <% } %>
+                  <% }) %>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="col-md-5">
+                  <h6 class="mb-2">Shipping Address:</h6>
+                  <% if (order.address) { %>
+                    <p class="mb-0">
+                      <strong><%= order.address.name %></strong><br>
+                      <%= order.address.landMark %>,<br>
+                      <%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %>
+                    </p>
+                  <% } else { %>
+                    <p>No shipping address provided.</p>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="text-end mt-3">
+                <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#detailsModal-<%= order._id %>">View Details</button>
+              </div>
+            </div>
+          </div>
+
+<!-- Enhanced Order Details Modal -->
+<div class="modal fade" id="detailsModal-<%= order._id %>" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Order Details - <%= order.orderId %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Order Info -->
+        <div class="mb-3">
+          <strong>Order ID:</strong> <%= order.orderId %><br>
+          <strong>Date:</strong> <%= new Date(order.invoiceDate).toLocaleString() %><br>
+          <strong>Payment Method:</strong> <%= order.paymentMethod || "Not specified" %><br>
+          <strong>Coupon:</strong> <%= order.couponName ? order.couponName : "No coupon used" %><br>
+          <strong>Total Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %><br>
+          <% if (order.expectedDelivery) { %>
+            <strong>Expected Delivery:</strong> <%= new Date(order.expectedDelivery).toDateString() %><br>
+          <% } %>
+          <% if (order.notes) { %>
+            <strong>Order Notes:</strong> <%= order.notes %>
+          <% } %>
+        </div>
+
+        <!-- Stepper -->
+        <% if (order.status === 'cancelled' || order.status === 'returned') { %>
+          <div class="alert alert-danger mt-3">
+            <strong>Status:</strong> <%= order.status.charAt(0).toUpperCase() + order.status.slice(1).replaceAll("_", " ") %>
+          </div>
+        <% } else { %>
+          <!-- Stepper -->
+          <div class="stepper d-flex justify-content-between align-items-center mb-4 px-2">
+            <% const steps = ['placed', 'shipped', 'out_for_delivery', 'delivered']; %>
+            <% const currentStep = steps.indexOf(order.status); %>
+            <% steps.forEach((step, i) => { %>
+              <div class="step text-center position-relative flex-fill">
+                <div class="circle <%= i <= currentStep ? 'completed' : '' %>">
+                  <%= i + 1 %>
+                </div>
+                <small class="d-block mt-2 text-capitalize">
+                  <%= step.replaceAll("_", " ") %>
+                </small>
+                <% if (i < steps.length - 1) { %>
+                  <div class="line <%= i < currentStep ? 'completed' : '' %>"></div>
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <!-- Ordered Items -->
+        <h6>Ordered Items:</h6>
+        <ul class="list-group mb-3">
+          <% order.orderedItems.forEach(item => { %>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong><%= item.product ? item.product.name : "Deleted Product" %></strong><br>
+                Qty: <%= item.quantity %>, Price: ₹<%= item.price.toFixed(2) %>
+              </div>
+              <span>Total: ₹<%= (item.price * item.quantity).toFixed(2) %></span>
+            </li>
+          <% }) %>
+        </ul>
+
+        <!-- Shipping Address -->
+        <h6>Shipping Address:</h6>
+        <% if (order.address) { %>
+          <p>
+            <strong><%= order.address.name %></strong><br>
+            <%= order.address.landMark %>, <%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %><br>
+            Phone: <%= order.address.phone %>
+          </p>
+        <% } else { %>
+          <p>No shipping address provided.</p>
+        <% } %>
+
+        <!-- Status History -->
+        <% if (order.statusHistory && order.statusHistory.length > 0) { %>
+          <h6>Status Timeline:</h6>
+          <ul class="list-group">
+            <% order.statusHistory.forEach(history => { %>
+              <li class="list-group-item">
+                <strong><%= history.status.replaceAll("_", " ") %>:</strong>
+                <%= new Date(history.timestamp).toLocaleString() %>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </div>
+
+      <div class="modal-footer">
+        <!-- Cancel Order Button -->
+        <% if (order.status !== 'cancelled' && order.status !== 'delivered') { %>
+          <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#cancelModal-<%= order._id %>">
+            Cancel Order
+          </button>
+        <% } %>
+
+<!-- Return Order Button -->
+<% if (order.status === 'delivered' && order.returnStatus !== 'requested') { %>
+  <form action="/return-order/<%= order._id %>" method="POST" class="d-inline">
+    <button type="button" class="btn btn-warning" id="returnOrderBtn">Return Order</button>
+    
+    <!-- Hidden Return Reason Form -->
+    <div id="returnReasonForm" style="display: none;" class="mt-3">
+      <div class="mb-3">
+        <label for="reason" class="form-label">Return Reason</label>
+        <textarea name="reason" id="reason" class="form-control" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Return</button>
+    </div>
+  </form>
+<% } else if (order.returnStatus === 'requested') { %>
+  <span class="text-success">Return already requested</span>
+<% } %>
+
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <!-- <a href="/download-invoice/<%= order._id %>" class="btn btn-primary">
+          Download Invoice
+        </a> -->
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Cancel Reason Modal (Shifted inside the loop) -->
+<div class="modal fade" id="cancelModal-<%= order._id %>" tabindex="-1" aria-labelledby="cancelModalLabel-<%= order._id %>" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/cancel-order/<%= order._id %>" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cancelModalLabel-<%= order._id %>">Reason for Cancellation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="cancelReason-<%= order._id %>" class="form-label">
+              Please tell us why you are cancelling this order:
+            </label>
+            <textarea name="reason" id="cancelReason-<%= order._id %>" class="form-control" rows="4" required></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">Submit Cancellation</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+        <% }) %>
+      <% } %>
+
+      <div class="text-end mt-3">
+        <a href="/" class="btn btn-sm btn-outline-primary">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- Stepper Styles -->
+<style>
+  .stepper .circle {
+    width: 30px;
+    height: 30px;
+    background-color: #ccc;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    z-index: 2;
+    position: relative;
+  }
+
+  .stepper .circle.completed {
+    background-color: #0d6efd;
+    color: #fff;
+  }
+
+  .stepper .line {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background-color: #ccc;
+    z-index: 1;
+  }
+
+  .stepper .line.completed {
+    background-color: #0d6efd;
+  }
+
+  .step {
+    flex: 1;
+    position: relative;
+  }
+
+  .step:not(:last-child) .line {
+    right: -50%;
+  }
+</style>
+
+<script>
+  document.getElementById('returnOrderBtn').addEventListener('click', function() {
+    // Toggle the visibility of the return reason form
+    const returnReasonForm = document.getElementById('returnReasonForm');
+    if (returnReasonForm.style.display === 'none') {
+      returnReasonForm.style.display = 'block';
+    } else {
+      returnReasonForm.style.display = 'none';
+    }
+  });
+</script>
+
+<%- include("../../views/partials/user/footerp") %>
