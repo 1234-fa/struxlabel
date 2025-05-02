@@ -18,59 +18,6 @@ const generateOrderId = () => {
 };
 
 
-const generateInvoice = async (orderId) => {
-  try {
-    const order = await Order.findById(orderId).populate('orderedItems.product');
-
-    if (!order) {
-      throw new Error('Order not found');
-    }
-
-    const doc = new PDFDocument();
-
-    // Define the file path for the invoice PDF
-    const invoicePath = path.join(__dirname, `../invoices/invoice_${orderId}.pdf`);
-
-    // Pipe the document to a file
-    doc.pipe(fs.createWriteStream(invoicePath));
-
-    // Add content to the PDF
-    doc.fontSize(16).text('Invoice', { align: 'center' });
-    doc.moveDown();
-
-    doc.fontSize(12).text(`Order ID: ${order._id}`);
-    doc.text(`Order Date: ${order.createdAt.toDateString()}`);
-    doc.moveDown();
-
-    doc.text(`Customer: ${order.customerName}`);
-    doc.text(`Email: ${order.customerEmail}`);
-    doc.moveDown();
-
-    // Add ordered items
-    doc.text('Items:');
-    order.orderedItems.forEach(item => {
-      doc.text(`${item.product.name} (Quantity: ${item.quantity}) - Price: ₹${item.product.salePrice * item.quantity}`);
-    });
-    doc.moveDown();
-
-    // Add total amount
-    const totalAmount = order.orderedItems.reduce((total, item) => total + item.product.salePrice * item.quantity, 0);
-    doc.text(`Total Amount: ₹${totalAmount}`);
-    doc.moveDown();
-
-    // Finalize the document
-    doc.end();
-
-
-    // Return the path of the generated invoice
-    return invoicePath;
-  } catch (error) {
-    console.error('Error generating invoice:', error);
-    throw error;
-  }
-};
-
-
 const getOrderPage = async (req, res) => {
   try {
     const userId = req.session.user;
@@ -247,8 +194,7 @@ const postPlaceOrder = async (req, res) => {
         message: 'Something went wrong while placing the order',
       });
     }
-  };
-  
+  };  
 
 
   const getPaymentPage = async (req, res) => {
@@ -326,17 +272,31 @@ const postPlaceOrder = async (req, res) => {
   const viewOrders = async (req, res) => {
     try {
       const userId = req.session.user;
-      console.log("Logged in user:", userId); 
+      console.log("Logged in user:", userId);
   
       if (!userId) return res.redirect('/login');
   
-      const orders = await Order.find({ user: userId })
+      const searchTerm = req.query.search || '';
+      const regex = new RegExp(searchTerm, 'i');
+  
+      let orders = await Order.find({ user: userId })
         .sort({ createdAt: -1 })
         .populate('orderedItems.product');
   
-      console.log('Fetched Orders:', orders); 
+      if (searchTerm) {
+        orders = orders.filter(order => {
+          const matchOrderId = regex.test(order.orderId);
   
-      res.render('vieworder', { orders, user: userId });
+          const matchProduct = order.orderedItems.some(item =>
+            item.product && regex.test(item.product.productName)
+          );
+  
+          return matchOrderId || matchProduct;
+        });
+      }
+  
+      res.render('vieworder', { orders, user: userId, searchTerm });
+  
     } catch (error) {
       console.error('Error fetching orders:', error);
       res.status(500).send('Internal Server Error');
@@ -624,7 +584,7 @@ const postPlaceOrder = async (req, res) => {
       for (const item of orderItems) {
         await Product.findByIdAndUpdate(
           item.product,
-          { $inc: { stock: -item.quantity } },
+          { $inc: { quantity: -item.quantity } },
           { new: true }
         );
       }
@@ -664,31 +624,6 @@ const postPlaceOrder = async (req, res) => {
   };
 
 
-  const downloadInvoice = async (req,res)=>{
-    try {
-      const { orderId } = req.params;
-  
-      const invoicePath = await generateInvoice(orderId);
-  
-      res.download(invoicePath, (err) => {
-        if (err) {
-          console.error('Error downloading the invoice:', err);
-          res.status(500).send('Error downloading the invoice.');
-        }
-  
-        fs.unlink(invoicePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error('Error deleting the invoice file:', unlinkErr);
-          }
-        });
-      });
-    } catch (error) {
-      console.error('Error generating or downloading invoice:', error);
-      res.status(500).send('Error generating invoice.');
-    }
-  }
-
-
 
 module.exports = {
   getOrderPage,
@@ -704,6 +639,5 @@ module.exports = {
   loadPaymentPagecart,
   placeOrderFromCart,
   orderSuccessCart,
-  downloadInvoice,
   viewOrderDetails
 };

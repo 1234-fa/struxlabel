@@ -83,7 +83,8 @@
           </div>
           <div class="mb-2 text-start">
             <label class="form-label"><strong>Phone</strong></label>
-            <input type="text" name="phone" class="form-control" value="<%= user.phone %>" required>
+            <input type="text" name="phone" class="form-control" value="<%= user.phone %>" 
+       maxlength="10" pattern="\d{10}" title="Enter a valid 10-digit phone number" required>
           </div>
           <button type="submit" class="btn btn-success w-100">Save Changes</button>
         </form>

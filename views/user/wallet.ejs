@@ -1,0 +1,51 @@
+<%- include("../../views/partials/user/headerp") %>
+
+<!-- Main Wallet Container -->
+<div class="container-fluid mt-4">
+  <div class="row">
+    
+    <!-- Sidebar (You can customize this part) -->
+    <div class="col-md-3">
+      <!-- You can add sidebar content here if needed -->
+    </div>
+
+    <!-- Wallet Content -->
+    <div class="col-md-9">
+      <h4 class="text-center mb-4">My Wallet</h4>
+
+      <% if (wallet && wallet.length > 0) { %>
+        <% wallet.forEach(wallet => { %>
+          <div class="card shadow-sm mb-4">
+            <div class="card-body">
+              <h5 class="card-title text-success">Wallet Transaction</h5>
+              <p><strong>Amount:</strong> ₹<%= wallet.amount %></p>
+              <p><strong>Type:</strong> <%= wallet.type %></p>
+              <p><strong>Entry:</strong> <%= wallet.entryType %></p>
+              <p><strong>Status:</strong> <%= wallet.status %></p>
+              <p><strong>Transaction ID:</strong> <%= wallet.transactionId %></p>
+              <p><strong>Date:</strong> <%= new Date(wallet.createdAt).toLocaleString() || 'N/A' %></p>
+
+              <% if (wallet.orderId) { %>
+                <hr />
+                <h6>Order Info:</h6>
+                <p><strong>Order ID:</strong> <%= wallet.orderId.orderId %></p>
+                <p><strong>Total Price:</strong> ₹<%= wallet.orderId.totalPrice %></p>
+                <p><strong>Status:</strong> <%= wallet.orderId.status %></p>
+                <p><strong>Payment Method:</strong> <%= wallet.orderId.paymentMethod %></p>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <p class="text-center">No wallet transactions yet.</p>
+      <% } %>
+
+      <!-- Back to Home Button -->
+      <div class="text-end mt-4">
+        <a href="/" class="btn btn-outline-primary btn-sm">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("../../views/partials/user/footerp") %>

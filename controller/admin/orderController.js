@@ -4,6 +4,8 @@ const Brand = require("../../models/brandSchema");
 const User = require("../../models/userSchema");
 const Address = require('../../models/addressSchema');
 const Order = require('../../models/orderSchema');
+const Wallet = require('../../models/walletSchema');
+const { v4: uuidv4 } = require('uuid');
 
 const getAllOrders = async (req, res) => {
   try {
@@ -169,8 +171,32 @@ const approveReturnItem = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (product) {
-      product.stock += quantityToAdd;
+      product.quantity += quantityToAdd;
       await product.save();
+    }
+    // 4. Refund logic
+    const refundAmount = item.price * item.quantity;
+
+    const existingWalletEntry = await Wallet.findOne({
+      userId: order.user,
+      orderId: order._id,
+      type: 'refund',
+      entryType: 'CREDIT',
+      amount: refundAmount
+    });
+
+    if (!existingWalletEntry) {
+      const walletEntry = new Wallet({
+        userId: order.user,
+        orderId: order._id,
+        transactionId: uuidv4(),
+        payment_type: 'refund',
+        amount: refundAmount,
+        status: 'success',
+        entryType: 'CREDIT',
+        type: 'refund',
+      });
+      await walletEntry.save();
     }
 
     await order.save();
