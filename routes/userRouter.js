@@ -6,6 +6,7 @@ const productController = require('../controller/user/productController');
 const orderController = require('../controller/user/orderController');
 const cartController =  require('../controller/user/cartController');
 const wishlistController = require('../controller/user/wishlistController')
+const invoiceController = require('../controller/user/invoiceController')
 const passport = require('passport');
 const multer=require('multer');
 const profileUpload = require('../helpers/profileUpload');
@@ -87,13 +88,14 @@ router.post('/cancel-order/:orderId', userAuth, orderController.cancelOrder);
 router.post('/cancel-product/:orderId/:productId', userAuth,orderController.cancelProduct);
 router.post('/return-order/:orderId', userAuth,orderController.returnOrder);
 router.post('/return-product/:itemId', userAuth,orderController.returnProduct);
-router.get('/download-invoice/:orderId', userAuth,orderController.downloadInvoice)
 router.get('/viewOrderDetails/:orderId',userAuth,orderController.viewOrderDetails);
+
+
+router.get('/download-invoice/:orderId', userAuth,invoiceController.downloadInvoice)
 
 
 router.get('/wishlist', userAuth , wishlistController.getWishlist);
 router.get('/addToWishlist', userAuth , wishlistController.addToWishlist);
 router.get('/removeFromWishlist', userAuth, wishlistController.removeFromWishlist);
-
 
 module.exports = router;

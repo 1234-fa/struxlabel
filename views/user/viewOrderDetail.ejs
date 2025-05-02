@@ -143,7 +143,7 @@
                       <% } else { %>
                         <span class="text-success">Return already requested</span>
                         <% } %>
-                        <% } else if(item.status !== 'cancelled' &&item.status !== 'delivered' && item.status !== 'returned' && item.status !== 'return request') { %>
+                        <% } else if(item.status !== 'cancelled' &&item.status !== 'delivered' && item.status !== 'returned' && item.status !== 'return request'&& item.status !== 'return approved'&& item.status !== 'return rejected') { %>
                           <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelProductModal-<%= item.product._id %>">Cancel Product</button>
                           <% } %>
                           <% } %>
@@ -195,13 +195,16 @@
 <!-- -------------------------------------------------------------------------------------------------------------------- -->
 <!-- -------------------------------------------------------------------------------------------------------------------- -->
 
-<% if (order.orderedItems) { %>
-<% order.orderedItems.forEach((item) => { %>
+<% if (order.status === 'delivered') { %>
 
-<% const allDelivered = order.orderedItems.every(item => item.status === 'delivered'); %>
-<% const allNotDelivered = order.orderedItems.every(item => item.status !== 'delivered'); %>
-<% }) %>
+
+  <a href="/download-invoice/<%= order._id %>" class="btn btn-success btn-sm" target="_blank">
+    <i class="fas fa-download"></i> Download Invoice
+  </a>
 <% } %>
+
+
+
             <!-- Cancel / Return Entire Order -->
             <% if (order.orderedItems.length <= 1) { %> 
             <div class="d-flex justify-content-end mt-3 gap-2">

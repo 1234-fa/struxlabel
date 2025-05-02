@@ -5,7 +5,6 @@ const Address = require('../../models/addressSchema')
 const Order = require('../../models/orderSchema');
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require('uuid');
-const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
