@@ -217,7 +217,7 @@ const postPlaceOrder = async (req, res) => {
         finalAmount: Number(totalPrice),
         address: address, // Only passing the cleaned address object
         invoiceDate: new Date(),
-        status: 'placed',
+        status: 'processing',
         createdOn: new Date(),
         coupenApplied: false,
         paymentMethod: paymentMethod,
@@ -356,11 +356,10 @@ const postPlaceOrder = async (req, res) => {
         return res.status(404).send('Order not found');
       }
   
-      if (!['pending', 'processing', 'placed','shipped'].includes(order.status.toLowerCase())) {
+      if (!['processing', 'placed','shipped'].includes(order.status.toLowerCase())) {
         return res.status(400).send('Order cannot be canceled at this stage');
       }
   
-      // Restock the products
       for (let item of order.orderedItems) {
         await Product.findByIdAndUpdate(item.product._id, {
           $inc: { quantity: item.quantity }
@@ -371,11 +370,12 @@ const postPlaceOrder = async (req, res) => {
   
       // Instead of deleting, update the order status and reason
       order.status = 'cancelled';
-      order.cancelReason = cancelReason; // You can add a `cancelReason` field in your schema
+      order.cancelReason = cancelReason; 
       await order.save();
-  
+
+      console.log(orderId)
       res.render('cancel-order-successful', {
-        orderId,
+        order_id: order.orderId,
         reason: cancelReason
       });
   
@@ -385,31 +385,45 @@ const postPlaceOrder = async (req, res) => {
     }
   };
 
-  
+
+
   const cancelProduct = async (req, res) => {
     try {
       const { orderId, productId } = req.params;
       const { reason } = req.body;
   
       const order = await Order.findById(orderId);
-      if (!order || (order.status !== 'pending' && order.status !== 'processing')) {
-        return res.status(400).send('Cannot cancel products in this order');
+      if (!order || !order.orderedItems || !Array.isArray(order.orderedItems)) {
+        return res.status(404).send('Order not found');
       }
   
-      const item = order.orderedItems.find(i => i.product._id.toString() === productId);
-      if (!item) return res.status(404).send('Product not found in order');
+      const item = order.orderedItems.find(
+        i => i.product.toString() === productId
+      );
   
-      await Product.findByIdAndUpdate(productId, { $inc: { stock: item.quantity } });
   
-      order.orderedItems = order.orderedItems.filter(i => i.product._id.toString() !== productId);
-      if (order.orderedItems.length === 0) {
+      await Product.findByIdAndUpdate(productId, {
+        $inc: { quantity: item.quantity }
+      });
+  
+      item.status = 'cancelled';
+      item.cancelReason = reason;
+  
+      const refundAmount = item.totalPrice || (item.price * item.quantity);
+      order.totalPrice -= refundAmount;
+      order.finalAmount -= refundAmount;
+  
+      const allCancelled = order.orderedItems.every(i => i.status === 'cancelled');
+      if (allCancelled) {
         order.status = 'cancelled';
       }
   
-      order.cancellationNotes = reason || '';
       await order.save();
   
-      res.redirect('/orders');
+      res.render('cancel-product-success', {
+        order_id: order.orderId,
+        reason
+      });
     } catch (err) {
       console.error(err);
       res.status(500).send('Server Error');
@@ -424,27 +438,70 @@ const postPlaceOrder = async (req, res) => {
       if (!reason || reason.trim() === '') {
         return res.status(400).send('Return reason is required.');
       }
-  
+
       const order = await Order.findById(orderId);
       if (!order || order.status !== 'delivered') {
         return res.status(400).send('Order cannot be returned.');
       }
-  
-      // Return items to inventory
-      for (let item of order.orderedItems) {
-        await Product.findByIdAndUpdate(item.product._id, {
-          $inc: { stock: item.quantity }
-        });
+
+      // Check if the order contains only one item and access the first item
+      const item = order.orderedItems[0]; // Since there's only one item
+
+      if (!item) {
+        return res.status(404).send('Item not found in order');
       }
-  
-      order.status = 'returned';
+
+      // Update item status
+      item.status = 'return request';
+      item.returnReason = reason;
+      
+      order.status = 'return request';
       order.returnReason = reason;
       await order.save();
-  
-      res.redirect('/order');
+
+
+      res.render('returnRequested',{reason})
     } catch (err) {
       console.error(err);
       res.status(500).send('Server Error');
+    }
+  };
+
+  const returnProduct = async (req, res) => {
+    try {
+      const { itemId } = req.params;
+      const { reason } = req.body;
+  
+      // Find the order that contains this item
+      const order = await Order.findOne({ 'orderedItems._id': itemId });
+  
+      if (!order) {
+        return res.status(404).send('Order or item not found');
+      }
+  
+      // Find the specific item
+      const item = order.orderedItems.id(itemId);
+  
+      if (!item) {
+        return res.status(404).send('Item not found in order');
+      }
+  
+      // Update item status
+      item.status = 'return request';
+      item.returnReason = reason;
+  
+      await order.save();
+  
+      // Render the confirmation page
+      res.render('returnRequested', {
+        orderId: order.orderId,
+        productId: item.product,
+        reason
+      });
+  
+    } catch (err) {
+      console.error('Return request failed:', err);
+      res.status(500).send('Server error');
     }
   };
 
@@ -510,6 +567,7 @@ const postPlaceOrder = async (req, res) => {
         const price = product.salePrice || product.price || 0;
         const quantity = item.quantity;
         const totalPrice = price * quantity;
+        const status = "processing"
   
         const orderqty = Number(quantity);
         if (product.quantity < orderqty) {
@@ -520,7 +578,8 @@ const postPlaceOrder = async (req, res) => {
           product: product._id,
           quantity,
           price,
-          totalPrice
+          totalPrice,
+          status
         };
       });
   
@@ -540,14 +599,14 @@ const postPlaceOrder = async (req, res) => {
         phone: selected.phone,
         altphone: selected.altphone,
       };
-  
+ 
       const newOrder = new Order({
         user: userId,
         address: address, 
         paymentMethod,
         totalAmount: calculatedTotal,
         orderedItems: orderItems,
-        status: paymentMethod === "cash_on_delivery" ? "placed" : "pending",
+        status: "processing",
         orderId: generateOrderId(),
         createdOn: new Date(),
         discount: 0,
@@ -580,6 +639,28 @@ const postPlaceOrder = async (req, res) => {
       if (!res.headersSent) {
         res.status(500).send("Something went wrong while placing your order.");
       }
+    }
+  };
+
+  const viewOrderDetails = async (req, res) => {
+    try {
+      const userId = req.session.user;
+      const { orderId } = req.params;
+  
+      if (!userId) {
+        return res.redirect('/login');
+      }
+  
+      const order = await Order.findById(orderId).populate('orderedItems.product');
+  
+      if (!order) {
+        return res.status(404).render('errorPage', { message: 'Order not found' });
+      }
+  
+      res.render('viewOrderDetail', { user: userId, order });
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      res.status(500).render('errorPage', { message: 'Something went wrong!' });
     }
   };
 
@@ -620,8 +701,10 @@ module.exports = {
   cancelOrder,
   cancelProduct,
   returnOrder,
+  returnProduct,
   loadPaymentPagecart,
   placeOrderFromCart,
   orderSuccessCart,
-  downloadInvoice
+  downloadInvoice,
+  viewOrderDetails
 };

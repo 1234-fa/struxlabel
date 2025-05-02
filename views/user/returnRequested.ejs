@@ -1,0 +1,25 @@
+<%- include("../partials/user/headerp") %>
+
+<div class="container mt-5 d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="card shadow-lg p-4" style="max-width: 500px; width: 100%;">
+    <div class="text-center">
+      <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+      <h3 class="mt-3 text-success">Return Request Submitted</h3>
+      <p class="text-muted mb-3">Thank you. We have received your return request.</p>
+
+      <% if (reason) { %>
+        <div class="alert alert-light border-start border-3 border-warning text-start">
+          <strong>Reason:</strong> <%= reason %>
+        </div>
+      <% } %>
+
+      <p class="text-secondary">Our team will review your request and get back to you shortly. Kindly wait for the response.</p>
+
+      <a href="/view-orders" class="btn btn-outline-primary mt-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to My Orders
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include("../partials/user/footerp") %>

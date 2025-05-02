@@ -64,7 +64,152 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+
+const viewOrderDetails =async (req,res)=>{
+try {
+      const { orderId } = req.params;
+  
+      const order = await Order.findById(orderId).populate('orderedItems.product');
+  
+      if (!order) {
+        return res.status(404).render('errorPage', { message: 'Order not found' });
+      }
+  
+      res.render('orderDetails', {order });
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      res.status(500).render('errorPage', { message: 'Something went wrong!' });
+    }
+}
+
+const updateOrderItemStatus = async (req, res) => {
+  try {
+    const { orderId, productId, status } = req.body;
+
+    const updateFields = {
+      "orderedItems.$[elem].status": status
+    };
+
+    if (status === "delivered") {
+      updateFields.deliveredOn = new Date();
+    }
+
+    const result = await Order.updateOne(
+      { _id: orderId, "orderedItems.product": productId },
+      { $set: updateFields },
+      { arrayFilters: [{ "elem.product": productId }] }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).send("Order item not found or status not updated.");
+    }
+
+    res.redirect("back");
+  } catch (error) {
+    console.error("Error updating item status:", error);
+    res.status(500).send("Server error while updating item status.");
+  }
+};
+
+const getAllReturnRequests = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      $or: [
+        { status: 'return request' },
+        { 'orderedItems.status': 'return request' }
+      ]
+    };
+
+    const totalOrders = await Order.countDocuments(filter);
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    const orders = await Order.find(filter)
+      .populate('user')
+      .populate('orderedItems.product')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.render('returnRequestDetails', {
+      orders,
+      currentPage: page,
+      totalPages
+    });
+  } catch (err) {
+    console.error('Error fetching return requests:', err);
+    res.redirect('/pagerror');
+  }
+};
+
+const approveReturnItem = async (req, res) => {
+  const { orderId, itemId } = req.params;
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).send('Order not found');
+
+    const item = order.orderedItems.id(itemId);
+    if (!item || item.status !== 'return request') {
+      return res.status(400).send('Item not found or not in return request status');
+    }
+
+    item.status = 'return approved';
+
+    const allReturned = order.orderedItems.every(i => i.status === 'return approved');
+    if (allReturned) {
+      order.status = 'return approved';
+    }
+
+    const productId = item.product; 
+    const quantityToAdd = item.quantity;
+
+    const product = await Product.findById(productId);
+    if (product) {
+      product.stock += quantityToAdd;
+      await product.save();
+    }
+
+    await order.save();
+
+    res.redirect('/admin/returnRequests'); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+};
+
+const rejectReturnItem = async (req, res) => {
+  const { orderId, itemId } = req.params;
+
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).send('Order not found');
+
+    const item = order.orderedItems.id(itemId);
+    if (!item || item.status !== 'return request') {
+      return res.status(400).send('Item not found or not in return request status');
+    }
+
+    item.status = 'return rejected'; 
+    await order.save();
+
+    res.redirect('/returnRequests');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+};
+
 module.exports = {
   getAllOrders,
   updateOrderStatus,
+  viewOrderDetails,
+  updateOrderItemStatus,
+  getAllReturnRequests,
+  approveReturnItem,
+  rejectReturnItem
 };

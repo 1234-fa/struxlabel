@@ -1,170 +1,131 @@
 <%- include("../../views/partials/admin/header") %>
 
-<div class="container mt-5">
-  <h2>All Orders</h2>
+<%
+  let returnOrderCount = 0;
+  let returnProductCount = 0;
 
-  <form method="GET" action="/admin/orderList" class="mb-3">
-    <div class="d-flex">
-      <input type="text" class="form-control me-2" name="search" placeholder="Search orders by User, Order ID, or Product" value="<%= searchTerm || '' %>">
-      <button type="submit" class="btn btn-primary">Search</button>
-      <% if (searchTerm) { %> 
-        <a href="/admin/orderList" class="btn btn-danger ms-2">Clear Search</a>
+  orders.forEach(order => {
+    // Check if the order status is 'return request'
+    if (order.status && order.status.toLowerCase() === 'return request') {
+      returnOrderCount++; // Increase the count of return orders
+    }
+
+    // Count the products in this order that have a 'return request' status
+    order.orderedItems.forEach(item => {
+      if (item.status && item.status.toLowerCase() === 'return request') {
+        returnProductCount++; // Increase the count of return products
+      }
+    });
+  });
+%>
+
+<div class="container mt-5">
+  <!-- Header + Return Requests Button -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-primary">All Orders</h2>
+    <a href="/admin/returnRequests" class="btn btn-warning">
+      Return Requests (<%= returnProductCount %>)
+    </a>
+  </div>
+
+  <!-- Search Form -->
+  <form method="GET" action="/admin/orderList" class="mb-4">
+    <div class="input-group">
+      <input 
+        type="text" 
+        class="form-control" 
+        name="search" 
+        placeholder="Search by User, Order ID, or Product"
+        value="<%= searchTerm || '' %>">
+      <button class="btn btn-outline-primary" type="submit">Search</button>
+      <% if (searchTerm) { %>
+        <a href="/admin/orderList" class="btn btn-outline-danger">Clear</a>
       <% } %>
     </div>
   </form>
 
-
-
-  <table class="table table-bordered mt-3">
-    <thead class="table-dark">
-      <tr>
-        <th>Order ID</th>
-        <th>User</th>
-        <th>Items</th>
-        <th>Total</th>
-        <th>Status</th>
-        <th>Shipping Address</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      <% orders.forEach((order, index) => { %>
-        <!-- Main Row -->
+  <!-- Orders Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle text-center">
+      <thead class="table-dark">
         <tr>
-          <td><%= order.orderId %></td>
-          <td><%= order.user?.name || 'Unknown' %></td>
-          <td>
-            <ul>
-              <% order.orderedItems.forEach(item => { %>
-                <li><%= item.product.name %> x <%= item.quantity %></li>
-              <% }) %>
-            </ul>
-          </td>
-          <td>₹<%= order.finalAmount %></td>
-          <td><%= order.status %></td>
-          <td>
-            <strong>Name:</strong> <%= order.address?.name || 'N/A' %><br>
-            <strong>City:</strong> <%= order.address?.city || 'N/A' %><br>
-            <strong>State:</strong> <%= order.address?.state || 'N/A' %><br>
-            <strong>Pincode:</strong> <%= order.address?.pincode || 'N/A' %><br>
-            <strong>Contact:</strong> <%= order.address?.phone || 'N/A' %>
-          </td>
-          <td>
-            <form action="/admin/update-order-status/<%= order._id %>" method="POST" class="d-flex mb-2">
-              <select name="status" class="form-select form-select-sm me-2">
-                <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
-                <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>
-                <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
-              </select>
-              <button type="submit" class="btn btn-sm btn-primary">Update</button>
-            </form>
-
-            <button class="btn btn-sm btn-secondary toggle-details" data-index="<%= index %>">
-              View Details
-            </button>
-          </td>
+          <th>Order ID</th>
+          <th>User</th>
+          <th>Products</th>
+          <th>Total (₹)</th>
+          <th>Status</th>
+          <th>Actions</th>
         </tr>
+      </thead>
 
-        <!-- Hidden Details Row -->
-        <tr id="details-<%= index %>" class="details-row" style="display: none; background-color: #f9f9f9;">
-          <td colspan="7">
-            <strong>User Info:</strong><br>
-            Name: <%= order.user?.name || 'N/A' %><br>
-            Email: <%= order.user?.email || 'N/A' %><br>
-            <hr>
+      <tbody>
+        <% orders.forEach(order => { %>
+          <tr>
+            <td><%= order.orderId %></td>
+            <td><%= order.user?.name || 'Unknown' %></td>
+            <td class="text-start">
+              <ul class="list-unstyled mb-0">
+                <% order.orderedItems.forEach(item => { %>
+                  <li class="mb-2 d-flex align-items-center">
+                    <img src="/uploads/re-image/<%= item.product.productImages[0] %>" 
+                         alt="Product Image"
+                         style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                    <div>
+                      <strong><%= item.product.productName %></strong><br>
+                      Qty: <%= item.quantity %><br>
+                      ₹<%= item.price.toFixed(2) %>
+                    </div>
+                  </li>
+                <% }) %>
+              </ul>
+            </td>
+            <td>₹<%= order.finalAmount.toFixed(2) %></td>
+            <td>
+              <% 
+                const status = order.status.toLowerCase();
+                let badgeClass = 'bg-secondary text-white';
+            
+                if (['processing', 'shipped', 'out for delivery'].includes(status)) {
+                  badgeClass = 'bg-primary text-white';
+                } else if (['cancelled', 'canceled', 'returned', 'return requested', 'return request'].includes(status)) {
+                  badgeClass = 'bg-danger text-white';
+                } else if (status === 'delivered') {
+                  badgeClass = 'bg-success text-white';
+                }
+              %>
+              <span class="badge <%= badgeClass %> text-uppercase"><%= order.status %></span>
+            </td>
+            <td>
+              <a href="/admin/singleOrderDetails/<%= order._id %>" class="btn btn-sm btn-primary">
+                View Details
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
 
-            <strong>Shipping Address:</strong><br>
-            <%= order.address?.name %>, <%= order.address?.city %>, <%= order.address?.state %><br>
-            Pincode: <%= order.address?.pincode %><br>
-            Phone: <%= order.address?.phone %><br>
-            Alternative Phone: <%= order.address?.altphone || 'N/A' %><br>
-            <hr>
-
-            <strong>Product Details:</strong>
-            <ul>
-              <% order.orderedItems.forEach(item => { %>
-                <li>
-                  <strong>Name:</strong> <%= item.product ? item.product.productName : 'No name available' %><br>
-                  <strong>Description:</strong> <%= item.product ? item.product.description || 'No description' : 'No description' %><br>
-                  <strong>Price:</strong> ₹<%= item.price.toFixed(2) %> <br>
-                  <strong>Quantity:</strong> <%= item.quantity %><br>
-                  <strong>Image:</strong><br>
-                  <img src="/uploads/re-image/<%= item.product.productImages[0] %>" alt="Product" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
-                  <br><br>
-                </li>
-              <% }) %>
-            </ul>
-            <hr>
-
-            <strong>Order Info:</strong><br>
-            Order ID: <%= order.orderId %><br>
-            Status: <%= order.status %><br>
-            Total Amount: ₹<%= order.finalAmount %><br>
-            Ordered At: <%= order.createdAt?.toLocaleString() || 'N/A' %>
-          </td>
-        </tr>
-
-      <% }) %>
-    </tbody>
-  </table>
-
-  <!-- Pagination Controls -->
+  <!-- Pagination -->
   <nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center mt-4">
       <% if (currentPage > 1) { %>
         <li class="page-item">
-          <a class="page-link" href="?page=<%= currentPage - 1 %>" aria-label="Previous">
-            <span aria-hidden="true">&laquo;</span>
-          </a>
+          <a class="page-link" href="?page=<%= currentPage - 1 %>">&laquo;</a>
         </li>
       <% } %>
-
       <% for (let i = 1; i <= totalPages; i++) { %>
         <li class="page-item <%= i === currentPage ? 'active' : '' %>">
           <a class="page-link" href="?page=<%= i %>"><%= i %></a>
         </li>
       <% } %>
-
       <% if (currentPage < totalPages) { %>
         <li class="page-item">
-          <a class="page-link" href="?page=<%= currentPage + 1 %>" aria-label="Next">
-            <span aria-hidden="true">&raquo;</span>
-          </a>
+          <a class="page-link" href="?page=<%= currentPage + 1 %>">&raquo;</a>
         </li>
       <% } %>
     </ul>
   </nav>
 </div>
 
-<!-- Toggle Details Script -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const toggleButtons = document.querySelectorAll('.toggle-details');
-
-    toggleButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const index = button.getAttribute('data-index');
-        const detailsRow = document.getElementById(`details-${index}`);
-        
-        if (detailsRow.style.display === 'none') {
-          detailsRow.style.display = 'table-row';
-          button.textContent = 'Hide Details';
-        } else {
-          detailsRow.style.display = 'none';
-          button.textContent = 'View Details';
-        }
-      });
-    });
-  });
-</script>
-
-<style>
-  .details-row td {
-    padding: 20px;
-  }
-</style>
+<%- include("../../views/partials/admin/footer") %>

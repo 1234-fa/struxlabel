@@ -1,0 +1,83 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container mt-5">
+  <h2 class="text-center mb-4 text-dark">All Return Requests</h2>
+
+  <% if (orders.length === 0) { %>
+    <p class="text-center">No return requests found.</p>
+  <% } else { %>
+    <% orders.forEach(order => { %>
+      <% const hasReturnItem = order.orderedItems.some(item => item.status === 'return request'); %>
+      <% if (order.status === 'return request' || hasReturnItem) { %>
+        <div class="card mb-5 shadow-sm">
+          <div class="card-header bg-warning fw-bold text-dark">
+            Order ID: <%= order.orderId %> | User: <%= order.user?.name || 'Unknown' %>
+          </div>
+          <div class="card-body">
+            <p><strong>Total Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %></p>
+            <p><strong>Status:</strong> 
+              <span class="badge bg-danger text-uppercase"><%= order.status %></span>
+            </p>
+
+            <!-- Dates -->
+            <p><strong>Order Date:</strong> <%= order.createdAt.toLocaleString() %></p>
+            <p><strong>Delivered Date:</strong> 
+              <%= order.deliveredAt ? order.deliveredAt.toLocaleString() : 'Not yet delivered' %>
+            </p>
+            <p><strong>Return Requested At:</strong> <%= order.updatedAt.toLocaleString() %></p>
+            <p><strong>Pickup Time Estimate:</strong> Within 5–7 Business Days</p>
+
+            <!-- Return Reason -->
+            <p><strong>Return Reason:</strong> <%= order.returnReason || 'N/A' %></p>
+
+            <!-- Product List -->
+            <!-- Product List -->
+<div class="mt-3">
+  <h6 class="fw-bold">Products Requested for Return:</h6>
+  <ul class="list-group">
+    <% order.orderedItems.forEach(item => { %>
+      <% if (item.status === 'return request') { %>
+        <li class="list-group-item d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <img src="/uploads/re-image/<%= item.product?.productImages[0] %>" 
+              style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 15px;">
+            <div>
+              <strong><%= item.product?.productName || 'Deleted Product' %></strong><br>
+              Qty: <%= item.quantity %> | ₹<%= item.price.toFixed(2) %><br>
+              <small>Reason: <%= item.returnReason || 'Not specified' %></small>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div>
+            <form method="POST" action="/admin/returnRequests/<%= order._id %>/item/<%= item._id %>/approve" class="d-inline">
+              <button class="btn btn-success btn-sm">✅ Approve</button>
+            </form>
+            <form method="POST" action="/admin/returnRequests/<%= order._id %>/item/<%= item._id %>/reject" class="d-inline">
+              <button class="btn btn-danger btn-sm">❌ Reject</button>
+            </form>
+          </div>
+        </li>
+      <% } %>
+    <% }) %>
+  </ul>
+</div>
+          </div>
+        </div>
+      <% } %>
+    <% }) %>
+
+    <!-- Pagination Controls -->
+    <nav class="d-flex justify-content-center mt-4">
+      <ul class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+
+<%- include("../../views/partials/admin/footer") %>

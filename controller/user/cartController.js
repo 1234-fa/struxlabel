@@ -63,8 +63,7 @@ const addToCart = async (req, res) => {
 
     if (existingItemIndex > -1) {
       cart.items[existingItemIndex].quantity += qty;
-      cart.items[existingItemIndex].totalPrice =
-        cart.items[existingItemIndex].quantity * itemPrice;
+      cart.items[existingItemIndex].totalPrice = cart.items[existingItemIndex].quantity * itemPrice;
     } else {
       cart.items.push({
         productId: product._id,
@@ -123,8 +122,52 @@ const removeCartItem = async (req, res) => {
     }
 };
 
+
+const updateCartQty = async (req, res) => {
+  try {
+    const cartItemId = req.params.id;
+    const qty = parseInt(req.body.qty);
+
+    if (!qty || qty < 1 || qty > 99) {
+      return res.json({ success: false, message: 'Invalid quantity' });
+    }
+
+    // Find the cart
+    const cart = await Cart.findOne({ userId: req.session.user._id });
+    if (!cart) {
+      return res.json({ success: false, message: 'Cart not found' });
+    }
+
+    // Find the item inside the cart
+    const item = cart.items.find(item => item._id.toString() === cartItemId);
+    if (!item) {
+      return res.json({ success: false, message: 'Item not found in cart' });
+    }
+
+    // Fetch the current product price
+    const product = await Product.findById(item.productId);
+    if (!product) {
+      return res.json({ success: false, message: 'Product not found' });
+    }
+
+    // Update quantity and total price
+    item.quantity = qty;
+    item.totalPrice = qty * product.salePrice;
+
+    await cart.save();
+
+    res.json({ success: true, message: 'Quantity updated successfully' });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).send('Something went wrong');
+  }
+};
+
+
+
 module.exports = {
   getCartPage,
   addToCart,
-  removeCartItem
+  removeCartItem,
+  updateCartQty
 };

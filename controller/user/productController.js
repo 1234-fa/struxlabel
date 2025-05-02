@@ -1,6 +1,7 @@
 const User = require("../../models/userSchema");
 const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
+const Cart = require('../../models/cartSchema');
 
 const productDetails = async (req, res) => {
     try {
@@ -26,6 +27,18 @@ const productDetails = async (req, res) => {
         category: product.category._id,
         _id: { $ne: product._id },
       }).limit(4);
+
+      let existingQtyincart=0;
+      if(userId){
+        const cart = await Cart.findOne({ userId: userId._id });
+        if(cart){
+          const cartItem = cart.items.find(item=>item.productId.toString()===productId);
+          if(cartItem){
+            existingQtyincart=cartItem.quantity;
+          }
+        }
+      }
+      console.log(existingQtyincart);
   
       res.render('product-details', {
         user: userData,
@@ -34,6 +47,8 @@ const productDetails = async (req, res) => {
         totalOffer: totalOffer,
         category: findCategory,
         similarProducts: similarProducts,
+        existingQtyincart,
+        message:null
       });
   
     } catch (error) {

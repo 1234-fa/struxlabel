@@ -63,6 +63,11 @@ router.get('/deleteBanner',adminAuth,bannerController.deleteBanner);
 
 router.get('/orderList', adminAuth, orderController.getAllOrders);
 router.post('/update-order-status/:orderId', adminAuth, orderController.updateOrderStatus);
+router.get('/singleOrderDetails/:orderId',adminAuth,orderController.viewOrderDetails);
+router.post('/update-order-item-status',adminAuth,orderController.updateOrderItemStatus);
+router.get('/returnRequests', adminAuth,orderController.getAllReturnRequests);
+router.post('/returnRequests/:orderId/item/:itemId/approve', adminAuth,orderController.approveReturnItem);
+router.post('/returnRequests/:orderId/item/:itemId/reject', adminAuth,orderController.rejectReturnItem);
 
 
 module.exports=router;

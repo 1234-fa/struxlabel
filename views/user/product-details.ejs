@@ -24,7 +24,7 @@
 
   .breadcrumb {
     font-size: 14px;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
     color: #6c757d;
   }
 
@@ -305,13 +305,29 @@
                 <li><i class="fi-rs-credit-card"></i> Cash on Delivery available</li>
               </ul>
               <div class="detail-extralink">
-                <div class="detail-qty">
-                  <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                  <span class="qty-val" id="quantity">1</span>
-                  <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                </div>
+                
                 <div class="product-extra-link2">
-                  <%if(quantity<=0){%>
+                  <%if(quantity<=0 || existingQtyincart >=1){%>
+                    <%if(existingQtyincart >=1){%>
+                      <div class="d-flex align-items-center mb-2">
+                        <form action="/cart" method="GET">
+                          <input type="hidden" name="productId" value="<%= product._id %>">
+                          <input type="hidden" name="quantity" value="1">
+                          <button type="submit" class="button button-add-to-cart">Go to Cart</button>
+                        </form>
+                        <a aria-label="Add To Wishlist" class="action-btn hover-up ms-3" href="#">
+                          <i class="fi-rs-heart"></i>
+                        </a>
+                      </div>
+
+                      <div style="background-color: #ffffff; border-radius: 6px; padding: 12px 24px; display: inline-block; transition: background-color 0.3s ease; cursor: pointer; text-align: center;">
+                        <a href="/order?id=<%= product._id %>" 
+                           class="text-green fw-semibold" 
+                           style="text-decoration: none; font-size: 16px; display: inline-block; width: 100%;">
+                          Buy Now
+                        </a>
+                      </div>
+                      <%}%>
                     <%}else{%>
 
                   <!-- Add to Cart + Wishlist -->

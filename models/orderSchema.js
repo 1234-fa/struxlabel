@@ -27,7 +27,30 @@ const orderSchema = new Schema({
       type: Number,
       default: 0,
     },
+    status: {
+      type: String,
+      enum: ['processing', 'shipped', 'delivered', 'cancelled', 'return request', 'returned','return approved','return rejected'],
+      default: 'processing',
+      lowercase: true,
+    },
+    cancelReason: {
+      type: String,
+      default: '',
+    },
+    returnReason: {
+      type: String,
+      default: '',
+    },
+    deliveredOn: {
+      type: Date, 
+    },
+    deliveredOn: {
+      type: Date, 
+    },
   }],
+  deliveredOn: {
+    type: Date, 
+  },
   totalPrice: {
     type: Number,
     default: 0,
@@ -56,7 +79,7 @@ const orderSchema = new Schema({
   status: {
     type: String,
     required: true,
-    enum: ['pending', 'processing','placed', 'shipped', 'delivered', 'cancelled', 'Return Request', 'returned'],
+    enum: ['processing','placed', 'shipped', 'delivered', 'cancelled', 'return request', 'returned' , 'return approved','return rejected'],
     lowercase: true,
   },
   createdOn: {
@@ -67,6 +90,14 @@ const orderSchema = new Schema({
   coupenApplied: {
     type: Boolean,
     default: false,
+  },
+  cancelReason: {
+    type: String,
+    default: '',
+  },
+  returnReason: {
+    type: String,
+    default: '',
   },
   paymentMethod: {
     type: String,

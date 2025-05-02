@@ -21,7 +21,7 @@ const categoryInfo = async (req, res) => {
             totalPages: totalPages,
             totalCategories: totalCategories
         });
-
+        
     } catch (error) {
         console.error("Error in categoryInfo:", error);
         res.redirect('/pageerror');
