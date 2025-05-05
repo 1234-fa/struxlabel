@@ -1,4 +1,4 @@
-<%- include("../../views/partials/user/shopheader") %>
+<%- include("../../views/partials/user/header") %>
 
 <style>
   .main-container {
@@ -274,7 +274,7 @@
       <% for(let i=0; i<products.length; i++) { %>
         <div class="product-card">
           <a href="/productDetails?id=<%= products[i]._id %>">
-            <img src="/uploads/re-image/<%= products[i].productImages[0] %>" alt="<%= products[i].productName %>" class="product-image" />
+            <img src="/uploads/product-images/<%= products[i].productImages[0] %>" alt="<%= products[i].productName %>" class="product-image" />
             <div class="product-name"><%= products[i].productName %></div>
             <div class="product-brand"><%= products[i].brand %></div>
             <div class="product-price">

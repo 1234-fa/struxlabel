@@ -22,7 +22,7 @@
             <!-- Dates -->
             <p><strong>Order Date:</strong> <%= order.createdAt.toLocaleString() %></p>
             <p><strong>Delivered Date:</strong> 
-              <%= order.deliveredAt ? order.deliveredAt.toLocaleString() : 'Not yet delivered' %>
+              <%= order.deliveredOn ? order.deliveredOn.toLocaleString() : 'Not yet delivered' %>
             </p>
             <p><strong>Return Requested At:</strong> <%= order.updatedAt.toLocaleString() %></p>
             <p><strong>Pickup Time Estimate:</strong> Within 5–7 Business Days</p>
@@ -39,7 +39,7 @@
       <% if (item.status === 'return request') { %>
         <li class="list-group-item d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center">
-            <img src="/uploads/re-image/<%= item.product?.productImages[0] %>" 
+            <img src="/uploads/product-images/<%= item.product?.productImages[0] %>" 
               style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 15px;">
             <div>
               <strong><%= item.product?.productName || 'Deleted Product' %></strong><br>

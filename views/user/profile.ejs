@@ -23,15 +23,18 @@
        alt="Profile Image" 
        style="width: 100px; height: 100px; object-fit: cover;"
        onerror="this.src='/img/profile_Picture.png'">
-  <button class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle" 
-          onclick="document.getElementById('profileImageInput').click()">
-    <i class="bi bi-camera-fill"></i>
-  </button>
   <input type="file" name="profileImage" id="profileImageInput" 
          accept="image/*" style="display: none;" />
 </div>
-            <input type="file" name="profileImage" id="profileImageInput" accept="image/*" style="display: none;" />
-            <a href="<%= user.profileImage || '#' %>" target="_blank" class="d-block text-decoration-underline small">View Image</a>
+<div class="d-flex align-items-center gap-2">
+  <a href="<%= user.profileImage || '#' %>" target="_blank" class="text-decoration-underline small">View Image</a>
+  
+  <button type="button" class="btn btn-sm btn-light" onclick="document.getElementById('profileImageInput').click()">
+    <i class="bi bi-camera-fill"></i> Change Image
+  </button>
+</div>
+
+<input type="file" name="profileImage" id="profileImageInput" accept="image/*" style="display: none;" />
           </div>
 
           <!-- User Info -->

@@ -248,7 +248,7 @@
               <div class="product-image-slider">
                 <% if (product.productImages && product.productImages.length > 0) { %>
                   <figure class="border-radius-10">
-                    <img id="mainProductImage" src="/uploads/re-image/<%= product.productImages[0] %>" alt="product-image">
+                    <img id="mainProductImage" src="/uploads/product-images/<%= product.productImages[0] %>" alt="product-image">
                   </figure>
                 <% } else { %>
                   <figure class="border-radius-10">
@@ -260,7 +260,7 @@
                 <% if (product.productImages && product.productImages.length > 0) { %>
                   <% for (let i = 0; i < product.productImages.length; i++) { %>
                     <div class="thumbnail-item">
-                      <img class="thumbnail-img" data-src="/uploads/re-image/<%= product.productImages[i] %>" src="/uploads/re-image/<%= product.productImages[i] %>" alt="Product Image <%= i + 1 %>">
+                      <img class="thumbnail-img" data-src="/uploads/product-images/<%= product.productImages[i] %>" src="/uploads/product-images/<%= product.productImages[i] %>" alt="Product Image <%= i + 1 %>">
                     </div>
                   <% } %>
                 <% } else { %>
@@ -386,7 +386,7 @@
                       <div class="product-img-action-wrap">
                           <div class="product-img product-img-zoom">
                               <a href="/productDetails?id=<%= item._id %>">
-                                  <img class="default-img" src="/uploads/re-image/<%= item.productImages[0] %>" alt="<%= item.productName %>">
+                                  <img class="default-img" src="/uploads/product-images/<%= item.productImages[0] %>" alt="<%= item.productName %>">
                               </a>
                           </div>
                           <a href="/addToWishlist?id=<%= item._id %>" class="wishlist-btn">

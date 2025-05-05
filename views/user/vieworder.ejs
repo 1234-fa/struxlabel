@@ -51,7 +51,7 @@
                   <% order.orderedItems.forEach(item => { %>
                     <% if (item.product) { %>
                       <div class="d-flex align-items-center border-bottom py-2">
-                        <img src="/uploads/re-image/<%= item.product.productImages[0] %>" alt="Product" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
+                        <img src="/uploads/product-images/<%= item.product.productImages[0] %>" alt="Product" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
                         <div>
                           <div><strong><%= item.product.productName %></strong></div>
                           <div>Qty: <%= item.quantity %></div>

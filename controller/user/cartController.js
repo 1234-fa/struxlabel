@@ -20,13 +20,16 @@ const getCartPage = async (req, res) => {
       });
     }
 
+    // Filter out items with null productId
+    const validItems = cart.items.filter(item => item.productId);
+
     let total = 0;
-    cart.items.forEach(item => {
+    validItems.forEach(item => {
       total += item.totalPrice;
     });
 
     res.render('cart', {
-      cartItems: cart.items,
+      cartItems: validItems,
       total,
       user: req.session.user || null,
       isLoggedIn: !!req.session.user

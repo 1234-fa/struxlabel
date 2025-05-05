@@ -33,7 +33,7 @@
       <div class="card p-4 shadow-sm d-flex flex-column align-items-start">
         <% if (item.product) { %>
           <div class="d-flex mb-3">
-            <img src="/uploads/re-image/<%= item.product.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 100px; height: 100px; object-fit: cover;">
+            <img src="/uploads/product-images/<%= item.product.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 100px; height: 100px; object-fit: cover;">
             <div>
               <h5><%= item.product.productName %></h5>
               <p class="mb-1">Brand: <%= item.product.brand %></p>

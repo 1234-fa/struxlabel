@@ -14,6 +14,7 @@ const productSchema = require('../models/productSchema');
 // const uploads= multer({storage:storage});
 
 
+
 router.get('/pageerror', adminController.pageerror);
 router.get('/login', adminController.loadlogin);
 router.post('/login', adminController.login);
@@ -44,14 +45,13 @@ router.get('/deleteBrand',adminAuth,brandController.deleteBrand);
 
 router.get('/products', adminAuth, productController.getProductPage);
 router.get('/addProducts',adminAuth,productController.getAddProduct);
-router.post('/addProducts',adminAuth,uploads.array("images[]",4),productController.addProducts);
+router.post('/addProducts',adminAuth,uploads.array("images",4),productController.addProducts);
 router.post('/addProductOffer',adminAuth,productController.addProductOffer);
 router.post('/removeProductOffer',adminAuth,productController.removeProductOffer)
 router.get('/blockProduct',adminAuth,productController.blockProduct);
 router.get('/unblockProduct',adminAuth,productController.unblockProduct);
 router.get('/editProduct',adminAuth,productController.getEditProduct);
 router.post('/editProduct/:id', adminAuth, uploads.array('images', 4), productController.editProduct);
-router.post('/deleteImage', adminAuth, productController.deleteSingleImage);
 
 
 router.get('/banner',adminAuth,bannerController.getBannerPage)

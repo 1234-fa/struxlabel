@@ -289,7 +289,7 @@ const loadShoppingPage = async (req,res)=>{
     try {
   
       const user = req.session.user;
-      const userData = await User.findOne({_id:user});
+      const userData = user ? await User.findById(user._id) : null;
       const categories = await Category.find({isListed:true});
       const categoryIds = categories.map((category)=>category._id.toString());
       const page = parseInt(req.query.page) || 1;

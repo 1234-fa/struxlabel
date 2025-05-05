@@ -59,8 +59,7 @@ const addBanner = async (req, res) => {
       if (result.deletedCount === 0) {
         console.log("No banner found with that ID");
         return res.redirect("/admin/pageerror");
-      }
-  
+      } 
       res.redirect("/admin/banner");
     } catch (error) {
       console.error("Error deleting banner:", error); // Show actual error

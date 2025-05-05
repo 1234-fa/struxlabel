@@ -35,7 +35,7 @@
         type="text" 
         class="form-control" 
         name="search" 
-        placeholder="Search by User, Order ID, or Product"
+        placeholder="Search by Order ID"
         value="<%= searchTerm || '' %>">
       <button class="btn btn-outline-primary" type="submit">Search</button>
       <% if (searchTerm) { %>
@@ -67,11 +67,17 @@
               <ul class="list-unstyled mb-0">
                 <% order.orderedItems.forEach(item => { %>
                   <li class="mb-2 d-flex align-items-center">
-                    <img src="/uploads/re-image/<%= item.product.productImages[0] %>" 
-                         alt="Product Image"
-                         style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                    <% if (item.product && item.product.productImages && item.product.productImages.length > 0) { %>
+                      <img src="/uploads/product-images/<%= item.product.productImages[0] %>" 
+                           alt="Product Image"
+                           style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                    <% } else { %>
+                      <img src="/images/placeholder.png" 
+                           alt="No Image"
+                           style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                    <% } %>
                     <div>
-                      <strong><%= item.product.productName %></strong><br>
+                      <strong><%= item.product?.productName || 'Product Not Found' %></strong><br>
                       Qty: <%= item.quantity %><br>
                       ₹<%= item.price.toFixed(2) %>
                     </div>

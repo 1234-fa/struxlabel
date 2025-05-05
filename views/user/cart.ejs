@@ -183,7 +183,7 @@
             <div class="cart-card">
               <div class="cart-image-btn">
                 <a href="/productDetails?id=<%= item.productId._id %>">
-                  <img src="/uploads/re-image/<%= item.productId.productImages[0] %>" alt="Product Image">
+                  <img src="/uploads/product-images/<%= item.productId.productImages[0] %>" alt="Product Image">
                 </a>
                 <div class="btn-group-inline">
                   <form action="/remove-from-cart/<%= item._id %>" method="POST"

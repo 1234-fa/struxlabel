@@ -10,6 +10,14 @@ const productSchema = new Schema({
     type: String,
     required: true
   },
+  longDescription: {
+    type: String,
+    required: true,
+},
+specifications: {
+    type: String,
+    required: true,
+},
   brand: {
     type: String,
     required: true

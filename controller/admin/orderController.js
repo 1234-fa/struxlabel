@@ -13,39 +13,35 @@ const getAllOrders = async (req, res) => {
     const limit = 5;  
     const skip = (page - 1) * limit;  
 
-    // Get the search term from the query params
     const searchTerm = req.query.search || '';
 
-    // Build the search query if there's a search term
     const searchQuery = searchTerm ? {
       $or: [
-        { 'user.name': { $regex: searchTerm, $options: 'i' } },  // Search by user name
-        { orderId: { $regex: searchTerm, $options: 'i' } },  // Search by Order ID
-        { 'orderedItems.product.name': { $regex: searchTerm, $options: 'i' } }  // Search by product name
+        { 'user.name': { $regex: searchTerm, $options: 'i' } },  
+        { orderId: { $regex: searchTerm, $options: 'i' } },  
+        { 'orderedItems.product.name': { $regex: searchTerm, $options: 'i' } }  
       ]
     } : {};
 
-    // Fetch orders with the search query
     const [orders, totalOrders] = await Promise.all([
-      Order.find(searchQuery)  // Apply the search filter
+      Order.find(searchQuery)  
         .populate('user')  
         .populate('orderedItems.product')  
         .sort({ createdOn: -1 })  
         .skip(skip)  
         .limit(limit),  
-      Order.countDocuments(searchQuery)  // Count total orders with the search filter
+      Order.countDocuments(searchQuery)  
     ]);
 
-    console.log(orders);  // Check the structure of orders
+    console.log(orders);  
 
     const totalPages = Math.ceil(totalOrders / limit);  
 
-    // Render the order list page with the search term
     res.render('orderList', {
       orders,
       currentPage: page,
       totalPages,
-      searchTerm  // Pass the search term to the view for retaining the input value
+      searchTerm  
     });
   } catch (err) {
     console.error("Order fetching error:", err);
@@ -223,7 +219,7 @@ const rejectReturnItem = async (req, res) => {
     item.status = 'return rejected'; 
     await order.save();
 
-    res.redirect('/returnRequests');
+    res.redirect('/admin/returnRequests');
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
