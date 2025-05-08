@@ -7,6 +7,7 @@ const brandController=require('../controller/admin/brandController');
 const productController=require('../controller/admin/productController');
 const bannerController=require('../controller/admin/bannerController');
 const orderController=require('../controller/admin/orderController')
+const couponController=require('../controller/admin/couponController');
 const {userAuth,adminAuth}=require('../middlewares/auth');
 const multer=require('multer');
 const uploads=require('../helpers/multer');
@@ -69,5 +70,10 @@ router.get('/returnRequests', adminAuth,orderController.getAllReturnRequests);
 router.post('/returnRequests/:orderId/item/:itemId/approve', adminAuth,orderController.approveReturnItem);
 router.post('/returnRequests/:orderId/item/:itemId/reject', adminAuth,orderController.rejectReturnItem);
 
+
+router.get('/coupon',adminAuth,couponController.getCoupons);
+router.post('/add-coupon',adminAuth,couponController.addCoupons);
+router.post('/edit-coupon/:id',adminAuth ,couponController.editCoupon);
+router.post('/delete-coupon/:id',adminAuth,couponController.deteleCoupon);
 
 module.exports=router;
