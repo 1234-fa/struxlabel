@@ -1,0 +1,38 @@
+<%- include("../../views/partials/user/headerp") %>
+
+
+<% if (userCoupons && userCoupons.length > 0) { %>
+    <% userCoupons.forEach(userCoupon => { 
+         const coupon = userCoupon.couponDetails;
+         const expiryDate = new Date(coupon.activeFrom);
+         expiryDate.setDate(expiryDate.getDate() + coupon.validDays);
+    %>
+      <div style="border: 1px solid #ccc; border-radius: 10px; padding: 20px; max-width: 600px; margin: 20px auto;">
+        <h2 style="color: #333;">🎁 Coupon Details</h2>
+  
+        <p><strong>Coupon Code:</strong> <span style="color: green;"><%= coupon.code %></span></p>
+        <p><strong>Discount:</strong> <%= coupon.discount %>%</p>
+        <p><strong>Active From:</strong> <%= coupon.activeFrom.toDateString() %></p>
+        <p><strong>Expiry Date:</strong> <%= expiryDate.toDateString() %></p>
+  
+        <p><strong>Status:</strong> 
+          <% if (userCoupon.status === 'can_apply') { %>
+            <span style="color: orange;">Can Apply</span>
+          <% } else if (userCoupon.status === 'applied') { %>
+            <span style="color: green;">Applied</span>
+          <% } else { %>
+            <span style="color: red;">Expired</span>
+          <% } %>
+        </p>
+  
+        <% if (userCoupon.appliedOrder) { %>
+          <p><strong>Applied Order ID:</strong> <%= userCoupon.appliedOrder %></p>
+        <% } %>
+      </div>
+    <% }); %>
+  <% } else { %>
+    <p>No coupon data available.</p>
+  <% } %>
+  
+
+  <%- include("../../views/partials/user/footerp") %>

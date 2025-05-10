@@ -3,6 +3,8 @@ const Cart = require('../../models/cartSchema');
 const Product = require('../../models/productSchema')
 const Address = require('../../models/addressSchema')
 const Order = require('../../models/orderSchema');
+const Coupon = require('../../models/coupenSchema');
+const UserCoupon = require('../../models/userCouponSchema');
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
@@ -46,6 +48,8 @@ const getOrderPage = async (req, res) => {
         };
       });
     }
+    const coupon = await Coupon.find();
+
 
     const userAddress = await Address.findOne({ userId });
       const addresses = userAddress ? userAddress.address : [];
@@ -55,6 +59,7 @@ const getOrderPage = async (req, res) => {
       totalAmount: total,
       user,
       addresses,
+      coupon,
       isLoggedIn: true
     });
 
@@ -78,7 +83,8 @@ const getSingleOrderPage = async (req, res) => {
   
       const product = await Product.findById(productId);
       if (!product) return res.redirect('/shop');
-  
+      const coupons = await Coupon.find();
+      console.log("coupons are ",coupons)
       const quantity = 1;
       const totalPrice = product.salePrice * quantity;
   
@@ -94,7 +100,8 @@ const getSingleOrderPage = async (req, res) => {
       res.render('order', {
         item,
         user,
-        addresses, 
+        addresses,
+        coupons, 
         isLoggedIn: true,
       });
   
@@ -105,7 +112,7 @@ const getSingleOrderPage = async (req, res) => {
   };
 
 
-const postPlaceOrder = async (req, res) => {
+  const postPlaceOrder = async (req, res) => {
     try {
       const {
         productId,
@@ -113,30 +120,29 @@ const postPlaceOrder = async (req, res) => {
         totalPrice,
         selected,
         paymentMethod,
+        couponId // Add couponId to destructuring
       } = req.body;
-
+      
       console.log('Received data:', req.body);
-
+      
       const userId = req.session.user?._id;
-
       if (!userId) {
         return res.status(401).json({ message: 'User not logged in' });
       }
-
+      
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({ message: 'Product not found' });
       }
-
+      
       const orderQty = Number(quantity);
       if (product.quantity < orderQty) {
         return res.status(400).json({ message: 'Insufficient stock available' });
-        
       }
-
+      
       // Ensure selected data is being passed correctly
       console.log('Selected Address:', selected);
-
+      
       // Create an address object with only the required fields
       const address = {
         addressType: selected.addressType,
@@ -148,45 +154,120 @@ const postPlaceOrder = async (req, res) => {
         phone: selected.phone,
         altphone: selected.altphone,
       };
-
+      
       const orderedItem = {
         product: product._id,
         quantity: orderQty,
         price: product.salePrice,
       };
-
+      
+      // Calculate pricing details
+      const originalPrice = product.regularPrice * orderQty;
+      const salePrice = product.salePrice * orderQty;
+      const productDiscount = originalPrice - salePrice;
+      let finalAmount = Number(totalPrice);
+      let couponDiscount = 0;
+      let appliedCoupon = null;
+      
+      // Check if a coupon was applied
+      if (couponId) {
+        appliedCoupon = await Coupon.findById(couponId);
+        
+        if (appliedCoupon) {
+          couponDiscount = (salePrice * appliedCoupon.discount / 100);
+          
+          // Mark the coupon as used by this user
+          if (!appliedCoupon.usersUsed.includes(userId)) {
+            await Coupon.findByIdAndUpdate(
+              couponId,
+              { $push: { usersUsed: userId } }
+            );
+          }
+        }
+      }
+      
       const newOrder = new Order({
         orderId: generateOrderId(),
         user: userId,
         orderedItems: [orderedItem],
-        totalPrice: Number(totalPrice),
-        finalAmount: Number(totalPrice),
-        address: address, // Only passing the cleaned address object
+        totalPrice: originalPrice, // Original price before any discounts
+        discount: productDiscount + couponDiscount, // Total discount (product + coupon)
+        finalAmount: finalAmount, // Final amount after all discounts
+        address: address,
         invoiceDate: new Date(),
         status: 'processing',
         createdOn: new Date(),
-        coupenApplied: false,
+        coupon: couponId ? couponId : null, // Store coupon ID if applied
+        couponApplied: !!couponId, // Boolean flag for coupon applied
         paymentMethod: paymentMethod,
       });
-
+      
       // Save the order
       await newOrder.save();
-
+      
       // Update product stock
       const updatedProduct = await Product.findByIdAndUpdate(
         productId,
         { $inc: { quantity: -orderQty } },
         { new: true }
       );
-
+      
       if (!updatedProduct) {
         console.error('Stock update failed.');
       } else {
         console.log(`Stock updated. Remaining quantity: ${updatedProduct.quantity}`);
       }
-
+      
+      // Clear any coupon from session
+      if (req.session.appliedCoupon) {
+        delete req.session.appliedCoupon;
+      }
+      
+      // Only assign new coupons if no coupon was applied on this order
+      if (!couponId) {
+        // Find eligible coupons for next purchase
+        const matchingCoupons = await Coupon.find({
+          isActive: true,
+          price: { $lte: totalPrice },
+        });
+        
+        const validCoupons = [];
+        for (let coupon of matchingCoupons) {
+          const userUsedCount = coupon.usersUsed.filter(
+            user => user.toString() === userId.toString()
+          ).length;
+          
+          if (userUsedCount < coupon.userLimit) {
+            validCoupons.push(coupon);
+          }
+        }
+        
+        // Pick highest discount
+        validCoupons.sort((a, b) => b.discount - a.discount);
+        
+        if (validCoupons.length > 0) {
+          const bestCoupon = validCoupons[0];
+          const exists = await UserCoupon.findOne({
+            userId: userId,
+            couponDetails: bestCoupon._id,
+          });
+          
+          if (!exists) {
+            const newUserCoupon = new UserCoupon({
+              userId: userId,
+              couponDetails: bestCoupon._id,
+              status: 'can_apply',
+            });
+            
+            await newUserCoupon.save();
+            console.log(`Best coupon "${bestCoupon.code}" assigned to user.`);
+          }
+        }
+      }
+      
       // Redirect to success page
       return res.redirect(`/order-success?orderId=${newOrder.orderId}`);
+      
     } catch (error) {
       console.error('Error placing order:', error);
       return res.status(500).json({
@@ -194,44 +275,76 @@ const postPlaceOrder = async (req, res) => {
         message: 'Something went wrong while placing the order',
       });
     }
-  };  
-
+  };
 
   const getPaymentPage = async (req, res) => {
     try {
-      const { selectedAddress, productId, quantity, totalPrice } = req.body;
+      const { selectedAddress, productId, quantity, totalPrice, couponId } = req.body;
       const userId = req.session.user;
-  
       if (!userId) return res.redirect('/login');
-
-      console.log(selectedAddress);
       
+      console.log("Selected Address:", selectedAddress);
       const addressDoc = await Address.findOne({ 'address._id': selectedAddress });
-      let selected=null;
+      let selected = null;
+      
       if (addressDoc) {
-         selected = addressDoc.address.find(addr => addr._id.toString() === selectedAddress.toString());
-        
+        selected = addressDoc.address.find(addr => addr._id.toString() === selectedAddress.toString());
       } else {
         console.log("No address found.");
+        return res.redirect('/checkout'); // Redirect if no address is found
       }
-
-      console.log(selected);
+      
       const user = await User.findById(userId);
       const product = await Product.findById(productId);
-  
+      
       if (!product) return res.redirect('/shop');
-  
+      
+      // Initialize variables for price calculation
+      let originalPrice = product.regularPrice * quantity;
+      let salePrice = product.salePrice * quantity;
+      let finalTotal = totalPrice; // This is the price after any coupon discount
+      let discountAmount = originalPrice - salePrice;
+      let couponDiscount = 0;
+      let appliedCoupon = null;
+      
+      // Check if coupon was applied
+      if (couponId) {
+        appliedCoupon = await Coupon.findById(couponId);
+        if (appliedCoupon) {
+          couponDiscount = (salePrice * appliedCoupon.discount / 100);
+          finalTotal = salePrice - couponDiscount;
+        }
+      } else if (req.session.appliedCoupon) {
+        // Fallback to session coupon if exists
+        appliedCoupon = req.session.appliedCoupon;
+        couponDiscount = salePrice - req.session.appliedCoupon.newTotal;
+        finalTotal = req.session.appliedCoupon.newTotal;
+      }
+      
+      console.log("Price details:", {
+        originalPrice,
+        salePrice,
+        couponDiscount,
+        finalTotal
+      });
+      
       res.render('payment', {
         user,
         selected,
         orderSummary: {
           productId,
           quantity,
-          total: totalPrice,
+          total: finalTotal,
           productName: product.productName,
           productImages: product.productImages,
           price: product.salePrice,
-          
+          regularPrice: product.regularPrice,
+          originalTotal: originalPrice,
+          saleTotal: salePrice,
+          saveAmount: discountAmount,
+          couponDiscount: couponDiscount,
+          couponId: appliedCoupon ? appliedCoupon._id : null,
+          couponName: appliedCoupon ? appliedCoupon.name : null
         }
       });
     } catch (error) {
@@ -293,8 +406,7 @@ const postPlaceOrder = async (req, res) => {
   
           return matchOrderId || matchProduct;
         });
-      }
-  
+      } 
       res.render('vieworder', { orders, user: userId, searchTerm });
   
     } catch (error) {
@@ -546,8 +658,7 @@ const postPlaceOrder = async (req, res) => {
       if (isNaN(calculatedTotal) || calculatedTotal <= 0) {
         return res.status(400).json({ message: 'Invalid order total' });
       }
-  
-  
+   
       const address = {
         addressType: selected.addressType,
         name: selected.name,

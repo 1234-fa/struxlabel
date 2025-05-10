@@ -87,9 +87,9 @@ const orderSchema = new Schema({
     default: Date.now,
     required: true,
   },
-  coupenApplied: {
-    type: Boolean,
-    default: false,
+  coupon: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Coupon',
   },
   cancelReason: {
     type: String,

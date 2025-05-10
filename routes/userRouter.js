@@ -8,6 +8,7 @@ const cartController =  require('../controller/user/cartController');
 const wishlistController = require('../controller/user/wishlistController')
 const invoiceController = require('../controller/user/invoiceController')
 const walletController = require('../controller/user/walletController');
+const couponController = require('../controller/user/couponController');
 const passport = require('passport');
 const multer=require('multer');
 const profileUpload = require('../helpers/profileUpload');
@@ -100,5 +101,9 @@ router.get('/addToWishlist', userAuth , wishlistController.addToWishlist);
 router.get('/removeFromWishlist', userAuth, wishlistController.removeFromWishlist);
 
 router.get('/wallet', userAuth,walletController.getMyWallet)
+
+
+router.get('/myCoupens',userAuth,couponController.showUserCoupon);
+router.post('/apply-coupon', userAuth, couponController.applyCoupon);
 
 module.exports = router;

@@ -1,5 +1,8 @@
 <%- include("../../views/partials/user/header") %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Bootstrap 5.3 bundle with Popper (required for Modal JS) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-...your-integrity-hash..." crossorigin="anonymous"></script>
 <div class="container mt-5">
   <h2 class="mb-4">Review Your Order</h2>
 
@@ -22,7 +25,6 @@
         <% } else { %>
           <p>No address found. Please add one.</p>
         <% } %>
-
         <!-- Trigger Modal -->
         <button class="btn btn-outline-primary mt-3" onclick="openAddressForm()">+ Add New Address</button>
       </div>
@@ -39,25 +41,78 @@
               <p class="mb-1">Brand: <%= item.product.brand %></p>
               <p class="mb-1">Qty: <%= item.quantity %></p>
               <div class="d-flex align-items-center">
-                <strong class="me-2">₹<%= item.totalPrice %></strong>
+                <strong class="me-2 final-price">₹<%= item.totalPrice %></strong>
                 <del class="text-muted">₹<%= item.product.regularPrice * item.quantity %></del>
               </div>
-              <small class="text-success">
+              <small class="text-success discount-amount">
                 You save ₹<%= (item.product.regularPrice - item.product.salePrice) * item.quantity %>
               </small>
             </div>
           </div>
-
-          <form action="/payment" method="POST" class="w-100">
-            <input type="hidden" name="productId" value="<%= item.product._id %>">
-            <input type="hidden" name="quantity" value="<%= item.quantity %>">
-            <input type="hidden" name="totalPrice" value="<%= item.totalPrice %>">
-            <input type="hidden" id="selectedAddressInput" name="selectedAddress" value="">
-            <button type="submit" class="btn btn-success w-100 mt-3">Proceed to Payment</button>
-          </form>
+          <% if(Number(item.product.salePrice) * Number(item.quantity) >= 500) { %>
+            <div>
+              <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#applyCouponModal">Apply Coupon</button>
+            </div>
+            <%}%>
+            <div class="price-section">
+              ₹<span class="final-price"><%= item.totalPrice %></span>
+              <span class="discount-amount"></span>
+            </div>
+            <!-- Modify the payment form to include these changes -->
+            <form action="/payment" method="POST" class="w-100">
+              <input type="hidden" name="productId" value="<%= item.product._id %>">
+              <input type="hidden" name="quantity" value="<%= item.quantity %>">
+              <input type="hidden" name="totalPrice" id="totalPriceInput" value="<%= item.totalPrice %>">
+              <input type="hidden" id="selectedAddressInput" name="selectedAddress" value="">
+              <!-- New hidden field for coupon ID -->
+              <input type="hidden" id="couponIdInput" name="couponId" value="">
+              <button type="submit" class="btn btn-success w-100 mt-3">Proceed to Payment</button>
+            </form>
         <% } %>
       </div>
-    </div>
+    </div> 
+  </div>
+</div>
+
+<!-- Apply Coupon Modal -->
+<div class="modal fade" id="applyCouponModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="couponForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Apply Coupon</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <h4 class="mb-3">Apply Coupon</h4>
+          <% const eligibleCoupons = coupons.filter(coupon => item.product.salePrice >= coupon.price); %>
+          <% if (eligibleCoupons && eligibleCoupons.length > 0) { %>
+            <% eligibleCoupons.forEach(function(coupon, index) { %>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" 
+                       name="selectedCoupons" 
+                       id="coupon<%= index %>" 
+                       value="<%= coupon._id %>"
+                       data-discount="<%= coupon.discount %>"
+                       <%= index === 0 ? 'checked' : '' %>>
+                <label class="form-check-label" for="coupon<%= index %>">
+                  <strong><%= coupon.name %></strong><br>
+                  Coupon Code: <%= coupon.code %><br>
+                  Coupon Validity: <%= coupon.validDays %> days<br>
+                  Discount: <%= coupon.discount %>%
+                </label>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p>No eligible coupons found for this purchase.</p>
+          <% } %>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success">Apply</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -166,6 +221,140 @@
 </style>
 
 <script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Get references to important elements
+  const couponForm = document.getElementById('couponForm');
+  const totalPriceInput = document.getElementById('totalPriceInput');
+  const finalPriceElements = document.querySelectorAll('.final-price');
+  const discountAmountElement = document.querySelector('.discount-amount');
+  const couponIdInput = document.getElementById('couponIdInput');
+  const couponBtn = document.querySelector('[data-bs-target="#applyCouponModal"]');
+  
+  // Track if a coupon has been applied
+  let activeCouponId = null;
+  let originalPrice = parseFloat(totalPriceInput.value);
+  
+  // Handle coupon application
+  couponForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get the selected coupon
+    const selectedCoupon = document.querySelector('input[name="selectedCoupons"]:checked');
+    
+    if (selectedCoupon) {
+      const couponId = selectedCoupon.value;
+      const discountLabel = selectedCoupon.dataset.discount;
+      const discountPercent = parseFloat(discountLabel);
+      
+      // Calculate the new price after discount
+      const discountAmount = (originalPrice * discountPercent / 100);
+      const newPrice = originalPrice - discountAmount;
+      
+      // Update the hidden input for the payment form
+      totalPriceInput.value = newPrice.toFixed(2);
+      couponIdInput.value = couponId;
+      
+      // Update the displayed price on the page
+      finalPriceElements.forEach(el => {
+        el.textContent = newPrice.toFixed(2);
+      });
+      
+      // Update the discount amount display
+      if (discountAmountElement) {
+        discountAmountElement.textContent = `You save ₹${discountAmount.toFixed(2)} with coupon`;
+        discountAmountElement.classList.add('fw-bold');
+        discountAmountElement.classList.add('text-success');
+      }
+      
+      // Close the modal - FIXED VERSION
+      const modalElement = document.getElementById('applyCouponModal');
+      const modalBackdrop = document.querySelector('.modal-backdrop');
+      
+      // Hide the modal properly
+      jQuery(modalElement).modal('hide');
+      
+      // Remove modal backdrop if it exists
+      if (modalBackdrop) {
+        modalBackdrop.remove();
+      }
+      
+      // Remove modal-open class from body
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      // Update the coupon button to show applied state
+      updateCouponButton(true);
+      
+      // Set the active coupon
+      activeCouponId = couponId;
+      
+      // Show success message after modal closes
+      setTimeout(() => {
+        showAlert('Coupon applied successfully!', 'success');
+      }, 300);
+    }
+  });
+  
+  // Function to update the coupon button appearance
+  function updateCouponButton(isApplied) {
+    if (isApplied) {
+      couponBtn.textContent = 'Coupon Applied ✓';
+      couponBtn.classList.remove('btn-warning');
+      couponBtn.classList.add('btn-success');
+    } else {
+      couponBtn.textContent = 'Apply Coupon';
+      couponBtn.classList.remove('btn-success');
+      couponBtn.classList.add('btn-warning');
+    }
+  }
+  
+  // Function to display an alert message
+  function showAlert(message, type) {
+    // Create alert element
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insert alert before the product card
+    const productCard = document.querySelector('.card.p-4.shadow-sm');
+    if (productCard && productCard.parentNode) {
+      productCard.parentNode.insertBefore(alertDiv, productCard);
+    
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 150);
+      }, 5000);
+    }
+  }
+  
+  // When the modal opens, pre-select the currently active coupon if there is one
+  const couponModal = document.getElementById('applyCouponModal');
+  if (couponModal) {
+    couponModal.addEventListener('show.bs.modal', function() {
+      if (activeCouponId) {
+        const coupons = document.querySelectorAll('input[name="selectedCoupons"]');
+        coupons.forEach(coupon => {
+          coupon.checked = (coupon.value === activeCouponId);
+        });
+      }
+    });
+  }
+});
+
+
+
+
+
+
     function openAddressForm() {
       document.getElementById('addressModal').style.display = 'flex';
     }

@@ -217,6 +217,95 @@
   color: #a71d2a;
 }
 
+/* Added styles for product details tabs */
+.product-info-tabs {
+  margin-top: 50px;
+  border-top: 1px solid #eaeaea;
+  padding-top: 30px;
+}
+
+.product-info-tabs .nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.product-info-tabs .nav-tabs .nav-item {
+  margin-right: 5px;
+  margin-bottom: -1px;
+}
+
+.product-info-tabs .nav-tabs .nav-link {
+  border: 1px solid transparent;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  padding: 10px 20px;
+  font-weight: 500;
+  color: #6c757d;
+  text-decoration: none;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.product-info-tabs .nav-tabs .nav-link.active {
+  color: #007bff;
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+}
+
+.product-info-tabs .nav-tabs .nav-link:hover:not(.active) {
+  color: #495057;
+  border-color: #e9ecef #e9ecef #dee2e6;
+}
+
+.tab-content {
+  padding: 20px 0;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.product-long-description,
+.product-specifications {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #444;
+}
+
+.product-specifications ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.product-specifications li {
+  margin-bottom: 8px;
+}
+
+.specifications-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+.specifications-table tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.specifications-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.specifications-table td:first-child {
+  font-weight: 500;
+  width: 30%;
+}
 
   @media screen and (max-width: 768px) {
     .product-detail {
@@ -234,6 +323,19 @@
 
     .title-detail {
       font-size: 24px;
+    }
+    
+    .product-info-tabs .nav-tabs {
+      flex-direction: column;
+    }
+    
+    .product-info-tabs .nav-tabs .nav-item {
+      margin-right: 0;
+      margin-bottom: 5px;
+    }
+    
+    .product-info-tabs .nav-tabs .nav-link {
+      border-radius: 4px;
     }
   }
 </style>
@@ -298,6 +400,7 @@
               </div>
               <div class="short-desc">
                 <p><%= product.description %></p>
+                <p><%= product.longDescription %></p>
               </div>
               <ul class="product_sort_info">
                 <li><i class="fi-rs-crown"></i> 1 Year Brand Warranty</li>
@@ -365,6 +468,59 @@
             </div>
           </div>
         </div>
+        
+        <!-- Product Information Tabs -->
+        <div class="product-info-tabs">
+          <ul class="nav nav-tabs" id="productTabs" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link" id="specifications-tab" data-toggle="tab" href="#specifications" role="tab" onclick="openTab(event, 'specifications')">Specifications</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="reviews-tab" data-toggle="tab" href="#reviews" role="tab" onclick="openTab(event, 'reviews')">Reviews</a>
+            </li>
+          </ul>
+            
+            
+            <div class="tab-pane" id="specifications" role="tabpanel">
+              <div class="product-specifications">
+                <% 
+                  // Try to parse specifications as JSON if it's stored that way
+                  let specsList = [];
+                  try {
+                    const specsObj = JSON.parse(product.specifications);
+                    if (typeof specsObj === 'object') {
+                      Object.entries(specsObj).forEach(([key, value]) => {
+                        specsList.push({ key, value });
+                      });
+                    }
+                  } catch (e) {
+                    // If it's not JSON, assume it's a text field and display it as is
+                  }
+                %>
+                
+                <% if (specsList.length > 0) { %>
+                  <table class="specifications-table">
+                    <% specsList.forEach(spec => { %>
+                      <tr>
+                        <td><%= spec.key %></td>
+                        <td><%= spec.value %></td>
+                      </tr>
+                    <% }); %>
+                  </table>
+                <% } else { %>
+                  <p><%= product.specifications %></p>
+                <% } %>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="reviews" role="tabpanel">
+              <div class="product-reviews">
+                <p>NO reviews.</p>
+                <!-- This is a placeholder for the reviews section -->
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -420,6 +576,25 @@
       mainImage.setAttribute('src', newSrc);
     });
   });
+  
+  // Tab functionality
+  function openTab(evt, tabName) {
+    // Hide all tab content
+    const tabcontent = document.getElementsByClassName("tab-pane");
+    for (let i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].classList.remove("active");
+    }
+    
+    // Remove active class from all tab links
+    const tablinks = document.getElementsByClassName("nav-link");
+    for (let i = 0; i < tablinks.length; i++) {
+      tablinks[i].classList.remove("active");
+    }
+    
+    // Show the current tab and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+  }
 </script>
 
 <%- include("../../views/partials/user/footer") %>

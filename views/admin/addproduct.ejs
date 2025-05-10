@@ -481,9 +481,7 @@
 <script>
 let cropperInstances = {};
 
-// Validate form before submission
 function validateForm() {
-    // Get form inputs
     const productName = document.querySelector('input[name="productName"]').value.trim();
     const description = document.querySelector('textarea[name="description"]').value.trim();
     const longDescription = document.querySelector('textarea[name="longDescription"]').value.trim();
@@ -494,17 +492,14 @@ function validateForm() {
     const imageInputs = document.querySelectorAll('input[type="file"]');
     let imageCount = 0;
 
-    // Check how many images are selected
     imageInputs.forEach(input => {
         if (input.files && input.files.length > 0) {
             imageCount++;
         }
     });
 
-    // Validation messages
     const errors = [];
 
-    // Product name validation
     if (!productName) {
         errors.push('Product name is required');
     } else if (productName.length < 3) {
