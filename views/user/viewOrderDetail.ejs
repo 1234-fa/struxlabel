@@ -166,8 +166,16 @@
       <strong>Order ID:</strong> <%= order.orderId %><br>
       <strong>Date:</strong> <%= order.createdAt?.toLocaleString() || 'N/A' %><br>
       <strong>Payment Method:</strong> <%= order.paymentMethod || "Not specified" %><br>
-      <strong>Coupon:</strong> <%= order.couponName || "No coupon used" %><br>
-      <strong>Total Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %><br>
+      <strong>Coupon:</strong>
+      <% if (order.coupon) { %>
+        <%= order.coupon.name || order.coupon.code || "Applied" %>
+        (<%= order.coupon.discount %>% off)
+      <% } else { %>
+        No coupon used
+      <% } %><br>
+      <strong>Total Amount:</strong> ₹<%= order.totalPrice.toFixed(2) %><br><span><strong>Discount:</strong> ₹<%= order.discount.toFixed(2) %><br></span>
+      
+      <strong>Final Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %><br>
       <% if (order.expectedDelivery) { %>
         <strong>Expected Delivery:</strong> <%= new Date(order.expectedDelivery).toDateString() %><br>
       <% } %>

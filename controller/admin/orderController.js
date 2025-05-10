@@ -5,6 +5,7 @@ const User = require("../../models/userSchema");
 const Address = require('../../models/addressSchema');
 const Order = require('../../models/orderSchema');
 const Wallet = require('../../models/walletSchema');
+const Coupon = require('../../models/coupenSchema');
 const { v4: uuidv4 } = require('uuid');
 
 const getAllOrders = async (req, res) => {
@@ -145,46 +146,89 @@ const getAllReturnRequests = async (req, res) => {
 
 const approveReturnItem = async (req, res) => {
   const { orderId, itemId } = req.params;
-
   try {
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).send('Order not found');
-
+    
     const item = order.orderedItems.id(itemId);
     if (!item || item.status !== 'return request') {
       return res.status(400).send('Item not found or not in return request status');
     }
-
+    
+    // Update the item status to return approved
     item.status = 'return approved';
-
+    
+    // Check if all items are now return approved
     const allReturned = order.orderedItems.every(i => i.status === 'return approved');
+    
+    // Get the current item's refund amount
+    const currentItemRefundAmount = item.price * item.quantity;
+    let refundAmount = currentItemRefundAmount;
+    
     if (allReturned) {
+      // If all items are returned, refund the entire finalAmount
       order.status = 'return approved';
+      refundAmount = order.finalAmount;
+    } else {
+      // Check remaining active items (not cancelled or return requested)
+      const activeItems = order.orderedItems.filter(i => 
+        i.status !== 'cancelled' && 
+        i.status !== 'return approved' && 
+        i.status !== 'return request'
+      );
+      
+      if (activeItems.length > 0) {
+        // Calculate total price of remaining active items
+        const remainingItemsPrice = activeItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+        
+        // Check if coupon is still valid for remaining items
+        let couponValid = false;
+        
+        if (order.coupon) {
+          // Retrieve coupon details
+          const coupon = await Coupon.findById(order.coupon);
+          
+          if (coupon) {
+            if(remainingItemsPrice >=coupon.price){
+              couponValid =true;
+            }else {
+              couponValid = false;
+            }
+          }
+        }
+        
+        if (couponValid) {
+          
+          refundAmount = currentItemRefundAmount;
+        } else {
+          refundAmount = order.finalAmount-remainingItemsPrice
+        }
+      }
     }
-
-    const productId = item.product; 
+    
+    // Update product inventory
+    const productId = item.product;
     const quantityToAdd = item.quantity;
-
     const product = await Product.findById(productId);
     if (product) {
       product.quantity += quantityToAdd;
       await product.save();
     }
-    // 4. Refund logic
-    const refundAmount = item.price * item.quantity;
-
+    
+    // Process refund to wallet
     const existingWalletEntry = await Wallet.findOne({
       userId: order.user,
       orderId: order._id,
       type: 'refund',
       entryType: 'CREDIT',
-      amount: refundAmount
+      itemId: itemId // Add itemId to make it specific to this item
     });
-
+    
     if (!existingWalletEntry) {
       const walletEntry = new Wallet({
         userId: order.user,
         orderId: order._id,
+        itemId: itemId, // Add itemId reference
         transactionId: uuidv4(),
         payment_type: 'refund',
         amount: refundAmount,
@@ -193,11 +237,13 @@ const approveReturnItem = async (req, res) => {
         type: 'refund',
       });
       await walletEntry.save();
+      
+      // Update refundAmount in the order
+      order.refundAmount += refundAmount;
     }
-
+    
     await order.save();
-
-    res.redirect('/admin/returnRequests'); 
+    res.redirect('/admin/returnRequests');
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

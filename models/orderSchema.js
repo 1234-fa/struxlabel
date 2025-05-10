@@ -63,6 +63,10 @@ const orderSchema = new Schema({
     type: Number,
     default: 0,
   },
+  refundAmount: {
+    type: Number,
+    default: 0,
+  },
   address: {
     addressType: { type: String, required: true },
     name: { type: String, required: true },
