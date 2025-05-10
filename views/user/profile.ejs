@@ -10,6 +10,7 @@
         <div class="card-header bg-success text-white rounded-top-4 py-3">
           <h5 class="mb-0 text-center"><i class="bi bi-person-circle me-2"></i>User Profile</h5>
         </div>
+        
         <div class="card-body text-center">
           <!-- Profile Image -->
           <div class="position-relative d-inline-block">
@@ -56,13 +57,20 @@
             </button>
           </form>
 
+          
+
           <!-- Email / Password buttons -->
           <div class="d-flex justify-content-center gap-3 mt-3">
             <a href="/change-email" class="btn btn-outline-success px-4"><i class="bi bi-envelope-open"></i> Change Email</a>
             <a href="/change-password" class="btn btn-outline-success px-4"><i class="bi bi-shield-lock"></i> Change Password</a>
           </div>
-
-          <!-- Update Profile Modal Trigger -->
+<br>
+          <div class="referral-container">
+            <h5 style="color: blue;">Referral Code</h5>
+            <input type="text" id="referralCode" value="<%= user.referralCode %>" readonly class="referral-input" />
+            <button onclick="copyReferralCode()" class="copy-btn">Copy</button>
+          </div>
+          <p id="copyMessage" style="color: green; display: none;">Copied!</p>
           
         </div>
       </div>
@@ -175,6 +183,25 @@
       modal.hide();
     });
   });
+
+
+
+  function copyReferralCode() {
+    const input = document.getElementById('referralCode');
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile
+
+    navigator.clipboard.writeText(input.value)
+      .then(() => {
+        const msg = document.getElementById('copyMessage');
+        msg.style.display = 'block';
+        setTimeout(() => msg.style.display = 'none', 2000);
+      })
+      .catch(err => {
+        alert('Failed to copy: ' + err);
+      });
+  }
+
 
   
 </script>

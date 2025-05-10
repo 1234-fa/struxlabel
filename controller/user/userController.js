@@ -3,30 +3,21 @@ const Banner= require("../../models/bannerSchema");
 const Category = require('../../models/categorySchema');
 const Brand = require('../../models/brandSchema')
 const Product = require('../../models/productSchema')
+const Wallet =require('../../models/walletSchema');
 const env = require('dotenv').config();
 const nodemailer = require('nodemailer');
 const bcrypt = require("bcrypt");
 const { request } = require("../../app");
+const { v4: uuidv4 } = require('uuid');
 
-// const loadHomepage = async (req, res) => {
-//     try {
-//         const today=new Date().toISOString();
-//         const findBanner= await Banner.find({
-//             startDate:{$lt:new Date(today)},
-//             endDate:{$gt: new Date(today)}
-//         })
-//         const user=req.session.user;
-//         if(user){
-//             const userData = await User.findById(user._id);
-//             res.render('home', { user: userData ,banner:findBanner || []});
-//         }else{
-//              return res.render('home',{user:null, banner:findBanner || []})
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).send("Server error");
-//     }
-// };
+const referrelcodeGenerate = ()=>{
+  let chars ='ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+  let refcode ='';
+  for(let i=0;i<10;i++){
+    refcode += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return refcode;
+}
 
 const loadHomepage = async (req, res) => {
     try {
@@ -168,7 +159,7 @@ const logout=async (req,res)=>{
 
 const signup = async (req, res) => {
     try {
-        const { name, phone, email, password } = req.body;
+        const { name, phone, email, password ,referralCode} = req.body;
 
         const findUser = await User.findOne({ email });
         if (findUser) {
@@ -183,7 +174,7 @@ const signup = async (req, res) => {
         }
 
         req.session.userOtp = otp;
-        req.session.userData = { name, phone, email, password };
+        req.session.userData = { name, phone, email, password ,referralCode};
 
         res.render('verify-otp');
         console.log("OTP sent:", otp);
@@ -223,12 +214,33 @@ const verifyOtp = async (req, res) => {
             if (existingUser) {
                 return res.status(400).json({ success: false, message: "User already exists. Please log in." });
             }
+            let codeUser;
+            if (user.referralCode) {
+                codeUser = await User.findOne({ referralCode: user.referralCode });
+            
+                if (codeUser) {
+                    const walletEntry = new Wallet({
+                        userId: codeUser._id,  
+                        transactionId: uuidv4(),
+                        amount: 100,
+                        payment_type: 'referral',
+                        status: 'success',
+                        entryType: 'CREDIT',
+                        type: 'referral',  
+                    });
+            
+                    await walletEntry.save();
+                } else {
+                    console.log("Referral code does not belong to any user.");
+                }
+            }
 
             const newUser = new User({
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
                 password: passwordHash,
+                referralCode: referrelcodeGenerate(),
             });
 
             await newUser.save();

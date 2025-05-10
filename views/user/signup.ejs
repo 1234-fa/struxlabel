@@ -207,6 +207,10 @@
                     <input type="password" placeholder="Confirm password" id="cpassword" name="cpassword">
                     <span class="error" id="cpasswordError"></span>
                 </div>
+                <div class="input-box">
+                    <input type="password" placeholder="Referral code (optional)" id="referralCode" name="referralCode">
+                    <span class="error" id="referralCode"></span>
+                </div>
 
                 <%if(locals.message && message.length>0){%>
                     <div class="alert-danger">
@@ -268,12 +272,19 @@
                 document.getElementById("cpasswordError").innerText = "Passwords do not match.";
                 isValid = false;
             }
-    
+
+
+
+
+
+
+            
             // If form is invalid, prevent submission
             if (!isValid) {
                 event.preventDefault();
             }
         });
+
     </script>
 </body>
 </html>

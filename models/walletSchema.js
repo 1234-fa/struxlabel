@@ -34,7 +34,7 @@ const walletSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['add_money', 'product_purchase', 'refund', 'cancel'],
+        enum: ['add_money', 'product_purchase', 'refund', 'cancel','referral'],
         required: true
     },
 },{timestamps : true});
