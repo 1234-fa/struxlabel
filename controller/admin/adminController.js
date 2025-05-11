@@ -35,19 +35,7 @@ const login = async (req, res) => {
     }
   }
 
-// Load dashboard
-const loaddashboard = async (req, res) => {
-  if (req.session.admin) {
-    try {
-      res.render('dashboard');
-    } catch (error) {
-      console.log("Dashboard loading error:", error);
-      res.redirect('/admin/pageerror');
-    }
-  } else {
-    res.redirect('/admin/login');  // Added fallback
-  }
-};
+
 
 // Logout admin
 const logout = async (req, res) => {
@@ -70,4 +58,4 @@ const pageerror = async (req, res) => {
   res.render('page-error');
 };
 
-module.exports = { loadlogin, login, loaddashboard, pageerror, logout };
+module.exports = { loadlogin, login, pageerror, logout };

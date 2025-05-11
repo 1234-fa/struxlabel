@@ -7,7 +7,7 @@ const showUserCoupon = async (req, res) => {
       const userId = req.session.user._id;
   
       const userCoupons = await UserCoupon.find({ userId })
-        .sort({ createdAt: -1 }) // latest first
+        .sort({ createdAt: -1 }) 
         .populate('couponDetails');
   
       res.render('userCoupon', {

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Success</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      padding: 50px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .content {
+      max-width: 60%;
+    }
+
+    .content h1 {
+      color: green;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .content p {
+      font-size: 1.2rem;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    .buttons a {
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
+      margin-right: 15px;
+      transition: background 0.3s;
+    }
+
+    .buttons .continue {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .buttons .continue:hover {
+      background-color: #218838;
+    }
+
+    .buttons .view {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .buttons .view:hover {
+      background-color: #0069d9;
+    }
+
+    .image-container {
+      max-width: 35%;
+    }
+
+    .image-container img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="content">
+      <h1>Order Failed!</h1>
+      <div class="buttons">
+        <a href="/shop" class="continue">Continue Shopping</a>
+        <!-- Include the orderId dynamically -->
+        <a href="/view-orders" class="view">retry</a>
+      </div>
+    </div>
+
+    <div class="image-container">
+      <img src="/img/logo.png" alt="Order Success"> <!-- Make sure this image exists -->
+    </div>
+  </div>
+
+</body>
+</html>

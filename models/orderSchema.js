@@ -106,8 +106,19 @@ const orderSchema = new Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['credit_card', 'paypal', 'cash_on_delivery'],
+    enum: ['credit_card', 'paypal', 'razorpay' ,'cash_on_delivery'],
   },
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid', 'Failed', 'Refunded', 'Partially Refunded'],
+    default: 'Pending'
+  },
+  razorpayOrderId: {
+    type: String
+  },
+  razorpayPaymentId: {
+    type: String
+  }
 }, {
   timestamps: true  
 });

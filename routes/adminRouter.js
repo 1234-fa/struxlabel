@@ -8,6 +8,7 @@ const productController=require('../controller/admin/productController');
 const bannerController=require('../controller/admin/bannerController');
 const orderController=require('../controller/admin/orderController')
 const couponController=require('../controller/admin/couponController');
+const salesreportController = require('../controller/admin/salesreportController');
 const {userAuth,adminAuth}=require('../middlewares/auth');
 const multer=require('multer');
 const uploads=require('../helpers/multer');
@@ -19,7 +20,6 @@ const productSchema = require('../models/productSchema');
 router.get('/pageerror', adminController.pageerror);
 router.get('/login', adminController.loadlogin);
 router.post('/login', adminController.login);
-router.get('/', adminAuth, adminController.loaddashboard);
 router.get('/logout', adminController.logout);
 
 
@@ -75,5 +75,11 @@ router.get('/coupon',adminAuth,couponController.getCoupons);
 router.post('/add-coupon',adminAuth,couponController.addCoupons);
 router.post('/edit-coupon/:id',adminAuth ,couponController.editCoupon);
 router.post('/delete-coupon/:id',adminAuth,couponController.deteleCoupon);
+
+
+
+// router.get('/dashboard',adminAuth,salesreportController.getDashboard);
+router.get('/', adminAuth, salesreportController.loaddashboard);
+
 
 module.exports=router;

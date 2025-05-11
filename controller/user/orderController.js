@@ -334,6 +334,7 @@ const getSingleOrderPage = async (req, res) => {
       res.render('payment', {
         user,
         selected,
+        razorpayKey: process.env.RAZORPAY_KEY_ID,
         orderSummary: {
           productId,
           quantity,
@@ -347,7 +348,8 @@ const getSingleOrderPage = async (req, res) => {
           saveAmount: discountAmount,
           couponDiscount: couponDiscount,
           couponId: appliedCoupon ? appliedCoupon._id : null,
-          couponName: appliedCoupon ? appliedCoupon.name : null
+          couponName: appliedCoupon ? appliedCoupon.name : null,
+           
         }
       });
     } catch (error) {
@@ -832,6 +834,7 @@ const getSingleOrderPage = async (req, res) => {
       res.render('paymentcart', {
         user,
         selected,
+        razorpayKey: process.env.RAZORPAY_KEY_ID,
         cartItems: cart.items,
         orderSummary: {
           quantity: cartItems.reduce((acc, item) => acc + item.quantity, 0),

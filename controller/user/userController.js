@@ -296,7 +296,6 @@ const pageNotFound = async (req, res) => {
     }
 };
 
-
 const loadShoppingPage = async (req,res)=>{
     try {
   

@@ -1,11 +1,12 @@
 <%- include("../../views/partials/user/header") %>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <div class="container mt-5 mb-5">
   <div class="row">
     <!-- Payment Methods -->
     <div class="col-md-7">
       <h4 class="mb-4">Choose Payment Method</h4>
-      <form action="/place-order" method="POST">
+      <form id="checkoutForm" action="/place-order" method="POST">
         <!-- Hidden Fields to carry data forward -->
         <input type="hidden" name="productId" value="<%= orderSummary.productId %>">
         <input type="hidden" name="quantity" value="<%= orderSummary.quantity %>">
@@ -25,6 +26,8 @@
         <input type="hidden" name="selected[pincode]" value="<%= selected.pincode %>">
         <input type="hidden" name="selected[phone]" value="<%= selected.phone %>">
         <input type="hidden" name="selected[altphone]" value="<%= selected.altphone %>">
+        <!-- Store selected address ID in hidden field -->
+        <input type="hidden" name="selectedAddress" value="<%= selected._id %>">
 
         <div class="card p-3 mb-3">
           <div class="form-check">
@@ -46,10 +49,18 @@
         
         <div class="card p-3 mb-3">
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="netBanking" value="net_banking">
-            <label class="form-check-label" for="netBanking">
-              Net Banking
-            </label>
+            <div class="d-flex align-items-center justify-content-between">
+              
+              <!-- Icon and Details (Grouped Together) -->
+              <div class="d-flex align-items-center gap-3">
+                <img src="https://www.yourtechstory.com/wp-content/uploads/2020/01/razorpay.png" alt="Razorpay" style="height: 32px;">
+                <div>
+                  <div class="fw-bold">Razorpay (Online)</div>
+                  <div class="text-muted small">Pay securely with Razorpay</div>
+                </div>
+              </div>
+              <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="razorpay" required/>
+            </div>
           </div>
         </div>
         
@@ -138,5 +149,82 @@
     </div>
   </div>
 </div>
+
+<script>
+document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+    
+    if (method === 'razorpay') {
+      // Get form data for Razorpay
+      const productId = document.querySelector('input[name="productId"]').value;
+      const quantity = document.querySelector('input[name="quantity"]').value;
+      const totalPrice = document.querySelector('input[name="totalPrice"]').value;
+      const couponId = document.querySelector('input[name="couponId"]').value;
+      const selected = {
+  addressType: document.querySelector('input[name="selected[addressType]"]').value,
+  name: document.querySelector('input[name="selected[name]"]').value,
+  city: document.querySelector('input[name="selected[city]"]').value,
+  landMark: document.querySelector('input[name="selected[landMark]"]').value,
+  state: document.querySelector('input[name="selected[state]"]').value,
+  pincode: document.querySelector('input[name="selected[pincode]"]').value,
+  phone: document.querySelector('input[name="selected[phone]"]').value,
+  altphone: document.querySelector('input[name="selected[altphone]"]').value
+};
+      
+      // 1. Create Razorpay order
+      const res1 = await fetch('/create-razorpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId,
+          quantity,
+          totalPrice,
+          selected,
+        })
+      });
+      
+      const { order_id, amount } = await res1.json();
+
+      const options = {
+        key: '<%= razorpayKey %>', // Use the variable passed from controller
+        amount: amount,
+        currency: 'INR',
+        name: 'Your Store',
+        description: 'Order Payment',
+        order_id: order_id,
+        handler: async function(response) {
+          // 3. Verify payment and place order
+          const res2 = await fetch('/verify-razorpay-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              selected,
+              productId,
+              quantity,
+              totalPrice,
+              couponId
+            })
+          });
+          const data = await res2.json();
+          if (data.success && data.redirect) {
+            window.location.href = data.redirect;
+          } else {
+            window.location.href = '/order-failure';
+          }
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } else {
+      // For other payment methods, submit the form normally
+      this.submit();
+    }
+});
+</script>
 
 <%- include("../../views/partials/user/footer") %>
