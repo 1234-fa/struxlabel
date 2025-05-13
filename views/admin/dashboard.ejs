@@ -1,108 +1,84 @@
 <%- include("../../views/partials/admin/header") %>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sales Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    .card {
-      @apply bg-white p-4 rounded-2xl shadow-md;
-    }
-    .heading {
-      @apply text-2xl font-semibold mb-2;
-    }
-    .chart-bar {
-      width: 100%;
-      height: 150px;
-      background: repeating-linear-gradient(
-        to top,
-        #d1d5db,
-        #d1d5db 1px,
-        transparent 1px,
-        transparent 20px
-      );
-    }
-  </style>
-</head>
-<body class="bg-gray-100 p-6 font-sans">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">Sales report</h1>
-    <div>
-      <button class="bg-blue-600 text-white px-4 py-2 rounded-md mr-2">Export pdf</button>
-      <button class="bg-gray-200 px-4 py-2 rounded-md">Export excl</button>
-    </div>
-  </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Sales in Year -->
-    <div class="card col-span-2">
-      <h2 class="heading">Sales in year</h2>
-      <div class="chart-bar mb-4"></div>
-      <div class="flex justify-between text-sm text-gray-600">
-        <div>
-          <span class="font-bold block text-black text-lg">10,528</span>
-          Total Customers
-        </div>
-        <div>
-          <span class="font-bold block text-black text-lg">10,528</span>
-          Total Views
-        </div>
-        <div>
-          <span class="font-bold block text-black text-lg">Samurai Katana blade...</span>
-          Bestsellers
-        </div>
-      </div>
-    </div>
+<style>
+  .dashboard-container { max-width: 1000px; margin: auto; padding: 20px; font-family: sans-serif; }
+  form, table { margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background-color: #f4f4f4; }
+  .pagination a { margin: 0 5px; padding: 6px 12px; border: 1px solid #ccc; text-decoration: none; }
+  .pagination .active { background-color: #007bff; color: white; }
+</style>
 
-    <!-- Total Sales Each Month -->
-    <div class="card">
-      <h2 class="heading">Total Sales each month</h2>
-      <div class="text-2xl font-bold text-green-600">₹4,06,790 <span class="text-sm">&#x2191; 3%</span>
-      </div>
-      <div class="chart-bar mt-2"></div>
-    </div>
-  </div>
+<div class="dashboard-container">
+  <h2>Sales Dashboard</h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-    <!-- Profit -->
-    <div class="card">
-      <h2 class="heading">Profit</h2>
-      <div class="text-xl font-bold text-green-600">₹1,068,900 <span class="text-sm">&#x2191; 3%</span>
-      </div>
-      <div class="chart-bar mt-2"></div>
-    </div>
+  <form method="GET" action="/admin">
+    <label>Date Range:</label>
+    <input type="date" name="startDate" value="<%= startDate || '' %>">
+    <input type="date" name="endDate" value="<%= endDate || '' %>">
 
-    <!-- Sales Account 1 -->
-    <div class="card">
-      <h2 class="heading">Sales Account</h2>
-      <div class="text-xl font-bold">₹192,065</div>
-      <p class="text-gray-600 text-sm">₹132,000 last year <span class="text-green-600">&#x2191; 3%</span></p>
-    </div>
+    <select name="filter">
+      <option value="">Custom</option>
+      <option value="day" <%= filter==='day'?'selected':'' %>>Last Day</option>
+      <option value="week" <%= filter==='week'?'selected':'' %>>Last Week</option>
+      <option value="month" <%= filter==='month'?'selected':'' %>>Last Month</option>
+    </select>
 
-    <!-- Sales Account 2 -->
-    <div class="card">
-      <h2 class="heading">Sales Account</h2>
-      <div class="text-xl font-bold">₹192,065</div>
-      <p class="text-gray-600 text-sm">₹132,000 last year <span class="text-green-600">&#x2191; 3%</span></p>
-    </div>
+    <input type="text" name="search" placeholder="Search by Order ID" value="<%= search || '' %>">
+    <button type="submit">Generate</button>
+  </form>
 
-    <!-- Sales by Location -->
-    <div class="card col-span-1 md:col-span-2 lg:col-span-1">
-      <h2 class="heading">Sales by Location</h2>
-      <div class="w-full h-40 bg-red-100 rounded-full flex items-center justify-center text-sm text-gray-700">
-        (Donut Chart Here)
-      </div>
-      <ul class="mt-4 text-sm">
-        <li><span class="font-bold text-red-500">Kerala:</span> 52.1%</li>
-        <li><span class="font-bold text-blue-500">TamilNadu:</span> 22.8%</li>
-        <li><span class="font-bold text-green-500">Karnataka:</span> 13.9%</li>
-        <li><span class="font-bold text-gray-500">Other:</span> 11.2%</li>
-      </ul>
+  <p>Total Sales: ₹<%= totalSales %></p>
+  <p>Total Discount: ₹<%= totalDiscount %></p>
+  <p>Coupon Deduction: ₹<%= totalCoupon %></p>
+  <p>Total Orders: <%= orders.length %></p>
+
+  <form method="POST" action="/admin/sales-report/download">
+    <input type="hidden" name="startDate" value="<%= startDate %>">
+    <input type="hidden" name="endDate" value="<%= endDate %>">
+    <button name="format" value="pdf">Download PDF</button>
+    <button name="format" value="excel">Download Excel</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Date</th>
+        <th>Total</th>
+        <th>Final Amount</th>
+        <th>Discount</th>
+        <th>Coupon</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (orders.length === 0) { %>
+        <tr><td colspan="5">No orders found for selected criteria.</td></tr>
+      <% } else { %>
+        <% orders.forEach(order => { %>
+          <tr>
+            <td><%= order.orderId %></td>
+            <td><%= order.createdAt.toDateString() %></td>
+            <td><%= order.totalPrice %></td>
+            <td>₹<%= order.finalAmount %></td>
+            <td>₹<%= order.discount %></td>
+            <td><%= order.coupon ? order.coupon.code : 'N/A' %></td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
+
+  <% if (totalPages > 1) { %>
+    <div class="pagination">
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <a class="<%= i === currentPage ? 'active' : '' %>" href="?page=<%= i %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>&filter=<%= filter || '' %>&search=<%= search || '' %>">
+          <%= i %>
+        </a>
+      <% } %>
     </div>
-  </div>
-</body>
-</html>
+  <% } %>
+</div>
 
 <%- include("../../views/partials/admin/footer") %>

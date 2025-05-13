@@ -271,6 +271,7 @@ const createRazorpayOrder = async (req, res) => {
         couponId,
         totalDiscount
       } = req.body;
+      console.log('total discount:',totalDiscount);
   
       // Verify Razorpay signature
       const generated_signature = crypto
@@ -362,7 +363,7 @@ const createRazorpayOrder = async (req, res) => {
         user: userId,
         orderedItems: orderItems,
         totalPrice: totalOriginalPrice,
-        discount: totalDiscount,
+        discount: Number(totalDiscount),
         finalAmount: totalPrice,
         address,
         invoiceDate: new Date(),
@@ -373,7 +374,7 @@ const createRazorpayOrder = async (req, res) => {
         paymentMethod: "razorpay",
         paymentStatus: "Paid"
       });
-  
+  console.log(newOrder.discount);
       await newOrder.save();
   
       // Update product stock

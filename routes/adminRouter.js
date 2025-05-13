@@ -80,6 +80,7 @@ router.post('/delete-coupon/:id',adminAuth,couponController.deteleCoupon);
 
 // router.get('/dashboard',adminAuth,salesreportController.getDashboard);
 router.get('/', adminAuth, salesreportController.loaddashboard);
+router.post('/sales-report/download', adminAuth,salesreportController.downloadSalesReport);
 
 
 module.exports=router;

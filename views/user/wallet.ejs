@@ -1,48 +1,112 @@
 <%- include("../../views/partials/user/headerp") %>
 
-<!-- Main Wallet Container -->
-<div class="container-fluid mt-4">
+<!-- Main content container with proper spacing -->
+<div class="container-fluid">
   <div class="row">
-    
-    <!-- Sidebar (You can customize this part) -->
-    <div class="col-md-3">
-      <!-- You can add sidebar content here if needed -->
+    <!-- Sidebar placeholder -->
+    <div class="col-md-3 d-none d-md-block">
+      <!-- Sidebar is included in the header partial -->
     </div>
+    
+    <!-- Main content column -->
+    <div class="col-md-9 px-3 py-2">
+      <!-- Wallet Balance Card -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <div class="card text-white bg-success shadow rounded-3">
+            <div class="card-body text-center py-2">
+              <h5 class="card-title mb-2">Wallet Balance</h5>
+              <h2 class="fw-bold mb-0">₹<%= totalAmount.toLocaleString() %></h2>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Wallet Content -->
-    <div class="col-md-9">
-      <h4 class="text-center mb-4">My Wallet</h4>
+      <!-- Recent Transactions Section -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <h5 class="mb-3">Recent Transactions</h5>
+        </div>
+      </div>
 
+      <!-- Transaction List -->
       <% if (wallet && wallet.length > 0) { %>
-        <% wallet.forEach(wallet => { %>
-          <div class="card shadow-sm mb-4">
-            <div class="card-body">
-              <h5 class="card-title text-success">Wallet Transaction</h5>
-              <p><strong>Amount:</strong> ₹<%= wallet.amount %></p>
-              <p><strong>Type:</strong> <%= wallet.type %></p>
-              <p><strong>Entry:</strong> <%= wallet.entryType %></p>
-              <p><strong>Status:</strong> <%= wallet.status %></p>
-              <p><strong>Transaction ID:</strong> <%= wallet.transactionId %></p>
-              <p><strong>Date:</strong> <%= new Date(wallet.createdAt).toLocaleString() || 'N/A' %></p>
+        <% wallet.forEach((item, index) => { %>
+          <div class="row mb-2">
+            <div class="col-12">
+              <div class="card border-0 shadow-sm">
+                <div class="card-body py-2 px-3">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                      <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;">
+                        <i class="bi bi-wallet2 text-secondary fs-5"></i>
+                      </div>
+                      <div>
+                        <div class="fw-semibold text-capitalize"><%= item.type.replace(/_/g, " ") %></div>
+                        <small class="text-muted"><%= new Date(item.createdAt).toLocaleDateString() %></small>
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <div class="<%= item.entryType === 'CREDIT' ? 'text-success' : 'text-danger' %> fw-bold">
+                        <%= item.entryType === 'CREDIT' ? '+' : '-' %>₹<%= item.amount %>
+                      </div>
+                      <button class="btn btn-sm btn-outline-secondary mt-1" data-bs-toggle="modal" data-bs-target="#txnModal<%= index %>">Details</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-              <% if (wallet.orderId) { %>
-                <hr />
-                <h6>Order Info:</h6>
-                <p><strong>Order ID:</strong> <%= wallet.orderId.orderId %></p>
-                <p><strong>Total Price:</strong> ₹<%= wallet.orderId.totalPrice %></p>
-                <p><strong>Status:</strong> <%= wallet.orderId.status %></p>
-                <p><strong>Payment Method:</strong> <%= wallet.orderId.paymentMethod %></p>
-              <% } %>
+          <!-- Modal -->
+          <div class="modal fade" id="txnModal<%= index %>" tabindex="-1" aria-labelledby="txnModalLabel<%= index %>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content rounded-4">
+                <div class="modal-header py-2">
+                  <h6 class="modal-title" id="txnModalLabel<%= index %>">Transaction Details</h6>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-2">
+                  <ul class="list-unstyled small">
+                    <li><strong>Amount:</strong> ₹<%= item.amount %></li>
+                    <li><strong>Type:</strong> <%= item.type %></li>
+                    <li><strong>Entry Type:</strong> <%= item.entryType %></li>
+                    <li><strong>Status:</strong> 
+                      <span class="badge bg-<%= item.status === 'Success' ? 'success' : 'warning' %>"><%= item.status %></span>
+                    </li>
+                    <li><strong>Transaction ID:</strong> <%= item.transactionId %></li>
+                    <li><strong>Date:</strong> <%= new Date(item.createdAt).toLocaleString() %></li>
+                    <% if (item.orderId) { %>
+                      <hr />
+                      <h6>Order Info:</h6>
+                      <li><strong>Order ID:</strong> <%= item.orderId.orderId %></li>
+                      <li><strong>Total Price:</strong> ₹<%= item.orderId.totalPrice %></li>
+                      <li><strong>Order Status:</strong> <%= item.orderId.status %></li>
+                      <li><strong>Payment Method:</strong> <%= item.orderId.paymentMethod %></li>
+                    <% } %>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         <% }) %>
       <% } else { %>
-        <p class="text-center">No wallet transactions yet.</p>
+        <div class="row">
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-body text-center py-4">
+                <p class="text-muted mb-0">You have no wallet transactions yet.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       <% } %>
 
       <!-- Back to Home Button -->
-      <div class="text-end mt-4">
-        <a href="/" class="btn btn-outline-primary btn-sm">Back to Home</a>
+      <div class="row mt-3">
+        <div class="col-12 text-end">
+          <a href="/" class="btn btn-outline-primary btn-sm">Back to Home</a>
+        </div>
       </div>
     </div>
   </div>
