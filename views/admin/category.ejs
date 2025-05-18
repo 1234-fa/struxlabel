@@ -96,7 +96,7 @@
                 <th></th>
                 <th>Name</th>
                 <th>Description</th>
-                <th>Offer Price</th>
+                <th>Offer Percentage</th>
                 <th>Offer</th>
                 <th>Status</th>
                 <th>List/Unlist</th>
@@ -319,47 +319,60 @@ document.getElementById("descriptionId").addEventListener("input", () => {
 function openModal() { document.getElementById("categoryModal").style.display = "flex"; }
 function closeModal() { document.getElementById("categoryModal").style.display = "none"; }
 
-async function addOffer(categoryId){
-    const {value:amount}=await Swal.fire({
-        title:"Offer n percentage",
-        input:"number",
-        inputLabel:"percentage",
-        inputPlaceholder:"%",
-    })
-
-    if(amount){
-        try {
-            const response=await fetch("/admin/addCategoryOffer",{
-                method:"post",
-                headers:{
-                    'content-type':"application/json",
-                },
-                body:JSON.stringify({
-                    percentage:amount,
-                    categoryId:categoryId,
-                })
-            });
-            const data=await response.json();
-            if(response.ok && data.status===true){
-                Swal.fire(
-                    "Offer added",
-                    "The offer has been added",
-                    "success"
-                ).then(()=>{
-                    location.reload();
-                })
-            }else{
-                Swal.fire("Failed",data.message || "Add offer failed", "error")
-            }
-        } catch (error) {
-            Swal.fire(
-                "Error",
-                "An error occured while adding the offer",
-                "error"
-            );
-            console.log("Error adding offer",error)
-        }
+async function addOffer(categoryId) {
+  const { value: amount } = await Swal.fire({
+    title: "Offer in Percentage",
+    input: "number",
+    inputLabel: "Percentage",
+    inputPlaceholder: "%",
+    inputAttributes: {
+      min: 1,
+      max: 100,
+      step: 1
+    },
+    preConfirm: (value) => {
+      if (!value || value <= 0 || value > 100) {
+        Swal.showValidationMessage("Please enter a valid percentage between 1 and 100.");
+      }
+      return value;
     }
+  });
+
+  if (amount) {
+    try {
+      const response = await fetch("/admin/addCategoryOffer", {
+        method: "post",
+        headers: {
+          'Content-Type': "application/json",
+        },
+        body: JSON.stringify({
+          percentage: amount,
+          categoryId: categoryId,
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.status === true) {
+        Swal.fire(
+          "Offer Added",
+          "The offer has been successfully added.",
+          "success"
+        ).then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire("Failed", data.message || "Add offer failed", "error");
+      }
+    } catch (error) {
+      Swal.fire(
+        "Error",
+        "An error occurred while adding the offer",
+        "error"
+      );
+      console.log("Error adding offer", error);
+    }
+  }
 }
 
 async function removeOffer(categoryId) {

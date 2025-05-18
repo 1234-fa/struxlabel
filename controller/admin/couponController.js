@@ -11,15 +11,29 @@ const generateCouponCode = () => {
     return orderId;
   };
 
-const getCoupons=async (req,res)=>{
+  const getCoupons = async (req, res) => {
     try {
-        const coupons = await Coupon.find();
-    
-        res.render('coupon',{coupons});
+      const page = parseInt(req.query.page) || 1;
+      const limit = 5; // You can change this limit as needed
+      const skip = (page - 1) * limit;
+  
+      const [coupons, totalCoupons] = await Promise.all([
+        Coupon.find().skip(skip).limit(limit),
+        Coupon.countDocuments()
+      ]);
+  
+      const totalPages = Math.ceil(totalCoupons / limit);
+  
+      res.render('coupon', {
+        coupons,
+        currentPage: page,
+        totalPages
+      });
     } catch (error) {
-        res.redirect('/pageerror')
+      console.error(error);
+      res.redirect('/pageerror');
     }
-}
+  };
 
 const addCoupons = async (req, res) => {
     try {

@@ -1,97 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Order Success</title>
-  <style>
+<meta charset="UTF-8">
+<title>Order Failed</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 900px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .header {
+    background-color: #f8d7da;
+    padding: 25px 40px;
+    border-bottom: 1px solid #f5c6cb;
+  }
+  
+  .header h1 {
+    color: #721c24;
+    font-size: 2rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .error-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #721c24;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+  }
+  
+  .content {
+    padding: 40px;
+    display: flex;
+    gap: 40px;
+  }
+  
+  .details {
+    flex: 1;
+  }
+  
+  .message {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+  
+  .error-code {
+    display: inline-block;
+    background-color: #f1f1f1;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 30px;
+  }
+  
+  .buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .buttons a {
+    text-decoration: none;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .primary {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+  }
+  
+  .primary:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+  }
+  
+  .secondary {
+    background-color: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+  }
+  
+  .secondary:hover {
+    background-color: #f1f1f1;
+    transform: translateY(-2px);
+  }
+  
+  .image-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .image-container img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  
+  .help-section {
+    background-color: #f1f8ff;
+    padding: 20px 40px;
+    border-top: 1px solid #e1e8ef;
+  }
+  
+  .help-section h3 {
+    color: #0056b3;
+    margin-top: 0;
+    font-size: 1.1rem;
+  }
+  
+  .help-list {
+    display: flex;
+    gap: 20px;
+    margin-top: 15px;
+  }
+  
+  .help-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #444;
+    font-size: 0.95rem;
+  }
+  
+  .help-icon {
+    color: #0056b3;
+    font-weight: bold;
+  }
+  
+  @media (max-width: 768px) {
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
-      padding: 50px;
+      padding: 20px;
     }
-
-    .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      max-width: 1000px;
-      margin: auto;
-    }
-
+    
     .content {
-      max-width: 60%;
+      flex-direction: column-reverse;
+      padding: 30px 20px;
     }
-
-    .content h1 {
-      color: green;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-    }
-
-    .content p {
-      font-size: 1.2rem;
-      color: #333;
-      margin-bottom: 25px;
-    }
-
-    .buttons a {
-      text-decoration: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 1rem;
-      margin-right: 15px;
-      transition: background 0.3s;
-    }
-
-    .buttons .continue {
-      background-color: #28a745;
-      color: white;
-    }
-
-    .buttons .continue:hover {
-      background-color: #218838;
-    }
-
-    .buttons .view {
-      background-color: #007bff;
-      color: white;
-    }
-
-    .buttons .view:hover {
-      background-color: #0069d9;
-    }
-
+    
     .image-container {
-      max-width: 35%;
+      margin-bottom: 30px;
     }
-
-    .image-container img {
+    
+    .buttons {
+      flex-direction: column;
+    }
+    
+    .buttons a {
       width: 100%;
-      height: auto;
-      border-radius: 8px;
     }
-  </style>
+    
+    .help-list {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+</style>
 </head>
 <body>
-
   <div class="container">
+    <div class="header">
+      <h1><span class="error-icon">!</span> Order Failed</h1>
+    </div>
+    
     <div class="content">
-      <h1>Order Failed!</h1>
-      <div class="buttons">
-        <a href="/shop" class="continue">Continue Shopping</a>
-        <!-- Include the orderId dynamically -->
-        <a href="/view-orders" class="view">retry</a>
+      <div class="details">
+        <p class="message">
+          We're sorry, but there was a problem processing your order. This could be due to 
+          payment issues, inventory problems, or a temporary system error.
+        </p>
+        
+        <div class="error-code">Error Code: ORD-4023</div>
+        
+        <div class="buttons">
+          <a href="#" class="primary" id="retryButton">Retry Payment</a>
+          <a href="/shop" class="secondary">Continue Shopping</a>
+        </div>
+      </div>
+      
+      <div class="image-container">
+        <img src="/img/logo.png" alt="Order Failed Illustration">
       </div>
     </div>
-
-    <div class="image-container">
-      <img src="/img/logo.png" alt="Order Success"> <!-- Make sure this image exists -->
+    
+    <div class="help-section">
+      <h3>Need help?</h3>
+      <div class="help-list">
+        <div class="help-item">
+          <span class="help-icon">✉</span> Email our support team
+        </div>
+        <div class="help-item">
+          <span class="help-icon">☎</span> Call us at 1-800-123-4567
+        </div>
+        <div class="help-item">
+          <span class="help-icon">?</span> Visit our FAQ section
+        </div>
+      </div>
     </div>
   </div>
-
 </body>
+<script>
+  document.getElementById("retryButton").addEventListener("click", function(event) {
+    event.preventDefault(); // Prevent the default link behavior
+    history.back(); // Go to previous page
+  });
+</script>
 </html>

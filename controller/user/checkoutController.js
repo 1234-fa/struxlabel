@@ -252,10 +252,7 @@ const createRazorpayOrder = async (req, res) => {
 
     } catch (error) {
       console.error('Error verifying Razorpay payment:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Something went wrong during payment verification'
-      });
+      return res.redirect('/order-failure');
     }
   };
 
@@ -406,7 +403,8 @@ const createRazorpayOrder = async (req, res) => {
       console.error("❌ Error verifying Razorpay cart payment:", error);
       return res.status(500).json({
         success: false,
-        message: "Something went wrong during payment verification"
+        redirect: '/order-failure',
+        message: "Payment verification failed"
       });
     }
   };

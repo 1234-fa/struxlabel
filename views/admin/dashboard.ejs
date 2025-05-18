@@ -34,11 +34,12 @@
   <p>Coupon Deduction: ₹<%= totalCoupon %></p>
   <p>Total Orders: <%= orders.length %></p>
 
-  <form method="POST" action="/admin/sales-report/download">
+  <form id="downloadForm" method="POST" action="/admin/sales-report/download">
     <input type="hidden" name="startDate" value="<%= startDate %>">
     <input type="hidden" name="endDate" value="<%= endDate %>">
     <button name="format" value="pdf">Download PDF</button>
     <button name="format" value="excel">Download Excel</button>
+    <p id="downloadError" style="color: rgb(238, 86, 86); display: none; margin-top: 10px;"></p>
   </form>
 
   <table>
@@ -80,5 +81,23 @@
     </div>
   <% } %>
 </div>
+
+<script>
+  document.getElementById('downloadForm').addEventListener('submit', function (e) {
+    const startDate = this.querySelector('input[name="startDate"]').value;
+    const endDate = this.querySelector('input[name="endDate"]').value;
+    const errorElement = document.getElementById('downloadError');
+
+    // Clear any previous error
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+
+    if (!startDate || !endDate) {
+      e.preventDefault();
+      errorElement.textContent = 'Please select both start and end dates before downloading.';
+      errorElement.style.display = 'block';
+    }
+  });
+</script>
 
 <%- include("../../views/partials/admin/footer") %>

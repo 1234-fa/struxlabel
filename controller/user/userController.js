@@ -22,10 +22,7 @@ const referrelcodeGenerate = ()=>{
 const loadHomepage = async (req, res) => {
     try {
         const today = new Date().toISOString();
-        const findBanner = await Banner.find({
-            startDate: { $lt: new Date(today) },
-            endDate: { $gt: new Date(today) }
-        });
+        const findBanner = await Banner.find({});
 
         const user = req.session.user;
         const categories = await Category.find({ isListed: true });
@@ -50,6 +47,7 @@ const loadHomepage = async (req, res) => {
             .slice(0, 4); // limit to 4 random items
 
         const userData = user ? await User.findById(user._id) : null;
+        // console.log('banners:',findBanner);
 
         return res.render('home', {
             user: userData,
@@ -207,7 +205,7 @@ const verifyOtp = async (req, res) => {
 
             if (!passwordHash) {
                 return res.status(500).json({ success: false, message: "Error processing password" });
-            }
+            } 
 
             // **Check if the user already exists before saving**
             const existingUser = await User.findOne({ email: user.email });
@@ -304,7 +302,7 @@ const loadShoppingPage = async (req,res)=>{
       const categories = await Category.find({isListed:true});
       const categoryIds = categories.map((category)=>category._id.toString());
       const page = parseInt(req.query.page) || 1;
-      const limit = 6;
+      const limit = 9;
       const skip = (page-1)*limit;
       const products = await Product.find({
         isBlocked:false,
@@ -335,7 +333,7 @@ const loadShoppingPage = async (req,res)=>{
     catch (error) {
       res.redirect("/pageNotFound")
     }
-  }
+  };
 
   const filterProduct = async (req, res) => {
     try {

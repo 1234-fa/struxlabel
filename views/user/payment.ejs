@@ -216,6 +216,20 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
             window.location.href = '/order-failure';
           }
         }
+        ,
+      prefill: {
+        name: selected.name,
+        contact: selected.phone
+      },
+      theme: {
+        color: "#3399cc"
+      },
+      modal: {
+    ondismiss: function () {
+      // 🔴 Redirect on modal close or cancellation
+      window.location.href = "/order-failure";
+    }
+  }
       };
 
       const rzp = new Razorpay(options);

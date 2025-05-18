@@ -390,11 +390,12 @@ const getSingleOrderPage = async (req, res) => {
   const viewOrders = async (req, res) => {
     try {
       const userId = req.session.user;
-      // console.log("Logged in user:", userId);
-  
       if (!userId) return res.redirect('/login');
   
       const searchTerm = req.query.search || '';
+      const page = parseInt(req.query.page) || 1;   // default to page 1
+      const limit = 5; // items per page
+      const skip = (page - 1) * limit;
       const regex = new RegExp(searchTerm, 'i');
   
       let orders = await Order.find({ user: userId })
@@ -404,15 +405,25 @@ const getSingleOrderPage = async (req, res) => {
       if (searchTerm) {
         orders = orders.filter(order => {
           const matchOrderId = regex.test(order.orderId);
-  
           const matchProduct = order.orderedItems.some(item =>
             item.product && regex.test(item.product.productName)
           );
-  
           return matchOrderId || matchProduct;
         });
-      } 
-      res.render('vieworder', { orders, user: userId, searchTerm });
+      }
+  
+      const totalOrders = orders.length;
+      const totalPages = Math.ceil(totalOrders / limit);
+  
+      const paginatedOrders = orders.slice(skip, skip + limit);
+  
+      res.render('vieworder', {
+        orders: paginatedOrders,
+        user: userId,
+        searchTerm,
+        currentPage: page,
+        totalPages
+      });
   
     } catch (error) {
       console.error('Error fetching orders:', error);

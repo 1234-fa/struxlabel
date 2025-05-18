@@ -1,314 +1,352 @@
 <%- include("../../views/partials/user/header") %>
 
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
+rel="stylesheet">
+
+<!-- Css Styles -->
+<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+<link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
+<link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
+<link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
+<link rel="stylesheet" href="css/nice-select.css" type="text/css">
+<link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
+<link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+
+<!-- Custom CSS for checkbox alignment -->
 <style>
-  .main-container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 20px;
-    font-family: 'Poppins', sans-serif;
-  }
-
-  .shop-topbar {
+  .checkbox-container {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
-  }
-
-  .search-form {
-    display: flex;
-    background-color: #eef1f4;
-    border-radius: 30px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-
-  .search-input {
-    border: none;
-    padding: 10px 15px;
-    font-size: 14px;
-    flex: 1;
-    background: transparent;
-    outline: none;
-  }
-
-  .search-button {
-    background: #00b894;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 14px;
+    align-items: center;
+    margin-bottom: 12px;
     cursor: pointer;
-    transition: background 0.3s;
-  }
-
-  .search-button:hover {
-    background: #019875;
-  }
-
-  .product-layout {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 20px;
-  }
-
-  .sidebar {
-    background: #fafafa;
-    padding: 20px;
-    border-radius: 10px;
-    height: fit-content;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-
-  .filter-title {
-    font-weight: bold;
-    margin-bottom: 10px;
-    font-size: 16px;
-    color: #333;
-    cursor: pointer;
-  }
-
-  .filter-content ul {
-    list-style: none;
-    padding: 0;
-    margin-top: 10px;
-  }
-
-  .filter-item {
-    margin-bottom: 10px;
-  }
-
-  .filter-item a {
-    text-decoration: none;
-    color: #555;
-    font-size: 14px;
-  }
-
-  .filter-item a:hover {
-    color: #00b894;
-  }
-
-  .price-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .price-button {
-    background: #f1f1f1;
-    padding: 10px;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
-  }
-
-  .price-button:hover {
-    background: #00b894;
-    color: white;
-  }
-
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-  }
-
-  .product-card {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    overflow: hidden;
-    text-align: center;
-    transition: transform 0.3s;
-    padding: 10px;
-  }
-
-  .product-card:hover {
-    transform: translateY(-5px);
-  }
-
-  .product-image {
-    width: 100%;
-    height: 280px;
-    object-fit: cover;
-    border-radius: 8px;
-  }
-
-  .product-name {
-    font-size: 16px;
-    margin: 10px 0 5px;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .product-brand {
-    font-size: 13px;
-    color: #888;
-  }
-
-  .product-price {
-    margin: 8px 0;
     font-size: 15px;
-    color: #00b894;
-    font-weight: bold;
   }
-
-  .product-regular {
-    font-size: 13px;
-    color: #aaa;
-    text-decoration: line-through;
-    margin-left: 5px;
-  }
-
-  .add-to-cart-btn {
-    width: 100%;
-    padding: 10px;
-    background-color: #0984e3;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    margin-top: 10px;
-    font-size: 14px;
+  
+  .checkbox-container input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    margin-right: 10px;
+    position: relative;
+    top: 0;
+    background-color: white;
     cursor: pointer;
-    transition: background 0.3s;
   }
-
-  .add-to-cart-btn:hover {
-    background-color: #0767c4;
+  
+  .checkbox-container input[type="checkbox"]:checked {
+    background-color: #000;
+    border-color: #000;
   }
-
-  .pagination {
-    display: flex;
-    justify-content: center;
-    margin: 30px 0 0;
-    gap: 10px;
+  
+  .checkbox-container input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
   }
-
-  .pagination a {
-    background: #f1f1f1;
-    padding: 8px 14px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: #555;
-    font-size: 14px;
-    transition: all 0.3s;
+  
+  .nice-scroll {
+    max-height: 200px;
+    overflow-y: auto;
   }
-
-  .pagination a:hover, .pagination .active {
-    background: #00b894;
-    color: white;
+  
+  .shop__sidebar__categories ul,
+  .shop__sidebar__brand ul,
+  .shop__sidebar__price ul {
+    padding-left: 5px;
+    margin-top: 10px;
   }
-
-  @media(max-width: 768px) {
-    .product-layout {
-      grid-template-columns: 1fr;
-    }
-
-    .sidebar {
-      order: 2;
-    }
-
-    .shop-topbar {
-      justify-content: center;
-    }
+  
+  .shop__sidebar__categories li,
+  .shop__sidebar__brand li,
+  .shop__sidebar__price li {
+    list-style: none;
+  }
+  
+  /* Hide the filter buttons as we'll apply automatically */
+  .shop__sidebar__filter__btn {
+    display: none;
+  }
+  
+  /* Add loading indicator */
+  .filter-loading {
+    display: none;
+    text-align: center;
+    padding: 10px 0;
+  }
+  
+  .filter-loading i {
+    animation: spin 1s infinite linear;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Styling for accordion headers */
+  .card-heading a {
+    font-weight: 600;
+    font-size: 16px;
+    color: #111;
+    display: block;
+    padding: 10px 0;
+  }
+  
+  .card {
+    border: none;
+    margin-bottom: 15px;
+  }
+  
+  .card-body {
+    padding: 0 0 15px 0;
   }
 </style>
 
-<div class="main-container">
-  <section class="shop-topbar">
-    <form action="/search" method="POST" class="search-form">
-      <input type="text" name="query" placeholder="Search products..." class="search-input" />
-      <button type="submit" class="search-button">Search</button>
-    </form>
-  </section>
-
-  <div class="product-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <!-- Categories -->
-      <div class="filter-section">
-        <div class="filter-title">Categories</div>
-        <div class="filter-content">
-          <ul>
-            <% for(let i=0; i<category.length; i++) { %>
-              <li class="filter-item">
-                <a href="/filter?category=<%= category[i]._id %>"><%= category[i].name %></a>
-              </li>
-            <% } %>
-          </ul>
-        </div>
+<!-- Shop Section Begin -->
+<section class="shop spad">
+  <div class="container">
+      <div class="row">
+          <div class="col-lg-3">
+              <div class="shop__sidebar">
+                  <div class="shop__sidebar__search">
+                      <form action="/search" method="POST" >
+                          <input type="text" name="query" placeholder="Search...">
+                          <button type="submit"><span class="icon_search"></span></button>
+                      </form>
+                  </div>
+                  <div class="shop__sidebar__accordion">
+                      <div class="accordion" id="accordionExample">
+                          <form id="filterForm" action="/filter" method="GET">
+                              <div class="card">
+                                  <div class="card-heading">
+                                      <a data-toggle="collapse" data-target="#collapseOne">CATEGORIES</a>
+                                  </div>
+                                  <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
+                                      <div class="card-body">
+                                          <div class="shop__sidebar__categories">
+                                              <ul class="nice-scroll">
+                                                  <% for(let i=0; i<category.length; i++) { %>
+                                                      <li>
+                                                          <label class="checkbox-container">
+                                                              <input type="checkbox" class="auto-filter" name="category" value="<%= category[i]._id %>">
+                                                              <%= category[i].name %>
+                                                          </label>
+                                                      </li>
+                                                  <% } %>
+                                              </ul>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="card">
+                                  <div class="card-heading">
+                                      <a data-toggle="collapse" data-target="#collapseTwo">BRANDING</a>
+                                  </div>
+                                  <div id="collapseTwo" class="collapse show" data-parent="#accordionExample">
+                                      <div class="card-body">
+                                          <div class="shop__sidebar__brand">
+                                              <ul>
+                                                  <% for(let i=0; i<brand.length; i++) { %>
+                                                      <li>
+                                                          <label class="checkbox-container">
+                                                              <input type="checkbox" class="auto-filter" name="brand" value="<%= brand[i]._id %>">
+                                                              <%= brand[i].brandName %>
+                                                          </label>
+                                                      </li>
+                                                  <% } %>
+                                              </ul>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="card">
+                                  <div class="card-heading">
+                                      <a data-toggle="collapse" data-target="#collapseThree">FILTER PRICE</a>
+                                  </div>
+                                  <div id="collapseThree" class="collapse show" data-parent="#accordionExample">
+                                      <div class="card-body">
+                                          <div class="shop__sidebar__price">
+                                              <ul>
+                                                  <li>
+                                                      <label class="checkbox-container">
+                                                          <input type="checkbox" class="auto-filter" name="price" value="0-500">
+                                                          ₹0.00 - ₹500.00
+                                                      </label>
+                                                  </li>
+                                                  <li>
+                                                      <label class="checkbox-container">
+                                                          <input type="checkbox" class="auto-filter" name="price" value="500-1000">
+                                                          ₹500.00 - ₹1000.00
+                                                      </label>
+                                                  </li>
+                                                  <li>
+                                                      <label class="checkbox-container">
+                                                          <input type="checkbox" class="auto-filter" name="price" value="1000-1500">
+                                                          ₹1000.00 - ₹1500.00
+                                                      </label>
+                                                  </li>
+                                                  <li>
+                                                      <label class="checkbox-container">
+                                                          <input type="checkbox" class="auto-filter" name="price" value="1500-100000">
+                                                          ₹1500.00+
+                                                      </label>
+                                                  </li>
+                                              </ul>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </form>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="col-lg-9">
+              <!-- <div class="shop__product__option">
+                  <div class="row">
+                      <div class="col-lg-6 col-md-6 col-sm-6">
+                          <div class="shop__product__option__left">
+                              <p>Showing <span id="product-count"><%= products.length %></span> products</p>
+                          </div>
+                      </div>
+                      <div class="col-lg-6 col-md-6 col-sm-6">
+                          <div class="shop__product__option__right">
+                              <p>Sort by Price:</p>
+                              <select id="sort-select" class="auto-filter">
+                                  <option value="asc">Low To High</option>
+                                  <option value="desc">High To Low</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+              </div> -->
+              <div class="row" id="products-container">
+                  <% for(let i=0; i<products.length; i++) { %>
+                      <div class="col-lg-4 col-md-6 col-sm-6">                       
+                          <div class="product__item">
+                            <a href="/productDetails?id=<%= products[i]._id %>">
+                              <div class="product__item__pic set-bg" data-setbg="/uploads/product-images/<%= products[i].productImages[0] %>">
+                              </div>
+                            </a>
+                              <div class="product__item__text">
+                                  <h6><%= products[i].productName %></h6>
+                                  <a href="/order?id=<%= products[i]._id %>">Buy Now</a>
+                                  <h6><%= products[i].brand %></h6>
+                                  <h5>₹<%= products[i].salePrice.toLocaleString('en-IN') %></h5>
+                              </div>
+                          </div>
+                      </div>
+                  <% } %>
+              </div>
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="product__pagination" id="pagination-container">
+                          <% if (currentPage > 1) { %>
+                              <a href="/shop?page=<%= currentPage - 1 %>"><</a>
+                          <% } %>
+                          <% for (let i = 1; i <= totalPages; i++) { %>
+                              <% if (currentPage === i) { %>
+                                  <a class="active" href="/shop?page=<%= i %>"><%= i %></a>
+                              <% } else { %>
+                                  <a href="/shop?page=<%= i %>"><%= i %></a>
+                              <% } %>
+                          <% } %>
+                          <% if (currentPage < totalPages) { %>
+                              <a href="/shop?page=<%= currentPage + 1 %>">></a>
+                          <% } %>
+                      </div>
+                  </div>
+              </div>
+          </div>
       </div>
+  </div>
+</section>
 
-      <!-- Brands -->
-      <div class="filter-section">
-        <div class="filter-title">Brands</div>
-        <div class="filter-content">
-          <ul>
-            <% for(let i=0; i<brand.length; i++) { %>
-              <li class="filter-item">
-                <a href="/filter?brand=<%= brand[i]._id %>"><%= brand[i].brandName %></a>
-              </li>
-            <% } %>
-          </ul>
-        </div>
-      </div>
+<script>
+  document.querySelectorAll(".auto-filter").forEach(function (checkbox) {
+    checkbox.addEventListener("change", function () {
+      const form = document.getElementById("filterForm");
+      const formData = new FormData(form);
 
-      <!-- Price -->
-      <div class="filter-section">
-        <div class="filter-title">Filter by Price</div>
-        <div class="filter-content">
-          <div class="price-options">
-            <a href="/filterPrice?gt=0&lt=500"><button type="button" class="price-button">Under ₹500</button></a>
-            <a href="/filterPrice?gt=500&lt=1000"><button type="button" class="price-button">₹500 - ₹1000</button></a>
-            <a href="/filterPrice?gt=1000&lt=1500"><button type="button" class="price-button">₹1000 - ₹1500</button></a>
-            <a href="/filterPrice?gt=1500&lt=100000"><button type="button" class="price-button">Above ₹1500</button></a>
+      const selectedValues = {};
+      for (let [key, value] of formData.entries()) {
+        if (!selectedValues[key]) {
+          selectedValues[key] = [];
+        }
+        selectedValues[key].push(value);
+      }
+
+      console.log("Selected checkbox values:", selectedValues);
+
+      fetch('/filter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(selectedValues)
+      })
+      .then(response => response.json())
+      .then(data => {
+  console.log("Response from backend:", data);
+
+  const products = data.data; // ✅ Get the actual array
+  const productsContainer = document.getElementById("products-container");
+
+  // Step 1: Clear previous products
+  productsContainer.innerHTML = "";
+
+  // Step 2: Handle empty case
+  if (!products || products.length === 0) {
+    productsContainer.innerHTML = "<p>No products found.</p>";
+    return;
+  }
+
+  // Step 3: Render new products
+  products.forEach(product => {
+    const productHTML = `
+      <div class="col-lg-4 col-md-6 col-sm-6">                       
+        <div class="product__item">
+          <a href="/productDetails?id=${product._id}">
+            <div class="product__item__pic set-bg" data-setbg="/uploads/product-images/${product.productImages[0]}">
+            </div>
+          </a>
+          <div class="product__item__text">
+            <h6>${product.productName}</h6>
+            <a href="#" class="add-cart">+ Add To Cart</a>
+            <h6>${product.brand}</h6>
+            <h5>₹${product.salePrice.toLocaleString('en-IN')}</h5>
           </div>
         </div>
       </div>
-    </aside>
+    `;
 
-    <!-- Products -->
-    <main class="products-grid">
-      <% for(let i=0; i<products.length; i++) { %>
-        <div class="product-card">
-          <a href="/productDetails?id=<%= products[i]._id %>">
-            <img src="/uploads/product-images/<%= products[i].productImages[0] %>" alt="<%= products[i].productName %>" class="product-image" />
-            <div class="product-name"><%= products[i].productName %></div>
-            <div class="product-brand"><%= products[i].brand %></div>
-            <div class="product-price">
-              ₹<%= products[i].salePrice.toLocaleString('en-IN') %>
-              <span class="product-regular">₹<%= products[i].regularPrice.toLocaleString('en-IN') %></span>
-            </div>
-          </a>
-          <button class="add-to-cart-btn" onclick="">Add to Cart</button>
-        </div>
-      <% } %>
-    </main>
-  </div>
+    productsContainer.insertAdjacentHTML('beforeend', productHTML);
+  });
 
-  <!-- Pagination -->
-  <div class="pagination">
-    <% if (currentPage > 1) { %>
-      <a href="/shop?page=<%= currentPage - 1 %>">Prev</a>
-    <% } %>
-    <% for (let i = 1; i <= totalPages; i++) { %>
-      <a href="/shop?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
-    <% } %>
-    <% if (currentPage < totalPages) { %>
-      <a href="/shop?page=<%= currentPage + 1 %>">Next</a>
-    <% } %>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-<%- include("../../views/partials/user/footer") %>
-
-<script>
-  $(document).ready(function () {
-    $('.filter-title').click(function() {
-      $(this).next('.filter-content').slideToggle(200);
+  // Step 4: Apply background images
+  document.querySelectorAll('.set-bg').forEach(el => {
+    const bg = el.getAttribute('data-setbg');
+    if (bg) {
+      el.style.backgroundImage = `url(${bg})`;
+    }
+  });
+})
+      .catch(error => {
+        console.error("Error sending data:", error);
+      });
     });
   });
 </script>
+<%- include("../../views/partials/user/footer") %>

@@ -219,7 +219,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         if (data.success && data.redirect) {
           window.location.href = data.redirect;
         } else {
-          window.location.href = '/order-failure';
+          window.location.href = data.redirect;
         }
       },
       prefill: {
@@ -228,7 +228,13 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       },
       theme: {
         color: "#3399cc"
-      }
+      },
+      modal: {
+    ondismiss: function () {
+      // 🔴 Redirect on modal close or cancellation
+      window.location.href = "/order-failure";
+    }
+  }
     };
 
     const rzp1 = new Razorpay(options);

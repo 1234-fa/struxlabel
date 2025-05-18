@@ -53,7 +53,7 @@
             <!-- Edit Modal -->
             <div class="modal fade" id="editCouponModal<%= coupon._id %>" tabindex="-1" aria-hidden="true">
               <div class="modal-dialog">
-                <form action="/admin/edit-coupon/<%= coupon._id %>" method="POST" class="modal-content">
+                <form id="editCouponForm-<%= coupon._id %>" action="/admin/edit-coupon/<%= coupon._id %>" method="POST" class="modal-content" novalidate>
                   <div class="modal-header">
                     <h5 class="modal-title">Edit Coupon</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -62,30 +62,43 @@
                     <div class="mb-2">
                       <label class="form-label">Name</label>
                       <input type="text" name="name" class="form-control" value="<%= coupon.name %>" required>
+                      <small class="text-danger d-none" id="edit-nameError-<%= coupon._id %>">Name is required.</small>
                     </div>
+                
                     <div class="mb-2">
                       <label class="form-label">Code</label>
                       <input type="text" name="code" class="form-control" value="<%= coupon.code %>" required>
+                      <small class="text-danger d-none" id="edit-codeError-<%= coupon._id %>">Code is required.</small>
                     </div>
+                
                     <div class="mb-2">
-                        <label class="form-label">Price</label>
-                        <input type="text" name="price" class="form-control" value="<%= coupon.price %>" required>
-                      </div>
+                      <label class="form-label">Price</label>
+                      <input type="number" name="price" class="form-control" value="<%= coupon.price %>" required>
+                      <small class="text-danger d-none" id="edit-priceError-<%= coupon._id %>">Enter a valid positive price.</small>
+                    </div>
+                
                     <div class="mb-2">
                       <label class="form-label">Discount (%)</label>
                       <input type="number" name="discount" class="form-control" value="<%= coupon.discount %>" required>
+                      <small class="text-danger d-none" id="edit-discountError-<%= coupon._id %>">Enter discount between 1 and 100.</small>
                     </div>
+                
                     <div class="mb-2">
                       <label class="form-label">Active From</label>
                       <input type="date" name="activeFrom" class="form-control" value="<%= coupon.activeFrom.toISOString().split('T')[0] %>" required>
+                      <small class="text-danger d-none" id="edit-dateError-<%= coupon._id %>">Enter a valid date.</small>
                     </div>
+                
                     <div class="mb-2">
                       <label class="form-label">Valid Days</label>
                       <input type="number" name="validDays" class="form-control" value="<%= coupon.validDays %>" required>
+                      <small class="text-danger d-none" id="edit-daysError-<%= coupon._id %>">Enter a valid number of days.</small>
                     </div>
+                
                     <div class="mb-2">
                       <label class="form-label">User Limit</label>
                       <input type="number" name="userLimit" class="form-control" value="<%= coupon.userLimit %>" required>
+                      <small class="text-danger d-none" id="edit-limitError-<%= coupon._id %>">User limit must be greater than 0.</small>
                     </div>
                   </div>
                   <div class="modal-footer">
@@ -124,36 +137,49 @@
 <!-- Add Coupon Modal -->
 <div class="modal fade" id="addCouponModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
-    <form action="/admin/add-coupon" method="POST" class="modal-content">
+    <form id="couponForm" action="/admin/add-coupon" method="POST" class="modal-content" novalidate>
       <div class="modal-header">
         <h5 class="modal-title">Add Coupon</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+    
         <div class="mb-2">
           <label class="form-label">Name</label>
           <input type="text" name="name" class="form-control" required>
+          <small class="text-danger d-none" id="nameError">Only letters and numbers allowed.</small>
         </div>
+    
         <div class="mb-2">
-          <label class="form-label">price</label>
-          <input type="text" name="price" class="form-control" required>
+          <label class="form-label">Price</label>
+          <input type="number" name="price" class="form-control" required>
+          <small class="text-danger d-none" id="priceError">Enter a valid positive price.</small>
         </div>
+    
         <div class="mb-2">
           <label class="form-label">Discount (%)</label>
           <input type="number" name="discount" class="form-control" required>
+          <small class="text-danger d-none" id="discountError">Enter discount between 1 and 100.</small>
         </div>
+    
         <div class="mb-2">
           <label class="form-label">Active From</label>
           <input type="date" name="activeFrom" class="form-control" required>
+          <small class="text-danger d-none" id="dateError">Date cannot be in the past.</small>
         </div>
+    
         <div class="mb-2">
           <label class="form-label">Valid Days</label>
           <input type="number" name="validDays" class="form-control" required>
+          <small class="text-danger d-none" id="daysError">Enter a valid number of days.</small>
         </div>
+    
         <div class="mb-2">
           <label class="form-label">User Limit</label>
           <input type="number" name="userLimit" class="form-control" required>
+          <small class="text-danger d-none" id="limitError">User limit must be greater than 0.</small>
         </div>
+    
       </div>
       <div class="modal-footer">
         <button type="submit" class="btn btn-primary">Add Coupon</button>
@@ -162,6 +188,301 @@
     </form>
   </div>
 </div>
+
+<nav aria-label="Coupon pagination" class="d-flex justify-content-center">
+  <ul class="pagination">
+    <% if (currentPage > 1) { %>
+      <li class="page-item">
+        <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
+      </li>
+    <% } else { %>
+      <li class="page-item disabled">
+        <span class="page-link">Previous</span>
+      </li>
+    <% } %>
+
+    <% for(let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+      </li>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <li class="page-item">
+        <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
+      </li>
+    <% } else { %>
+      <li class="page-item disabled">
+        <span class="page-link">Next</span>
+      </li>
+    <% } %>
+  </ul>
+</nav>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+  // Common validation rules
+  const validations = {
+    // Validate coupon name - alphanumeric with spaces allowed
+    validateName: (name) => {
+      if (!name || name.trim() === "") return "Coupon name is required.";
+      if (!/^[a-zA-Z0-9 -]+$/.test(name)) return "Only letters, numbers, spaces and hyphens allowed.";
+      return null;
+    },
+    
+    // Validate coupon code - uppercase alphanumeric
+    validateCode: (code) => {
+      if (!code || code.trim() === "") return "Coupon code is required.";
+      if (!/^[A-Z0-9-]+$/.test(code)) return "Code must contain only uppercase letters, numbers and hyphens.";
+      return null;
+    },
+    
+    // Validate price
+    validatePrice: (price) => {
+      if (isNaN(price) || price <= 0) return "Enter a valid positive price.";
+      return null;
+    },
+    
+    // Validate discount percentage
+    validateDiscount: (discount) => {
+      if (isNaN(discount) || discount < 1 || discount > 100) return "Discount must be between 1 and 100.";
+      return null;
+    },
+    
+    // Validate active from date
+    validateActiveFrom: (activeFrom) => {
+      if (!activeFrom) return "Start date is required.";
+      
+      // Check date format with regex
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(activeFrom)) return "Invalid date format.";
+      
+      // Check if date is in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(activeFrom);
+      if (selectedDate < today) return "Date cannot be in the past.";
+      
+      return null;
+    },
+    
+    // Validate valid days
+    validateDays: (days) => {
+      if (isNaN(days) || !Number.isInteger(Number(days)) || days <= 0) {
+        return "Enter a valid positive number of days.";
+      }
+      return null;
+    },
+    
+    // Validate user limit
+    validateUserLimit: (limit) => {
+      if (isNaN(limit) || !Number.isInteger(Number(limit)) || limit <= 0) {
+        return "User limit must be a positive whole number.";
+      }
+      return null;
+    }
+  };
+
+  // EDIT COUPON FORM VALIDATION
+  const allEditForms = document.querySelectorAll('form[id^="editCouponForm-"]');
+  
+  allEditForms.forEach(form => {
+    form.addEventListener("submit", function(e) {
+      const couponId = form.id.split("editCouponForm-")[1];
+      let isValid = true;
+      
+      // Get form values
+      const name = form.name.value.trim();
+      const code = form.code.value.trim();
+      const price = parseFloat(form.price.value);
+      const discount = parseFloat(form.discount.value);
+      const activeFrom = form.activeFrom.value;
+      const validDays = parseInt(form.validDays.value);
+      const userLimit = parseInt(form.userLimit.value);
+      
+      // Hide all error messages first
+      form.querySelectorAll("small.text-danger").forEach(el => el.classList.add("d-none"));
+      
+      // Validate name
+      const nameError = validations.validateName(name);
+      if (nameError) {
+        const nameErrorEl = document.getElementById(`edit-nameError-${couponId}`);
+        nameErrorEl.textContent = nameError;
+        nameErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate code
+      const codeError = validations.validateCode(code);
+      if (codeError) {
+        const codeErrorEl = document.getElementById(`edit-codeError-${couponId}`);
+        codeErrorEl.textContent = codeError;
+        codeErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate price
+      const priceError = validations.validatePrice(price);
+      if (priceError) {
+        const priceErrorEl = document.getElementById(`edit-priceError-${couponId}`);
+        priceErrorEl.textContent = priceError;
+        priceErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate discount
+      const discountError = validations.validateDiscount(discount);
+      if (discountError) {
+        const discountErrorEl = document.getElementById(`edit-discountError-${couponId}`);
+        discountErrorEl.textContent = discountError;
+        discountErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate active from date
+      const dateError = validations.validateActiveFrom(activeFrom);
+      if (dateError) {
+        const dateErrorEl = document.getElementById(`edit-dateError-${couponId}`);
+        dateErrorEl.textContent = dateError;
+        dateErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate valid days
+      const daysError = validations.validateDays(validDays);
+      if (daysError) {
+        const daysErrorEl = document.getElementById(`edit-daysError-${couponId}`);
+        daysErrorEl.textContent = daysError;
+        daysErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate user limit
+      const limitError = validations.validateUserLimit(userLimit);
+      if (limitError) {
+        const limitErrorEl = document.getElementById(`edit-limitError-${couponId}`);
+        limitErrorEl.textContent = limitError;
+        limitErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      if (!isValid) {
+        e.preventDefault(); // Prevent form submission if invalid
+      }
+    });
+  });
+  
+  // ADD COUPON FORM VALIDATION
+  const addCouponForm = document.getElementById("couponForm");
+  
+  if (addCouponForm) {
+    addCouponForm.addEventListener("submit", function(e) {
+      let isValid = true;
+      const form = e.target;
+      
+      // Get form values
+      const name = form.name.value.trim();
+      const price = parseFloat(form.price.value);
+      const discount = parseFloat(form.discount.value);
+      const activeFrom = form.activeFrom.value;
+      const validDays = parseInt(form.validDays.value);
+      const userLimit = parseInt(form.userLimit.value);
+      
+      // Hide all error messages first
+      form.querySelectorAll("small.text-danger").forEach(el => el.classList.add("d-none"));
+      
+      // Validate name
+      const nameError = validations.validateName(name);
+      if (nameError) {
+        const nameErrorEl = document.getElementById("nameError");
+        nameErrorEl.textContent = nameError;
+        nameErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate price
+      const priceError = validations.validatePrice(price);
+      if (priceError) {
+        const priceErrorEl = document.getElementById("priceError");
+        priceErrorEl.textContent = priceError;
+        priceErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate discount
+      const discountError = validations.validateDiscount(discount);
+      if (discountError) {
+        const discountErrorEl = document.getElementById("discountError");
+        discountErrorEl.textContent = discountError;
+        discountErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate active from date
+      const dateError = validations.validateActiveFrom(activeFrom);
+      if (dateError) {
+        const dateErrorEl = document.getElementById("dateError");
+        dateErrorEl.textContent = dateError;
+        dateErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate valid days
+      const daysError = validations.validateDays(validDays);
+      if (daysError) {
+        const daysErrorEl = document.getElementById("daysError");
+        daysErrorEl.textContent = daysError;
+        daysErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      // Validate user limit
+      const limitError = validations.validateUserLimit(userLimit);
+      if (limitError) {
+        const limitErrorEl = document.getElementById("limitError");
+        limitErrorEl.textContent = limitError;
+        limitErrorEl.classList.remove("d-none");
+        isValid = false;
+      }
+      
+      if (!isValid) {
+        e.preventDefault(); // Prevent form submission if invalid
+      }
+    });
+  }
+
+  // Search functionality
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("keyup", function(e) {
+      if (e.key === "Enter") {
+        performSearch();
+      }
+    });
+    
+    const searchButton = searchInput.nextElementSibling;
+    if (searchButton) {
+      searchButton.addEventListener("click", performSearch);
+    }
+    
+    function performSearch() {
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      const tableRows = document.querySelectorAll("table tbody tr");
+      
+      tableRows.forEach(row => {
+        const couponName = row.cells[0].textContent.toLowerCase();
+        const couponCode = row.cells[1].textContent.toLowerCase();
+        
+        if (couponName.includes(searchTerm) || couponCode.includes(searchTerm)) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    }
+  }
+});
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <%- include("../../views/partials/admin/footer") %>

@@ -10,6 +10,7 @@ const invoiceController = require('../controller/user/invoiceController')
 const walletController = require('../controller/user/walletController');
 const couponController = require('../controller/user/couponController');
 const checkoutController = require('../controller/user/checkoutController');
+const shopController = require('../controller/user/shopController');
 const passport = require('passport');
 const multer=require('multer');
 const profileUpload = require('../helpers/profileUpload');
@@ -28,7 +29,7 @@ router.post('/resend-otp',userController.resendOtp);
 
 
 router.get('/', userController.loadHomepage);
-router.get('/shop',userAuth,userController.loadShoppingPage)
+
 router.get('/filter',userAuth,userController.filterProduct)
 router.get('/filterPrice',userAuth,userController.filterByPrice);
 router.post('/search',userAuth,userController.searchProducts);
@@ -113,5 +114,8 @@ router.post('/verify-razorpay-payment', userAuth, checkoutController.verifyRazor
 router.post('/create-razorpay-order-cart', userAuth, checkoutController.createRazorpayOrderCart);
 router.post('/verify-razorpay-payment-cart', userAuth, checkoutController.verifyRazorpayPaymentCart);
 router.get('/order-failure',userAuth,checkoutController.getorderFailurePage);
+
+router.post('/filter',userAuth,shopController.getfilter);
+router.get('/shop',userAuth,shopController.loadShoppingPage)
 
 module.exports = router;

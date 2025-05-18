@@ -62,7 +62,6 @@ const getAddProduct =async (req, res) => {
   }
 };
 
-// express validator
 const addProducts = async (req,res)=>{
   try {
       const products = req.body;
@@ -198,8 +197,6 @@ const categoryId = await Category.findOne({name: products.category});
     }
 }
 
-
-
 const addProductOffer = async(req,res)=>{
   try {
     const {productId,percentage} = req.body;
@@ -252,7 +249,6 @@ const unblockProduct = async (req,res)=>{
     res.redirect('/pageerror');
   }
 }
-
 
 const getEditProduct = async (req, res) => {
   try {
@@ -365,9 +361,6 @@ const editProduct = async (req, res) => {
       res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-
 
 
 
