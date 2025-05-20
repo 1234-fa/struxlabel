@@ -257,11 +257,11 @@
       // Check date format with regex
       if (!/^\d{4}-\d{2}-\d{2}$/.test(activeFrom)) return "Invalid date format.";
       
-      // Check if date is in the past
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const selectedDate = new Date(activeFrom);
-      if (selectedDate < today) return "Date cannot be in the past.";
+      // // Check if date is in the past
+      // const today = new Date();
+      // today.setHours(0, 0, 0, 0);
+      // const selectedDate = new Date(activeFrom);
+      // if (selectedDate < today) return "Date cannot be in the past.";
       
       return null;
     },

@@ -11,6 +11,7 @@
         <input type="hidden" name="productId" value="<%= orderSummary.productId %>">
         <input type="hidden" name="quantity" value="<%= orderSummary.quantity %>">
         <input type="hidden" name="totalPrice" value="<%= orderSummary.total %>">
+        <input type="hidden" name="deliveryCharge" value="<%= orderSummary.deliveryCharge %>">
         
         <!-- Coupon information -->
         <% if (orderSummary.couponId) { %>
@@ -63,8 +64,10 @@
             </div>
           </div>
         </div>
-        
-        <div class="card p-3 mb-3">
+        <%if(orderSummary.total>1000){%>
+          <h5 style="color: green;">“Cash on Delivery is available only for orders up to ₹1000.”</h5>
+          <%}else{%>
+            <div class="card p-3 mb-3">
           <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cash_on_delivery">
             <label class="form-check-label" for="cod">
@@ -72,7 +75,7 @@
             </label>
           </div>
         </div>
-
+        <%}%>
         <button type="submit" class="btn btn-primary mt-3">Continue</button>
       </form>
     </div>
@@ -119,7 +122,11 @@
           
           <div class="d-flex justify-content-between">
             <span>Delivery Charges</span>
-            <span class="text-success">FREE</span>
+            <% if(orderSummary.deliveryCharge > 0) { %>
+              <span>₹<%= orderSummary.deliveryCharge %></span>
+            <% } else { %>
+              <span class="text-success">FREE</span>
+            <% } %>
           </div>
           
           <hr>
@@ -161,6 +168,8 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       const quantity = document.querySelector('input[name="quantity"]').value;
       const totalPrice = document.querySelector('input[name="totalPrice"]').value;
       const couponId = document.querySelector('input[name="couponId"]').value;
+      const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
+
       const selected = {
   addressType: document.querySelector('input[name="selected[addressType]"]').value,
   name: document.querySelector('input[name="selected[name]"]').value,
@@ -180,6 +189,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
           productId,
           quantity,
           totalPrice,
+          deliveryCharge,
           selected,
         })
       });
@@ -205,6 +215,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
               selected,
               productId,
               quantity,
+              deliveryCharge,
               totalPrice,
               couponId
             })

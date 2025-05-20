@@ -55,6 +55,10 @@ const orderSchema = new Schema({
     type: Number,
     default: 0,
   },
+  deliveryCharge: {
+    type: Number,
+    default: 0
+  },
   discount: {
     type: Number,
     default: 0,

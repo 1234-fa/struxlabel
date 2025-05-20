@@ -109,20 +109,19 @@ const addToCart = async (req, res) => {
 };
 
 
-
 const removeCartItem = async (req, res) => {
-    try {
-      const cartItemId = req.params.id; 
-      await Cart.updateOne(
-        { userId: req.session.user._id },
-        { $pull: { items: { _id: cartItemId } } }
-      );
-  
-      res.redirect('/cart');
-    } catch (err) {
-      console.error('Error removing item:', err);
-      res.status(500).send("Something went wrong");
-    }
+  try {
+    const cartItemId = req.params.id; 
+    await Cart.updateOne(
+      { userId: req.session.user._id },
+      { $pull: { items: { _id: cartItemId } } }
+    );
+
+    res.redirect('/cart');
+  } catch (err) {
+    console.error('Error removing item:', err);
+    res.status(500).send("Something went wrong");
+  }
 };
 
 

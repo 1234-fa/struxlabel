@@ -14,7 +14,7 @@ const generateCouponCode = () => {
   const getCoupons = async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
-      const limit = 5; // You can change this limit as needed
+      const limit = 5; 
       const skip = (page - 1) * limit;
   
       const [coupons, totalCoupons] = await Promise.all([
@@ -39,17 +39,14 @@ const addCoupons = async (req, res) => {
     try {
       const { name, discount, price, activeFrom, validDays, userLimit } = req.body;
   
-      // Check if coupon with the same name already exists
       const existingCoupon = await Coupon.findOne({ name });
       if (existingCoupon) {
         const coupons = await Coupon.find();
         return res.render('coupon', { coupons, message: 'Coupon already exists' });
       }
   
-      // Generate a unique coupon code
       const code = generateCouponCode();
   
-      // Create new coupon
       const newCoupon = new Coupon({
         name,
         code,
@@ -60,10 +57,8 @@ const addCoupons = async (req, res) => {
         userLimit
       });
   
-      // Save the coupon
       await newCoupon.save();
   
-      // Redirect to coupon list
       res.redirect('/admin/coupon');
     } catch (error) {
       console.error('Error adding coupon:', error);

@@ -19,6 +19,7 @@
         <input type="hidden" name="totalPrice" value="<%= orderSummary.total %>">
         <input type="hidden" name="totalDiscount" value="<%= (orderSummary.saveAmount + orderSummary.couponDiscount).toFixed(2) %>">
         <input type="hidden" name="orderType" value="cart">
+        <input type="hidden" name="deliveryCharge" value="<%= orderSummary.deliveryCharge %>">
 
         
 
@@ -60,14 +61,16 @@
             </div>
           </div>
         </div>
-
-        <div class="card p-3 mb-3">
+        <%if(orderSummary.total>1000){%>
+          <h5 style="color: green;">“Cash on Delivery is available only for orders up to ₹1000.”</h5>
+          <%}else{%>
+          <div class="card p-3 mb-3">
           <div class="form-check">
             <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cash_on_delivery">
             <label class="form-check-label" for="cod">Cash on Delivery</label>
           </div>
         </div>
-
+        <%}%>
         <button type="submit" class="btn btn-primary mt-3">Continue</button>
       </form>
     </div>
@@ -117,7 +120,11 @@
           
           <div class="d-flex justify-content-between">
             <span>Delivery Charges</span>
-            <span class="text-success">FREE</span>
+            <% if(orderSummary.deliveryCharge > 0) { %>
+              <span>₹<%= orderSummary.deliveryCharge %></span>
+            <% } else { %>
+              <span class="text-success">FREE</span>
+            <% } %>
           </div>
           
           <hr>
@@ -164,6 +171,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
     const couponIdInput = document.querySelector('input[name="couponId"]');
     const couponId = couponIdInput ? couponIdInput.value : null;
     const totalDiscount = document.querySelector('input[name="totalDiscount"]').value;
+    const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
 
     const selected = {
       addressType: document.querySelector('input[name="selected[addressType]"]').value,
@@ -184,6 +192,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         cartItems,
         totalPrice,
         couponId,
+        deliveryCharge,
         selected
       })
     });
@@ -211,6 +220,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
             totalPrice,
             couponId,
             selected,
+            deliveryCharge,
             totalDiscount
           })
         });

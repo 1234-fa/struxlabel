@@ -30,7 +30,7 @@ const getorderFailurePage =async (req,res)=>{
 // Create Razorpay order
 const createRazorpayOrder = async (req, res) => {
     try {
-      const { productId, quantity, totalPrice } = req.body;
+      const { productId, quantity, totalPrice ,deliveryCharge} = req.body;
       const userId = req.session.user;
       
       if (!userId) {
@@ -107,7 +107,8 @@ const createRazorpayOrder = async (req, res) => {
         quantity,
         totalPrice,
         selected,
-        couponId
+        couponId,
+        deliveryCharge
       } = req.body;
   
       // Verify Razorpay signature
@@ -190,6 +191,7 @@ const createRazorpayOrder = async (req, res) => {
         couponApplied: !!couponId,
         paymentMethod: 'razorpay',
         paymentStatus:'Paid',
+        deliveryCharge:deliveryCharge
       });
   
       await newOrder.save();
@@ -266,6 +268,7 @@ const createRazorpayOrder = async (req, res) => {
         totalPrice,
         selected,
         couponId,
+        deliveryCharge,
         totalDiscount
       } = req.body;
       console.log('total discount:',totalDiscount);
@@ -361,6 +364,7 @@ const createRazorpayOrder = async (req, res) => {
         orderedItems: orderItems,
         totalPrice: totalOriginalPrice,
         discount: Number(totalDiscount),
+        deliveryCharge:deliveryCharge,
         finalAmount: totalPrice,
         address,
         invoiceDate: new Date(),

@@ -1,5 +1,7 @@
 const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema')
+const StatusCode = require('../../config/statuscode');
+
 
 const categoryInfo = async (req, res) => {
     try {
@@ -32,13 +34,13 @@ const addCategory = async (req, res) => {
     const { name, description } = req.body;
 
     if (!name || !description) {
-        return res.status(400).json({ error: "Name and description are required." });
+        return res.status(StatusCode.NOT_FOUND).json({ error: "Name and description are required." });
     }
 
     try {
         const existingCategory = await Category.findOne({ name });
         if (existingCategory) {
-            return res.status(400).json({ error: "Category already exists" });
+            return res.status(StatusCode.NOT_FOUND).json({ error: "Category already exists" });
         }
 
         const newCategory = new Category({ name, description });
@@ -48,7 +50,7 @@ const addCategory = async (req, res) => {
 
     } catch (error) {
         console.error("Error in addCategory:", error);
-        return res.status(500).json({ error: "Internal server error", details: error.message });
+        return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ error: "Internal server error", details: error.message });
     }
 };
 
@@ -58,7 +60,7 @@ const addCategoryOffer = async (req, res) => {
       const categoryId = req.body.categoryId;
       const category = await Category.findById(categoryId);
       if (!category) {
-        return res.status(404).json({ status: false, message: "Category not found" });
+        return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ status: false, message: "Category not found" });
       }
   
       const products = await Product.find({ category: category._id });
@@ -110,8 +112,8 @@ const removeCategoryOffer = async (req, res) => {
 
 const getlistCategory=async (req,res)=>{
     try {
-        const id=req.query.id;
-        await Category.updateOne({_id:id},{$set: {isListed:false}});
+        const categoryId=req.query.id;
+        await Category.updateOne({_id:categoryId},{$set: {isListed:false}});
         res.redirect('/admin/category')
     } catch (error) {
         res.redirect('/pageerror')
@@ -121,8 +123,8 @@ const getlistCategory=async (req,res)=>{
 
 const getunlistCategory=async (req,res)=>{
     try {
-        const id=req.query.id;
-        await Category.updateOne({_id:id},{$set:{isListed:true}});
+        const categoryId=req.query.id;
+        await Category.updateOne({_id:categoryId},{$set:{isListed:true}});
         res.redirect('/admin/category');
     } catch (error) {
         res.redirect('/pageerror');

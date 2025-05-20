@@ -123,7 +123,8 @@ const getSingleOrderPage = async (req, res) => {
         totalPrice,
         selected,
         paymentMethod,
-        couponId // Add couponId to destructuring
+        couponId ,
+        deliveryCharge
       } = req.body;
       
       console.log('Received data:', req.body);
@@ -203,6 +204,7 @@ const getSingleOrderPage = async (req, res) => {
         coupon: couponId ? couponId : null, // Store coupon ID if applied
         couponApplied: !!couponId, // Boolean flag for coupon applied
         paymentMethod: paymentMethod,
+        deliveryCharge:deliveryCharge
       });
       
       // Save the order
@@ -323,12 +325,17 @@ const getSingleOrderPage = async (req, res) => {
         couponDiscount = salePrice - req.session.appliedCoupon.newTotal;
         finalTotal = req.session.appliedCoupon.newTotal;
       }
-      
+      const deliveryCharge = Number(finalTotal <= 2000 ? 54 :0);
+
+      finalTotal=Number(finalTotal)+deliveryCharge;
+
+
       console.log("Price details:", {
         originalPrice,
         salePrice,
         couponDiscount,
-        finalTotal
+        finalTotal,
+        deliveryCharge
       });
       
       res.render('payment', {
@@ -349,7 +356,7 @@ const getSingleOrderPage = async (req, res) => {
           couponDiscount: couponDiscount,
           couponId: appliedCoupon ? appliedCoupon._id : null,
           couponName: appliedCoupon ? appliedCoupon.name : null,
-           
+          deliveryCharge: deliveryCharge          
         }
       });
     } catch (error) {
@@ -828,12 +835,17 @@ const getSingleOrderPage = async (req, res) => {
         couponDiscount = saleTotal - req.session.appliedCoupon.newTotal;
         finalTotal = req.session.appliedCoupon.newTotal;
       }
-  
+
+      const deliveryCharge = Number(finalTotal <= 2000 ? 54 :0);
+
+      finalTotal=Number(finalTotal)+deliveryCharge;
+
       console.log("Price details:", {
         originalTotal,
         saleTotal,
         discountAmount,
         couponDiscount,
+        deliveryCharge,
         finalTotal
       });
 
@@ -855,7 +867,8 @@ const getSingleOrderPage = async (req, res) => {
           saveAmount: discountAmount,
           couponDiscount,
           couponId: appliedCoupon ? appliedCoupon._id : null,
-          couponName: appliedCoupon ? appliedCoupon.name : null
+          couponName: appliedCoupon ? appliedCoupon.name : null,
+          deliveryCharge:deliveryCharge
         }
       });
   
@@ -869,7 +882,7 @@ const getSingleOrderPage = async (req, res) => {
   const placeOrderFromCart = async (req, res) => {
     try {
       const userId = req.session.user?._id;
-      const { selected, couponId, paymentMethod, cartItems ,totalPrice ,totalDiscount} = req.body;
+      const { selected, couponId, paymentMethod, cartItems ,totalPrice ,totalDiscount,deliveryCharge} = req.body;
   
       if (!userId || !selected || !cartItems || cartItems.length === 0) {
         return res.redirect("/cart");
@@ -880,15 +893,13 @@ const getSingleOrderPage = async (req, res) => {
         return res.status(404).json({ message: "Cart not found" });
       }
   
-      // Filter only selected and valid (non-null product) items
       const orderedItems = cart.items
         .filter(item => cartItems.includes(item._id.toString()))
-        .filter(item => item.productId); // Remove items with missing products
+        .filter(item => item.productId); 
   
-      // Optional: Log missing products for debugging
       cart.items.forEach(item => {
         if (cartItems.includes(item._id.toString()) && !item.productId) {
-          console.warn(`⚠️ Missing product for cart item ID: ${item._id}`);
+          console.warn(` Missing product for cart item ID: ${item._id}`);
         }
       });
   
@@ -943,7 +954,8 @@ const getSingleOrderPage = async (req, res) => {
       }
   
       
-  
+  console.log('delivery charge',deliveryCharge);
+
       const address = {
         addressType: selected.addressType,
         name: selected.name,
@@ -968,7 +980,8 @@ const getSingleOrderPage = async (req, res) => {
         createdOn: new Date(),
         coupon: couponId || null,
         couponApplied: !!couponId,
-        paymentMethod
+        paymentMethod,
+        deliveryCharge
       });
   
       await newOrder.save();
