@@ -1,5 +1,7 @@
 const Order = require('../../models/orderSchema');
 const generateInvoice = require('../../config/invoice');
+const StatusCode = require('../../config/statuscode');
+
 
 const downloadInvoice = async (req, res) => {
   try {
@@ -11,14 +13,14 @@ const downloadInvoice = async (req, res) => {
       .populate('orderedItems.product', 'productName');
 
     if (!order) {
-      return res.status(404).send('Order not found');
+      return res.status(StatusCode.NOT_FOUND).send('Order not found');
     }
 
     // 2) Ensure order status is eligible for invoice
     const allowed = ['order confirmed', 'order shipped', 'delivered'];
     if (!allowed.includes(order.status.toLowerCase())) {
       return res
-        .status(403)
+        .status(StatusCode.FORBIDDEN)
         .send('Invoice only available once order is confirmed.');
     }
 
@@ -26,7 +28,7 @@ const downloadInvoice = async (req, res) => {
     const addrDetail = order.address;
 
     if (!addrDetail || !addrDetail.name) {
-      return res.status(400).send('No address information found in this order.');
+      return res.status(StatusCode.BAD_REQUEST).send('No address information found in this order.');
     }
 
     // 4) Format address
@@ -59,7 +61,7 @@ const downloadInvoice = async (req, res) => {
 
   } catch (err) {
     console.error('Error generating invoice:', err);
-    res.status(500).send('Internal Server Error');
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
   }
 };
 

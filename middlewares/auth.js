@@ -14,7 +14,7 @@ const userAuth = (req, res, next) => {
             })
             .catch(error => {
                 console.log("Error in user auth middleware:", error);
-                res.status(500).send("Internal server error");
+                res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal server error");
             });
     } else {
         res.redirect('/login');

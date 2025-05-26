@@ -381,9 +381,7 @@
                 <div class="pro-details-brand">
                   <span> Brands: <a href="#"><%= product.brand %></a></span>
                 </div>
-                <div class="product-rate-cover text-end">
-                  <span class="font-small ml-5 text-muted"> (25 reviews)</span>
-                </div>
+                
               </div>
               <div class="product-price-cover">
                 <div class="price-info">
@@ -392,7 +390,7 @@
                 </div>
                 <div class="offer-info">
                   <% if (!totalOffer) { %>
-                    <div class="no-offer">No offers available</div>
+                    <div class="no-offer"></div>
                   <% } else { %>
                     <div class="offer-percent"><%= totalOffer %>% OFF</div>
                   <% } %>

@@ -80,7 +80,7 @@ const addCategoryOffer = async (req, res) => {
   
       res.json({ status: true });
     } catch (error) {
-      res.status(500).json({ status: false, message: "Internal server error" });
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" });
     }
   };
 
@@ -90,7 +90,7 @@ const removeCategoryOffer = async (req, res) => {
       const category = await Category.findById(categoryId);
   
       if (!category) {
-        return res.status(404).json({ status: false, message: "Category not found" });
+        return res.status(StatusCode.NOT_FOUND).json({ status: false, message: "Category not found" });
       }
   
       const percentage = category.categoryOffer;
@@ -106,7 +106,7 @@ const removeCategoryOffer = async (req, res) => {
       await category.save();
       res.json({ status: true });
     } catch (error) {
-      res.status(500).json({ status: false, message: "Internal server error" });
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" });
     }
   };
 
@@ -139,7 +139,7 @@ const editCategory = async (req, res) => {
       const existingCategory = await Category.findOne({ name });
   
       if (existingCategory && existingCategory._id.toString() !== id) {
-        return res.status(400).json({ status: false, message: "Category name already exists" });
+        return res.status(StatusCode.BAD_REQUEST).json({ status: false, message: "Category name already exists" });
       }
   
       const updatedCategory = await Category.findByIdAndUpdate(
@@ -149,13 +149,13 @@ const editCategory = async (req, res) => {
       );
   
       if (updatedCategory) {
-        return res.status(200).json({ status: true, message: "Category updated successfully" });
+        return res.status(StatusCode.OK).json({ status: true, message: "Category updated successfully" });
       } else {
-        return res.status(404).json({ status: false, message: "Category not found" });
+        return res.status(StatusCode.NOT_FOUND).json({ status: false, message: "Category not found" });
       }
     } catch (error) {
       console.error("Edit Category Error:", error);
-      return res.status(500).json({ status: false, message: "Internal server error" });
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ status: false, message: "Internal server error" });
     }
   };
 

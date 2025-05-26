@@ -7,6 +7,8 @@ const razorpay = require('../../config/payments');
 const Coupon = require('../../models/coupenSchema');
 const UserCoupon = require('../../models/userCouponSchema');
 const PaymentBackup = require('../../models/paymentBackup');
+const StatusCode = require('../../config/statuscode');
+
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 
@@ -34,7 +36,7 @@ const createRazorpayOrder = async (req, res) => {
       const userId = req.session.user;
       
       if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
+        return res.status(StatusCode.UNAUTHORIZED).json({ error: 'User not authenticated' });
       }
       
       // Convert to paise (Razorpay requires amount in smallest currency unit)
@@ -56,7 +58,7 @@ const createRazorpayOrder = async (req, res) => {
       res.json({ order_id: order.id, amount: order.amount });
     } catch (error) {
       console.error('Error creating Razorpay order:', error);
-      res.status(500).json({ error: 'Failed to create payment order' });
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Failed to create payment order' });
     }
   };
 
@@ -66,7 +68,7 @@ const createRazorpayOrder = async (req, res) => {
       const userId = req.session.user;
   
       if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
+        return res.status(StatusCode.UNAUTHORIZED).json({ error: 'User not authenticated' });
       }
   
       const amount = Math.round(parseFloat(totalPrice) * 100); // Convert to paise
@@ -92,10 +94,11 @@ const createRazorpayOrder = async (req, res) => {
       });
     } catch (error) {
       console.error('Error creating Razorpay order:', error);
-      res.status(500).json({ error: 'Failed to create payment order' });
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Failed to create payment order' });
     }
   };
 
+  
 
   const verifyRazorpayPayment = async (req, res) => {
     try {
@@ -118,22 +121,22 @@ const createRazorpayOrder = async (req, res) => {
         .digest('hex');
   
       if (generated_signature !== razorpay_signature) {
-        return res.status(400).json({ success: false, message: 'Payment verification failed' });
+        return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: 'Payment verification failed' });
       }
   
       const userId = req.session.user?._id;
       if (!userId) {
-        return res.status(401).json({ message: 'User not logged in' });
+        return res.status(StatusCode.UNAUTHORIZED).json({ message: 'User not logged in' });
       }
   
       const product = await Product.findById(productId);
       if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
+        return res.status(StatusCode.NOT_FOUND).json({ message: 'Product not found' });
       }
   
       const orderQty = Number(quantity);
       if (product.quantity < orderQty) {
-        return res.status(400).json({ message: 'Insufficient stock available' });
+        return res.status(StatusCode.BAD_REQUEST).json({ message: 'Insufficient stock available' });
       }
   
       const address = {
@@ -280,17 +283,17 @@ const createRazorpayOrder = async (req, res) => {
         .digest("hex");
   
       if (generated_signature !== razorpay_signature) {
-        return res.status(400).json({ success: false, message: "Payment verification failed" });
+        return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Payment verification failed" });
       }
   
       const userId = req.session.user?._id;
       if (!userId) {
-        return res.status(401).json({ message: "User not logged in" });
+        return res.status(StatusCode.UNAUTHORIZED).json({ message: "User not logged in" });
       }
   
       const cart = await Cart.findOne({ userId }).populate("items.productId");
       if (!cart) {
-        return res.status(404).json({ message: "Cart not found" });
+        return res.status(StatusCode.NOT_FOUND).json({ message: "Cart not found" });
       }
   
       const orderedItems = cart.items
@@ -298,7 +301,7 @@ const createRazorpayOrder = async (req, res) => {
         .filter(item => item.productId); // filter valid products
   
       if (orderedItems.length === 0) {
-        return res.status(400).json({ message: "No valid products to order" });
+        return res.status(StatusCode.BAD_REQUEST).json({ message: "No valid products to order" });
       }
   
       let totalOriginalPrice = 0;
@@ -312,7 +315,7 @@ const createRazorpayOrder = async (req, res) => {
               const quantity = item.quantity;
         
               if (product.quantity < quantity) {
-                return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
+                return res.status(StatusCode.BAD_REQUEST).json({ message: `Insufficient stock for ${product.name}` });
               }
         
               const itemTotal = price * quantity;
@@ -405,7 +408,7 @@ const createRazorpayOrder = async (req, res) => {
   
     } catch (error) {
       console.error("❌ Error verifying Razorpay cart payment:", error);
-      return res.status(500).json({
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         redirect: '/order-failure',
         message: "Payment verification failed"

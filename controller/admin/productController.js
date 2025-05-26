@@ -2,10 +2,10 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
 const User = require("../../models/userSchema");
+const StatusCode = require('../../config/statuscode');
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
-
 
 
 const getProductPage = async (req, res) => {
@@ -119,7 +119,7 @@ const addProducts = async (req,res)=>{
 
   // Return validation errors if any
   if (validationErrors.length) {
-      return res.status(400).json({ errors: validationErrors });
+      return res.status(StatusCode.BAD_REQUEST).json({ errors: validationErrors });
   }
 
   // Check for duplicate product name
@@ -128,7 +128,7 @@ const addProducts = async (req,res)=>{
   });
 
   if(productExists){
-      return res.status(400).json({ error: "Product already exists, please try another name" });
+      return res.status(StatusCode.BAD_REQUEST).json({ error: "Product already exists, please try another name" });
   }
 
   let images = [];
@@ -164,14 +164,14 @@ const addProducts = async (req,res)=>{
             } catch (unlinkError) {
                 console.error('Error deleting temporary file:', unlinkError);
             }
-            return res.status(500).json({ error: "Error processing image" });
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ error: "Error processing image" });
         }
     }
 }
 const categoryId = await Category.findOne({name: products.category});
 
         if(!categoryId){
-            return res.status(400).json({ error: "Invalid category name" });
+            return res.status(StatusCode.BAD_REQUEST).json({ error: "Invalid category name" });
         }
         const newProduct = new Product({
             productName: products.productName.trim(),
@@ -193,7 +193,7 @@ const categoryId = await Category.findOne({name: products.category});
     
     } catch (error) {
         console.error('Error saving product:', error);
-        return res.status(500).json({ error: "Error saving product", details: error.message });
+        return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ error: "Error saving product", details: error.message });
     }
 }
 
@@ -290,11 +290,11 @@ const editProduct = async (req, res) => {
 
       const product = await Product.findOne({ _id: id });
       if (!product) {
-          return res.status(404).json({ message: "Product not found" });
+          return res.status(StatusCode.NOT_FOUND).json({ message: "Product not found" });
       }
 
       if (!productName || !description || !longDescription || !specifications || !category || !regularPrice || !salePrice) {
-          return res.status(400).json({ message: "All fields are required" });
+          return res.status(StatusCode.BAD_REQUEST).json({ message: "All fields are required" });
       }
 
       let images = [...product.productImages];
@@ -355,10 +355,10 @@ const editProduct = async (req, res) => {
       // Save
       await product.save();
 
-      res.status(200).redirect('/admin/products');
+      res.status(StatusCode.OK).redirect('/admin/products');
   } catch (error) {
       console.error('Error in editProduct:', error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: "Internal server error" });
   }
 };
 

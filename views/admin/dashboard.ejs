@@ -1,103 +1,325 @@
 <%- include("../../views/partials/admin/header") %>
 
-<style>
-  .dashboard-container { max-width: 1000px; margin: auto; padding: 20px; font-family: sans-serif; }
-  form, table { margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-  th { background-color: #f4f4f4; }
-  .pagination a { margin: 0 5px; padding: 6px 12px; border: 1px solid #ccc; text-decoration: none; }
-  .pagination .active { background-color: #007bff; color: white; }
-</style>
-
-<div class="dashboard-container">
-  <h2>Sales Dashboard</h2>
-
-  <form method="GET" action="/admin">
-    <label>Date Range:</label>
-    <input type="date" name="startDate" value="<%= startDate || '' %>">
-    <input type="date" name="endDate" value="<%= endDate || '' %>">
-
-    <select name="filter">
-      <option value="">Custom</option>
-      <option value="day" <%= filter==='day'?'selected':'' %>>Last Day</option>
-      <option value="week" <%= filter==='week'?'selected':'' %>>Last Week</option>
-      <option value="month" <%= filter==='month'?'selected':'' %>>Last Month</option>
-    </select>
-
-    <input type="text" name="search" placeholder="Search by Order ID" value="<%= search || '' %>">
-    <button type="submit">Generate</button>
-  </form>
-
-  <p>Total Sales: ₹<%= totalSales %></p>
-  <p>Total Discount: ₹<%= totalDiscount %></p>
-  <p>Coupon Deduction: ₹<%= totalCoupon %></p>
-  <p>Total Orders: <%= orders.length %></p>
-
-  <form id="downloadForm" method="POST" action="/admin/sales-report/download">
-    <input type="hidden" name="startDate" value="<%= startDate %>">
-    <input type="hidden" name="endDate" value="<%= endDate %>">
-    <button name="format" value="pdf">Download PDF</button>
-    <button name="format" value="excel">Download Excel</button>
-    <p id="downloadError" style="color: rgb(238, 86, 86); display: none; margin-top: 10px;"></p>
-  </form>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Order ID</th>
-        <th>Date</th>
-        <th>Total</th>
-        <th>Final Amount</th>
-        <th>Discount</th>
-        <th>Coupon</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% if (orders.length === 0) { %>
-        <tr><td colspan="5">No orders found for selected criteria.</td></tr>
-      <% } else { %>
-        <% orders.forEach(order => { %>
-          <tr>
-            <td><%= order.orderId %></td>
-            <td><%= order.createdAt.toDateString() %></td>
-            <td><%= order.totalPrice %></td>
-            <td>₹<%= order.finalAmount %></td>
-            <td>₹<%= order.discount %></td>
-            <td><%= order.coupon ? order.coupon.code : 'N/A' %></td>
-          </tr>
-        <% }) %>
-      <% } %>
-    </tbody>
-  </table>
-
-  <% if (totalPages > 1) { %>
-    <div class="pagination">
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <a class="<%= i === currentPage ? 'active' : '' %>" href="?page=<%= i %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>&filter=<%= filter || '' %>&search=<%= search || '' %>">
-          <%= i %>
-        </a>
-      <% } %>
-    </div>
-  <% } %>
+<div class="container-fluid">
+  <div class="row">    
+    <main>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard</h1>
+      </div>
+      <!-- Statistics Overview -->
+      <div class="row mb-1">
+        <div class="col-md-3 mb-3">
+          <div class="card text-white bg-primary">
+            <div class="card-body">
+              <h5 class="card-title">Daily Sales</h5>
+              <p class="card-text fs-4">₹<%= statistics.dailySales.toFixed(2) %></p>
+              <p class="small"><%= statistics.dailyOrders %> orders today</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card text-white bg-success">
+            <div class="card-body">
+              <h5 class="card-title">Monthly Sales</h5>
+              <p class="card-text fs-4">₹<%= statistics.monthlySales.toFixed(2) %></p>
+              <p class="small"><%= statistics.monthlyOrders %> orders this month</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card text-white bg-warning">
+            <div class="card-body">
+              <h5 class="card-title">Products</h5>
+              <p class="card-text fs-4"><%= statistics.productCount %></p>
+              <p class="small"><%= statistics.lowStockCount %> low stock items</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card text-white bg-danger">
+            <div class="card-body">
+              <h5 class="card-title">Pending Orders</h5>
+              <p class="card-text fs-4"><%= statistics.pendingOrdersCount %></p>
+              <p class="small">Awaiting processing</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex;align-items: center;justify-content: center;">
+      <div style="margin-bottom:10px; margin-top: 0%;">
+      <button >
+      <h3 style="color: blue;"><a href="/admin/salesReport">Sales Report</a></h3>
+      </button>
+      </div>
+      </div>
+      <!-- Sales Chart -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Sales Overview</h5>
+          <form id="filterForm" class="row g-3 align-items-center">
+            <div class="col-auto">
+              <select class="form-select" id="filterType" name="filterType" onchange="updateFilterOptions()">
+                <option value="yearly" <%= filterType === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                <option value="monthly" <%= filterType === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                <option value="daily" <%= filterType === 'daily' ? 'selected' : '' %>>Daily</option>
+              </select>
+            </div>
+            
+            <div class="col-auto" id="yearSelectContainer" <%= filterType !== 'daily' ? '' : 'style="display:none;"' %>>
+              <select class="form-select" id="year" name="year">
+                <% for (let year = currentYear; year >= currentYear - 4; year--) { %>
+                  <option value="<%= year %>" <%= selectedYear === year ? 'selected' : '' %>><%= year %></option>
+                <% } %>
+              </select>
+            </div>
+            
+            <div class="col-auto" id="monthSelectContainer" <%= filterType === 'daily' ? '' : 'style="display:none;"' %>>
+              <select class="form-select" id="month" name="month">
+                <option value="1" <%= selectedMonth === 1 ? 'selected' : '' %>>January</option>
+                <option value="2" <%= selectedMonth === 2 ? 'selected' : '' %>>February</option>
+                <option value="3" <%= selectedMonth === 3 ? 'selected' : '' %>>March</option>
+                <option value="4" <%= selectedMonth === 4 ? 'selected' : '' %>>April</option>
+                <option value="5" <%= selectedMonth === 5 ? 'selected' : '' %>>May</option>
+                <option value="6" <%= selectedMonth === 6 ? 'selected' : '' %>>June</option>
+                <option value="7" <%= selectedMonth === 7 ? 'selected' : '' %>>July</option>
+                <option value="8" <%= selectedMonth === 8 ? 'selected' : '' %>>August</option>
+                <option value="9" <%= selectedMonth === 9 ? 'selected' : '' %>>September</option>
+                <option value="10" <%= selectedMonth === 10 ? 'selected' : '' %>>October</option>
+                <option value="11" <%= selectedMonth === 11 ? 'selected' : '' %>>November</option>
+                <option value="12" <%= selectedMonth === 12 ? 'selected' : '' %>>December</option>
+              </select>
+            </div>
+            
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">Apply</button>
+            </div>
+          </form>
+        </div>
+        <div class="card-body">
+          <canvas id="salesChart" height="100"></canvas>
+        </div>
+      </div>
+      
+      <div class="row">
+        <!-- Best Selling Products -->
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Best Selling Products</h5>
+              <a href="/admin/products" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th class="text-end">Sold</th>
+                      <th class="text-end">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% bestSellingProducts.forEach(product => { %>
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <% if (product.productImages) { %>
+                              <img src="/uploads/product-images/<%= product.productImages %>" alt="<%= product.productName %>" class="img-thumbnail me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            <% } else { %>
+                              <div class="bg-light me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-image"></i>
+                              </div>
+                            <% } %>
+                            <span><%= product.productName %></span>
+                          </div>
+                        </td>
+                        <td class="text-end"><%= product.totalQuantity %></td>
+                        <td class="text-end">₹<%= product.totalRevenue.toFixed(2) %></td>
+                      </tr>
+                    <% }) %>
+                    <% if (bestSellingProducts.length === 0) { %>
+                      <tr>
+                        <td colspan="3" class="text-center">No data available</td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Best Selling Categories -->
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Best Selling Categories</h5>
+              <a href="/admin/category" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th class="text-end">Items Sold</th>
+                      <th class="text-end">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% bestSellingCategories.forEach(category => { %>
+                      <tr>
+                        <td><%= category.categoryName %></td>
+                        <td class="text-end"><%= category.totalQuantity %></td>
+                        <td class="text-end">₹<%= category.totalRevenue.toFixed(2) %></td>
+                      </tr>
+                    <% }) %>
+                    <% if (bestSellingCategories.length === 0) { %>
+                      <tr>
+                        <td colspan="3" class="text-center">No data available</td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Best Selling Brands -->
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Best Selling Brands</h5>
+              <a href="/admin/products" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th>Brand</th>
+                      <th class="text-end">Items Sold</th>
+                      <th class="text-end">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% bestSellingBrands.forEach(brand => { %>
+                      <tr>
+                        <td><%= brand.brandName %></td>
+                        <td class="text-end"><%= brand.totalQuantity %></td>
+                        <td class="text-end">₹<%= brand.totalRevenue.toFixed(2) %></td>
+                      </tr>
+                    <% }) %>
+                    <% if (bestSellingBrands.length === 0) { %>
+                      <tr>
+                        <td colspan="3" class="text-center">No data available</td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Ledger Book Quick Access -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Ledger Book</h5>
+        </div>
+        <div class="card-body">
+          <form action="/admin/ledger" method="GET" class="row g-3">
+            <div class="col-md-4">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="startDate" name="startDate" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+            <div class="col-md-4">
+              <label for="endDate" class="form-label">End Date</label>
+              <input type="date" class="form-control" id="endDate" name="endDate" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary">Generate Ledger</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  document.getElementById('downloadForm').addEventListener('submit', function (e) {
-    const startDate = this.querySelector('input[name="startDate"]').value;
-    const endDate = this.querySelector('input[name="endDate"]').value;
-    const errorElement = document.getElementById('downloadError');
-
-    // Clear any previous error
-    errorElement.textContent = '';
-    errorElement.style.display = 'none';
-
-    if (!startDate || !endDate) {
-      e.preventDefault();
-      errorElement.textContent = 'Please select both start and end dates before downloading.';
-      errorElement.style.display = 'block';
+  // Sales Chart
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  const salesChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: <%- JSON.stringify(salesData.labels) %>,
+      datasets: [
+        {
+          label: 'Sales (₹)',
+          data: <%- JSON.stringify(salesData.salesData) %>,
+          backgroundColor: 'rgba(54, 162, 235, 0.5)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Orders',
+          data: <%- JSON.stringify(salesData.orderCounts) %>,
+          backgroundColor: 'rgba(255, 99, 132, 0.5)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+          type: 'line',
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Sales (₹)'
+          }
+        },
+        y1: {
+          beginAtZero: true,
+          position: 'right',
+          grid: {
+            drawOnChartArea: false
+          },
+          title: {
+            display: true,
+            text: 'Orders'
+          }
+        }
+      }
     }
   });
+  
+  // Update filter options based on selection
+  function updateFilterOptions() {
+    const filterType = document.getElementById('filterType').value;
+    const yearContainer = document.getElementById('yearSelectContainer');
+    const monthContainer = document.getElementById('monthSelectContainer');
+    
+    if (filterType === 'yearly') {
+      yearContainer.style.display = 'block';
+      monthContainer.style.display = 'none';
+    } else if (filterType === 'monthly') {
+      yearContainer.style.display = 'block';
+      monthContainer.style.display = 'none';
+    } else if (filterType === 'daily') {
+      yearContainer.style.display = 'block';
+      monthContainer.style.display = 'block';
+    }
+  }
 </script>
-
 <%- include("../../views/partials/admin/footer") %>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOST AND FOUND - Premium Men's Fashion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            padding: 60px 0;
+            position: relative;
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+            border-radius: 50%;
+            border: 4px solid #FFD700;
+            padding: 10px;
+            background: linear-gradient(45deg, #000, #333);
+            animation: logoFloat 3s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.1);
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .main-title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.2); }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #cccccc;
+            margin-bottom: 40px;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        /* About Section */
+        .about-section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 50px;
+            color: #FFD700;
+            position: relative;
+            animation: slideInLeft 1s ease-out;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            animation: expandLine 1.5s ease-out 0.5s both;
+        }
+
+        @keyframes expandLine {
+            0% { width: 0; }
+            100% { width: 100px; }
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            margin-bottom: 80px;
+        }
+
+        .text-content {
+            animation: fadeInLeft 1s ease-out 0.8s both;
+        }
+
+        .text-content h3 {
+            font-size: 2rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+
+        .text-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+
+        .highlight {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .image-container {
+            position: relative;
+            animation: fadeInRight 1s ease-out 0.8s both;
+        }
+
+        .clothing-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+            border: 3px solid #FFD700;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .clothing-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            padding: 60px 0;
+            margin: 80px 0;
+            border-radius: 20px;
+            animation: slideInUp 1s ease-out 1.2s both;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item {
+            color: #000;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            animation: countUp 2s ease-out 1.5s both;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Locations Section */
+        .locations-section {
+            padding: 80px 0;
+        }
+
+        .locations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .location-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #FFD700;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 1s ease-out calc(1.5s + var(--delay)) both;
+        }
+
+        .location-card:nth-child(1) { --delay: 0s; }
+        .location-card:nth-child(2) { --delay: 0.2s; }
+        .location-card:nth-child(3) { --delay: 0.4s; }
+
+        .location-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(255, 215, 0, 0.2);
+        }
+
+        .location-card h4 {
+            font-size: 1.5rem;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+
+        .location-card p {
+            color: #cccccc;
+            font-size: 1.1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            0% {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes countUp {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2.5rem;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .logo {
+                width: 120px;
+                height: 120px;
+            }
+
+            .locations-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Floating particles animation */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: #FFD700;
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating particles -->
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 20%; animation-delay: 1s;"></div>
+    <div class="particle" style="left: 30%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 40%; animation-delay: 3s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+    <div class="particle" style="left: 70%; animation-delay: 2.5s;"></div>
+    <div class="particle" style="left: 80%; animation-delay: 1.5s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 3.5s;"></div>
+
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="logo">
+                <a href="/">
+                    <img src="/img/logo.png" alt="Store Logo">
+                </a>
+            </div>
+            <h1 class="main-title">Premium Men's Fashion</h1>
+            <p class="subtitle">Defining Style, Delivering Excellence Since 2018</p>
+        </header>
+
+        <!-- About Section -->
+        <section class="about-section">
+            <h2 class="section-title">About Us</h2>
+            
+            <div class="content-grid">
+                <div class="text-content">
+                    <h3>Our Story</h3>
+                    <p>
+                        For over <span class="highlight">6+ years</span>, we have been Kerala's premier destination for sophisticated men's fashion. What started as a vision to redefine men's style has evolved into a trusted brand with a strong presence across the region.
+                    </p>
+                    <p>
+                        Located in the heart of <span class="highlight">Kottayam, Thenagna, and Kanjirappally</span>, our three strategically positioned branches serve the discerning gentlemen of Kerala who understand that great style is not just about clothing—it's about confidence, character, and craftsmanship.
+                    </p>
+                    <p>
+                        We curate the finest collection of men's apparel, from contemporary casual wear to sophisticated formal attire, ensuring every piece meets our standards of quality and style excellence.
+                    </p>
+                </div>
+                
+                <div class="image-container">
+                    <img src="https://world-arabia.com/storage/images/news/crops/news-promo/f2sgWTiESHbH6hDH1EHvQscWdSypTaBg1hlhCdNV.webp" 
+                         alt="Premium Men's Clothing" class="clothing-image">
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">6+</div>
+                    <div class="stat-label">Years of Excellence</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Store Locations</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">1000+</div>
+                    <div class="stat-label">Happy Customers</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Premium Products</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Locations Section -->
+        <section class="locations-section">
+            <h2 class="section-title">Our Locations</h2>
+            
+            <div class="locations-grid">
+                <div class="location-card">
+                    <h4>Kottayam Branch</h4>
+                    <p>Our flagship store in the heart of Kottayam, offering the complete range of premium men's fashion with personalized styling services.</p>
+                </div>
+                
+                <div class="location-card">
+                    <h4>Thenagna Branch</h4>
+                    <p>Conveniently located in Thenagna, this branch focuses on contemporary styles and the latest fashion trends for the modern gentleman.</p>
+                </div>
+                
+                <div class="location-card">
+                    <h4>Kanjirappally Branch</h4>
+                    <p>Our newest addition in Kanjirappally, bringing premium men's fashion closer to our valued customers in the region.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Add scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated elements
+        document.querySelectorAll('[class*="fade"], [class*="slide"]').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Add hover effects to stat numbers
+        document.querySelectorAll('.stat-number').forEach(stat => {
+            stat.addEventListener('mouseenter', () => {
+                stat.style.transform = 'scale(1.1)';
+                stat.style.transition = 'transform 0.2s ease';
+            });
+            
+            stat.addEventListener('mouseleave', () => {
+                stat.style.transform = 'scale(1)';
+            });
+        });
+
+        // Add dynamic particle generation
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 6000);
+        }
+
+        // Generate particles periodically
+        setInterval(createParticle, 2000);
+    </script>
+</body>
+</html>

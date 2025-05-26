@@ -1,98 +1,198 @@
+<!-- Footer Section Begin -->
+<style>
+    .footer {
+        background-color: #000000;
+        color: #ecf0f1;
+        padding: 40px 0 20px;
+    }
 
-    <!-- Footer Section Begin -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3 col-md-6 col-sm-6">
-                    <div class="footer__about">
-                        <div class="aside-top" style="display: flex; justify-content: space-between; align-items: center;">
-                            <a href="#" class="brand-wrap" style="display: flex; align-items: center; text-decoration: none;">
-                                <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 4px;">
-                                    <img src="/img/logo.png" alt="Men Fashion Dashboard"
-                                         style="width: 100%; height: auto; display: block;">
-                                </div>
-                                <span style="font-size: 14px; color: white;">LOST AND FOUND</span>
-                            </a>
-                        </div>
-                        <p>Welcome to LOST AND FOUND, your go-to destination for stylish and premium-quality fashion. We take pride in blending modern trends with timeless elegance, offering unique designs that make a statement. Our mission is to empower individuals to express their style with confidence and authenticity. Dress bold, live free!</p>
-                        <a href="#"><img src="img/payment.png" alt=""></a>
+    .footer__about .brand-wrap span {
+        font-weight: 600;
+        font-size: 16px;
+        color: #ffffff;
+    }
+
+    .footer__about p {
+        color: #bdc3c7;
+        line-height: 1.6;
+        margin: 15px 0;
+        font-size: 14px;
+    }
+
+    .footer__widget h6 {
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .footer__widget ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer__widget ul li {
+        margin-bottom: 8px;
+    }
+
+    .footer__widget ul li a {
+        color: #bdc3c7;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s ease;
+    }
+
+    .footer__widget ul li a:hover {
+        color: #3498db;
+    }
+
+    .location-item {
+        color: #bdc3c7;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .location-item i {
+        color: #3498db;
+        margin-right: 8px;
+        width: 12px;
+    }
+
+    .footer__copyright {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #34495e;
+        text-align: center;
+    }
+
+    .footer__copyright p {
+        color: #95a5a6;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .footer {
+            padding: 30px 0 15px;
+        }
+        
+        .footer__widget {
+            margin-bottom: 25px;
+        }
+    }
+</style>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <!-- Brand & About -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="footer__about">
+                    <div class="aside-top">
+                        <a href="/" class="brand-wrap" style="display: flex; align-items: center; text-decoration: none;">
+                            <div style="width: 32px; height: 32px; overflow: hidden; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 8px;">
+                                <img src="/img/logo.png" alt="Lost and Found Logo" style="width: 100%; height: auto;">
+                            </div>
+                            <span>LOST AND FOUND</span>
+                        </a>
                     </div>
-                </div>
-                <div class="col-lg-2 offset-lg-1 col-md-3 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>Shopping</h6>
-                        <ul>
-                            <li><a href="#">Clothing Store</a></li>
-                            <li><a href="#">Trending Shoes</a></li>
-                            <li><a href="#">Accessories</a></li>
-                            <li><a href="#">Sale</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>Shopping</h6>
-                        <ul>
-                            <li><a href="#">Contact Us</a></li>
-                            <li><a href="#">Payment Methods</a></li>
-                            <li><a href="#">Delivary</a></li>
-                            <li><a href="#">Return & Exchanges</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 offset-lg-1 col-md-6 col-sm-6">
-                    <div class="footer__widget">
-                        <h6>NewLetter</h6>
-                        <div class="footer__newslatter">
-                            <p>Be the first to know about new arrivals, look books, sales & promos!</p>
-                            <form action="#">
-                                <input type="text" placeholder="Your email">
-                                <button type="submit"><span class="icon_mail_alt"></span></button>
-                            </form>
-                        </div>
-                    </div>
+                    <p>Welcome to LOST AND FOUND, your go-to destination for stylish and premium-quality fashion. We take pride in blending modern trends with timeless elegance, offering unique designs that make a statement. Our mission is to empower individuals to express their style with confidence and authenticity. Dress bold, live free!</p>
+                    <a href="#"><img src="img/payment.png" alt="Payment Methods"></a>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <div class="footer__copyright__text">
-                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                        <p>Copyright ©
-                            <script>
-                                document.write(new Date().getFullYear());
-                            </script>2020
-                            All rights reserved | Lost And Found<i class="fa fa-heart-o"
-                            aria-hidden="true"></i>
-                        </p>
-                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+
+            <!-- Shopping -->
+            <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="footer__widget">
+                    <h6>Shopping</h6>
+                    <ul>
+                        <li>Clothing Store</li>
+                        <li>Trending Shoes</li>
+                        <li>Accessories</li>
+                    </ul>
+                </div>
+            </div>
+
+             <!-- Shopping -->
+            <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="footer__widget">
+                    <h6>Contact</h6>
+                    <ul>
+                       <li>call : +91-9744021175</li>
+                       <li>help@lostandfound.com</li>
+    
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Company -->
+            <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="footer__widget">
+                    <h6>Company</h6>
+                    <ul>
+                        <li><a href="/aboutUs">About Us</a></li>
+                        <li><a href="/privacyPolicy">Privacy Policy</a></li>
+                        <li><a href="/shippingPolicy">Shipping Policy</a></li>
+                        <li><a href="/termsAndConditions">Terms And Conditions</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Locations -->
+            <div class="col-lg-2 col-md-6 col-sm-12">
+                <div class="footer__widget">
+                    <h6>Our Locations</h6>
+                    <div class="location-item">
+                        <i class="fas fa-map-marker-alt"></i>Thengana
+                    </div>
+                    <div class="location-item">
+                        <i class="fas fa-map-marker-alt"></i>Kottayam
+                    </div>
+                    <div class="location-item">
+                        <i class="fas fa-map-marker-alt"></i>Kanjikkuzhi
+                    </div>
+                    <div class="location-item">
+                        <i class="fas fa-map-marker-alt"></i>Kanjirappaly
+                    </div>
+                    <div class="location-item">
+                        <i class="fas fa-map-marker-alt"></i>Thiruvalla
                     </div>
                 </div>
             </div>
         </div>
-    </footer>
-    <!-- Footer Section End -->
 
-    <!-- Search Begin -->
-    <div class="search-model">
-        <div class="h-100 d-flex align-items-center justify-content-center">
-            <div class="search-close-switch">+</div>
-            <form class="search-model-form">
-                <input type="text" id="search-input" placeholder="Search here.....">
-            </form>
+
+        <!-- Copyright -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="footer__copyright">
+                    <p>
+                        Copyright © <script>document.write(new Date().getFullYear());</script> 
+                        All rights reserved | Lost And Found 
+                        <i class="fa fa-heart-o" aria-hidden="true"></i>
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- Search End -->
+</footer>
+<!-- Footer Section End -->
 
-    <!-- Js Plugins -->
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery.nice-select.min.js"></script>
-    <script src="js/jquery.nicescroll.min.js"></script>
-    <script src="js/jquery.magnific-popup.min.js"></script>
-    <script src="js/jquery.countdown.min.js"></script>
-    <script src="js/jquery.slicknav.js"></script>
-    <script src="js/mixitup.min.js"></script>
-    <script src="js/owl.carousel.min.js"></script>
-    <script src="js/main.js"></script>
+<!-- Js Plugins -->
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/jquery.nice-select.min.js"></script>
+<script src="js/jquery.nicescroll.min.js"></script>
+<script src="js/jquery.magnific-popup.min.js"></script>
+<script src="js/jquery.countdown.min.js"></script>
+<script src="js/jquery.slicknav.js"></script>
+<script src="js/mixitup.min.js"></script>
+<script src="js/owl.carousel.min.js"></script>
+<script src="js/main.js"></script>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </body>
 </html>

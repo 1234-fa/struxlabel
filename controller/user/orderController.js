@@ -6,6 +6,7 @@ const Order = require('../../models/orderSchema');
 const Coupon = require('../../models/coupenSchema');
 const UserCoupon = require('../../models/userCouponSchema');
 const Wallet = require('../../models/walletSchema');
+const StatusCode = require('../../config/statuscode');
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
@@ -131,17 +132,17 @@ const getSingleOrderPage = async (req, res) => {
       
       const userId = req.session.user?._id;
       if (!userId) {
-        return res.status(401).json({ message: 'User not logged in' });
+        return res.status(StatusCode.UNAUTHORIZED).json({ message: 'User not logged in' });
       }
       
       const product = await Product.findById(productId);
       if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
+        return res.status(StatusCode.NOT_FOUND).json({ message: 'Product not found' });
       }
       
       const orderQty = Number(quantity);
       if (product.quantity < orderQty) {
-        return res.status(400).json({ message: 'Insufficient stock available' });
+        return res.status(StatusCode.BAD_REQUEST).json({ message: 'Insufficient stock available' });
       }
       
       // Ensure selected data is being passed correctly
@@ -275,7 +276,7 @@ const getSingleOrderPage = async (req, res) => {
       
     } catch (error) {
       console.error('Error placing order:', error);
-      return res.status(500).json({
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Something went wrong while placing the order',
       });
@@ -361,7 +362,7 @@ const getSingleOrderPage = async (req, res) => {
       });
     } catch (error) {
       console.error('Error in getPaymentPage:', error);
-      res.status(500).send('Something went wrong');
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Something went wrong');
     }
   };
 
@@ -380,7 +381,7 @@ const getSingleOrderPage = async (req, res) => {
       res.render('order-success', { order });
     } catch (error) {
       console.error('Error fetching order details:', error);
-      res.status(500).json({ message: 'Something went wrong' });
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: 'Something went wrong' });
     }
   };
 
@@ -434,7 +435,7 @@ const getSingleOrderPage = async (req, res) => {
   
     } catch (error) {
       console.error('Error fetching orders:', error);
-      res.status(500).send('Internal Server Error');
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
     }
   };
 
@@ -446,11 +447,11 @@ const getSingleOrderPage = async (req, res) => {
   
       const order = await Order.findById(orderId);
       if (!order || !Array.isArray(order.orderedItems)) {
-        return res.status(404).send('Order not found');
+        return res.status(StatusCode.NOT_FOUND).send('Order not found');
       }
   
       if (!['processing', 'placed', 'shipped'].includes(order.status.toLowerCase())) {
-        return res.status(400).send('Order cannot be canceled at this stage');
+        return res.status(StatusCode.BAD_REQUEST).send('Order cannot be canceled at this stage');
       }
   
       let totalRefundAmount = 0;
@@ -549,7 +550,7 @@ const getSingleOrderPage = async (req, res) => {
       });
     } catch (err) {
       console.error('Error cancelling order:', err);
-      res.status(500).send('Server Error');
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Server Error');
     }
   };
 
@@ -562,7 +563,7 @@ const getSingleOrderPage = async (req, res) => {
       
       const order = await Order.findById(orderId);
       if (!order || !order.orderedItems || !Array.isArray(order.orderedItems)) {
-        return res.status(404).send('Order not found');
+        return res.status(StatusCode.NOT_FOUND).send('Order not found');
       }
       
       const item = order.orderedItems.find(
@@ -570,7 +571,7 @@ const getSingleOrderPage = async (req, res) => {
       );
       
       if (!item) {
-        return res.status(404).send('Product not found in order');
+        return res.status(StatusCode.NOT_FOUND).send('Product not found in order');
       }
       
       // Update product inventory - add the cancelled quantity back
@@ -688,7 +689,7 @@ const getSingleOrderPage = async (req, res) => {
       });
     } catch (err) {
       console.error(err);
-      res.status(500).send('Server Error');
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Server Error');
     }
   };
   
@@ -698,19 +699,19 @@ const getSingleOrderPage = async (req, res) => {
       const { reason } = req.body;
   
       if (!reason || reason.trim() === '') {
-        return res.status(400).send('Return reason is required.');
+        return res.status(StatusCode.BAD_REQUEST).send('Return reason is required.');
       }
 
       const order = await Order.findById(orderId);
       if (!order || order.status !== 'delivered') {
-        return res.status(400).send('Order cannot be returned.');
+        return res.status(StatusCode.BAD_REQUEST).send('Order cannot be returned.');
       }
 
       // Check if the order contains only one item and access the first item
       const item = order.orderedItems[0]; // Since there's only one item
 
       if (!item) {
-        return res.status(404).send('Item not found in order');
+        return res.status(StatusCode.NOT_FOUND).send('Item not found in order');
       }
 
       // Update item status
@@ -725,7 +726,7 @@ const getSingleOrderPage = async (req, res) => {
       res.render('returnRequested',{reason})
     } catch (err) {
       console.error(err);
-      res.status(500).send('Server Error');
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Server Error');
     }
   };
 
@@ -738,14 +739,14 @@ const getSingleOrderPage = async (req, res) => {
       const order = await Order.findOne({ 'orderedItems._id': itemId });
   
       if (!order) {
-        return res.status(404).send('Order or item not found');
+        return res.status(StatusCode.NOT_FOUND).send('Order or item not found');
       }
   
       // Find the specific item
       const item = order.orderedItems.id(itemId);
   
       if (!item) {
-        return res.status(404).send('Item not found in order');
+        return res.status(StatusCode.NOT_FOUND).send('Item not found in order');
       }
   
       // Update item status
@@ -763,7 +764,7 @@ const getSingleOrderPage = async (req, res) => {
   
     } catch (err) {
       console.error('Return request failed:', err);
-      res.status(500).send('Server error');
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Server error');
     }
   };
 
@@ -874,7 +875,7 @@ const getSingleOrderPage = async (req, res) => {
   
     } catch (err) {
       console.error("Error loading payment page:", err);
-      res.status(500).send("Internal Server Error");
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
   };
 
@@ -890,7 +891,7 @@ const getSingleOrderPage = async (req, res) => {
   
       const cart = await Cart.findOne({ userId }).populate("items.productId");
       if (!cart) {
-        return res.status(404).json({ message: "Cart not found" });
+        return res.status(StatusCode.NOT_FOUND).json({ message: "Cart not found" });
       }
   
       const orderedItems = cart.items
@@ -904,7 +905,7 @@ const getSingleOrderPage = async (req, res) => {
       });
   
       if (orderedItems.length === 0) {
-        return res.status(400).json({ message: "Selected items are no longer available." });
+        return res.status(StatusCode.BAD_REQUEST).json({ message: "Selected items are no longer available." });
       }
   
       let totalOriginalPrice = 0;
@@ -918,7 +919,7 @@ const getSingleOrderPage = async (req, res) => {
         const quantity = item.quantity;
   
         if (product.quantity < quantity) {
-          return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
+          return res.status(StatusCode.BAD_REQUEST).json({ message: `Insufficient stock for ${product.name}` });
         }
   
         const itemTotal = price * quantity;
@@ -1006,7 +1007,7 @@ const getSingleOrderPage = async (req, res) => {
     } catch (error) {
       console.error("❌ Error placing cart order:", error);
       if (!res.headersSent) {
-        res.status(500).send("Something went wrong while placing your order.");
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Something went wrong while placing your order.");
       }
     }
   };
@@ -1023,13 +1024,13 @@ const getSingleOrderPage = async (req, res) => {
       const order = await Order.findById(orderId).populate('orderedItems.product').populate('coupon');
   
       if (!order) {
-        return res.status(404).render('errorPage', { message: 'Order not found' });
+        return res.status(StatusCode.NOT_FOUND).render('errorPage', { message: 'Order not found' });
       }
   
       res.render('viewOrderDetail', { user: userId, order });
     } catch (error) {
       console.error('Error fetching order details:', error);
-      res.status(500).render('errorPage', { message: 'Something went wrong!' });
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).render('errorPage', { message: 'Something went wrong!' });
     }
   };
 

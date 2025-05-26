@@ -1,16 +1,17 @@
 const User = require('../../models/userSchema');
+const StatusCode = require('../../config/statuscode');
+
 
 const customerInfo = async (req, res) => {
     try {
-        let search = req.query.search || ""; // Fix search retrieval
-        let page = parseInt(req.query.page) || 1; // Ensure `page` is a number
-        const limit = 10; // Number of users per page
+        let search = req.query.search || ""; 
+        let page = parseInt(req.query.page) || 1; 
+        const limit = 10; 
 
-        // Fetch users based on search and pagination
         const userData = await User.find({
             isAdmin: false,
             $or: [
-                { name: { $regex: ".*" + search + ".*", $options: "i" } }, // Case-insensitive search
+                { name: { $regex: ".*" + search + ".*", $options: "i" } }, 
                 { email: { $regex: ".*" + search + ".*", $options: "i" } },
             ],
         })
@@ -18,7 +19,6 @@ const customerInfo = async (req, res) => {
         .skip((page - 1) * limit)
         .exec();
 
-        // Count total customers for pagination
         const count = await User.countDocuments({
             isAdmin: false,
             $or: [
@@ -27,15 +27,13 @@ const customerInfo = async (req, res) => {
             ],
         });
 
-        // Calculate total pages
         const totalPages = Math.ceil(count / limit);
 
-        // Render the customers page with fetched data
         res.render('customers', { data: userData, totalPages, currentPage: page });
 
     } catch (error) {
         console.error("Error fetching customer data:", error);
-        res.status(500).send("Internal Server Error");
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
 };
 
@@ -45,7 +43,7 @@ const customerBlocked=async (req,res)=>{
         await User.updateOne({_id: id},{$set:{isBlocked:true}});
         res.redirect('/admin/users');
     } catch (error) {
-        res.redirect('/errorpage');
+        res.redirect('/pageerror');
     }
 }
 
@@ -55,7 +53,7 @@ const cutomerunBlocked = async (req,res)=>{
         await User.updateOne({_id:id},{$set:{isBlocked:false}});
         res.redirect('/admin/users');
     } catch (error) {
-        res.redirect('/errorpage');
+        res.redirect('/pageerror');
     }
 }
 

@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Wallet = require('../../models/walletSchema');
 const User   = require('../../models/userSchema');
+const StatusCode = require('../../config/statuscode');
+
 
 const getMyWallet = async (req, res) => {
   try {
@@ -64,7 +66,7 @@ const getMyWallet = async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching wallet:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Internal Server Error');
   }
 };
 

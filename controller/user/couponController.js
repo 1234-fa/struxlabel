@@ -1,6 +1,8 @@
 const UserCoupon = require('../../models/userCouponSchema');
 const Coupon = require('../../models/coupenSchema');
 const Product = require('../../models/productSchema');
+const StatusCode = require('../../config/statuscode');
+
 
 const showUserCoupon = async (req, res) => {
     try {
@@ -15,7 +17,7 @@ const showUserCoupon = async (req, res) => {
       });
     } catch (err) {
       console.error('Error loading coupons:', err);
-      res.status(500).send('Internal server error');
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Internal server error');
     }
   };
 
@@ -52,7 +54,7 @@ const showUserCoupon = async (req, res) => {
       });
     } catch (err) {
       console.error('Coupon apply error:', err);
-      return res.status(500).json({ success: false, message: 'Server error while applying coupon.' });
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error while applying coupon.' });
     }
   };
 

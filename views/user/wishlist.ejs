@@ -71,6 +71,26 @@
            </div>
        </div>
    </section>
+
+   <div class="row">
+                  <div class="col-lg-12">
+                      <div class="product__pagination" id="pagination-container">
+                          <% if (currentPage > 1) { %>
+                              <a href="/wishlist?page=<%= currentPage - 1 %>"><</a>
+                          <% } %>
+                          <% for (let i = 1; i <= totalPages; i++) { %>
+                              <% if (currentPage === i) { %>
+                                  <a class="active" href="/wishlist?page=<%= i %>"><%= i %></a>
+                              <% } else { %>
+                                  <a href="/wishlist?page=<%= i %>"><%= i %></a>
+                              <% } %>
+                          <% } %>
+                          <% if (currentPage < totalPages) { %>
+                              <a href="/wishlist?page=<%= currentPage + 1 %>">></a>
+                          <% } %>
+                      </div>
+                  </div>
+              </div>
 </main>
 <%- include("../../views/partials/user/footer") %>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -1,6 +1,7 @@
 const User=require('../../models/userSchema');
 const Address=require('../../models/addressSchema');
 const nodemailer=require('nodemailer');
+const StatusCode = require('../../config/statuscode');
 const bcrypt=require('bcrypt');
 const env=require('dotenv').config();
 const session=require('express-session');
@@ -57,7 +58,7 @@ const securePassword = async (password)=>{
 
 const getForgotPassPage = async (req,res)=>{
     try {
-        res.render('forgot-password');
+        res.render('forgot-password',{message:""});
     } catch (error) {
         res.redirect('/pageNotFound');
     }
@@ -76,7 +77,9 @@ const forgotEmailValid = async(req,res)=>{
                 res.render("forgotpass-otp");
                 console.log("OTP :",otp);
             }else{
-                res.json({success:false,message:"Failed to send otp ,please try again"});
+                res.render('forgot-password',{
+                message:"Failed to send otp ,please try again"
+            });
             }
         }else{
             res.render('forgot-password',{
@@ -90,16 +93,30 @@ const forgotEmailValid = async(req,res)=>{
 
 const verifyForgotpassOtp = async (req, res) => {
     try {
-      const enteredOtp = req.body.otp;
-      if (enteredOtp === req.session.userOtp) {
-        res.json({ success: true, redirectUrl: "/reset-password" });
-      } else {
-        res.json({ success: false, message: "OTP not matching" });
-      }
+        const enteredOtp = req.body.otp;
+        console.log("Received OTP:", enteredOtp);
+        console.log("Session OTP:", req.session.userOtp);
+        console.log("OTP types:", typeof enteredOtp, typeof req.session.userOtp);
+        
+        // Convert both to strings for comparison
+        if (String(enteredOtp) === String(req.session.userOtp)) {
+            res.json({ success: true, redirectUrl: "/reset-password-forgot" });
+        } else {
+            res.json({ success: false, message: "OTP not matching" });
+        }
     } catch (error) {
-      res.status(500).json({ success: false, message: "An error occured. Please try again" });
+        console.error("OTP verification error:", error);
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error. Please try again." });
     }
-  };
+};
+
+const getResetPassforgot=async (req,res)=>{
+    try {
+        res.render('reset-forgot-password');
+    } catch (error) {
+        res.redirect('/pageNotFound');
+    }
+}
 
 const getResetPassPage=async (req,res)=>{
     try {
@@ -107,6 +124,23 @@ const getResetPassPage=async (req,res)=>{
     } catch (error) {
         res.redirect('/pageNotFound');
     }
+}
+
+const resetPasswordforgot = async (req,res)=>{
+  try {
+    const {newPass1,newPass2}=req.body;
+    const email = req.session.email;
+    if(newPass1 === newPass2){
+      const passwordHash = await securePassword(newPass1);
+      await User.updateOne({email:email},{$set:{password:passwordHash}})
+      res.redirect('/login');
+    }else{
+      res.render('reset-forgot-password',{message:"passwords do not match"})
+    }
+
+  } catch (error) {
+    res.redirect('/pageNotFound');
+  }
 }
 
 const resetPassword = async (req,res)=>{
@@ -172,7 +206,7 @@ const changeEmailvalid = async (req, res) => {
   };
 
 
-  const verifyEmailOtp = async (req, res) => {
+const verifyEmailOtp = async (req, res) => {
     try {
       const enteredOtp = req.body.otp;
       if (enteredOtp === req.session.userOtp) {
@@ -189,7 +223,7 @@ const changeEmailvalid = async (req, res) => {
     } catch (error) {
       res.redirect("pageNotFound");
     }
-  };
+};
   
 
 
@@ -294,7 +328,7 @@ const verifychangepassOtp = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(500).render('change-password-otp', {
+    return res.status(StatusCode.INTERNAL_SERVER_ERROR).render('change-password-otp', {
       message: "An error occurred. Please try again later."
     });
   }
@@ -469,7 +503,7 @@ const postEditAddress = async (req, res) => {
     res.redirect('/address');
   } catch (error) {
     console.error('Error updating address:', error);
-    res.status(500).send('Something went wrong');
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Something went wrong');
   }
 };
 
@@ -486,7 +520,7 @@ const deleteAddress = async (req, res) => {
 
     if (!addressDoc) {
       console.warn("Address not found");
-      return res.status(404).send("Address not found");
+      return res.status(StatusCode.NOT_FOUND).send("Address not found");
     }
 
     await Address.updateOne(
@@ -506,16 +540,15 @@ const deleteAddress = async (req, res) => {
 };
 
 
-
 const uploadProfileImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' });
+      return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: 'No file uploaded' });
     }
 
     const userId = req.session.user?._id; 
     if (!userId) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(StatusCode.UNAUTHORIZED).json({ success: false, message: 'Unauthorized' });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -527,7 +560,7 @@ const uploadProfileImage = async (req, res) => {
     res.json({ success: true, user: updatedUser });
   } catch (error) {
     console.error('Error uploading profile image:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -548,7 +581,7 @@ const updateProfile = async (req, res) => {
     res.redirect('/userprofile');
   } catch (err) {
     console.error('Error updating profile:', err);
-    res.status(500).send('Something went wrong.');
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Something went wrong.');
   }
 };
 
@@ -556,7 +589,8 @@ const updateProfile = async (req, res) => {
 module.exports ={getForgotPassPage,
     forgotEmailValid,
     verifyForgotpassOtp,
-    getResetPassPage ,
+    getResetPassPage,
+    getResetPassforgot,
     userProfile,
     changeEmail,
     changeEmailvalid,
@@ -567,6 +601,7 @@ module.exports ={getForgotPassPage,
     changePasswordvalid ,
     verifychangepassOtp ,
     resetPassword ,
+    resetPasswordforgot,
     addAddress ,
     postAddAddress,
     getAddress,

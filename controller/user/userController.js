@@ -4,6 +4,7 @@ const Category = require('../../models/categorySchema');
 const Brand = require('../../models/brandSchema')
 const Product = require('../../models/productSchema')
 const Wallet =require('../../models/walletSchema');
+const StatusCode = require('../../config/statuscode');
 const env = require('dotenv').config();
 const nodemailer = require('nodemailer');
 const bcrypt = require("bcrypt");
@@ -58,7 +59,7 @@ const loadHomepage = async (req, res) => {
 
     } catch (error) {
         console.log("Error in loading homepage:", error);
-        res.status(500).send("Server error");
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Server error");
     }
 };
 
@@ -79,7 +80,7 @@ const loadsignup = async (req, res) => {
         return res.render("signup");
     } catch (error) {
         console.log("Signup page not loading", error);
-        res.status(500).send("Server error");
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Server error");
     }
 };
 
@@ -196,7 +197,7 @@ const verifyOtp = async (req, res) => {
         const { otp } = req.body;
 
         if (!req.session.userOtp || !req.session.userData) {
-            return res.status(400).json({ success: false, message: "Session expired, please sign up again" });
+            return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Session expired, please sign up again" });
         }
 
         if (otp === req.session.userOtp) {
@@ -204,13 +205,13 @@ const verifyOtp = async (req, res) => {
             const passwordHash = await securePassword(user.password);
 
             if (!passwordHash) {
-                return res.status(500).json({ success: false, message: "Error processing password" });
+                return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error processing password" });
             } 
 
             // **Check if the user already exists before saving**
             const existingUser = await User.findOne({ email: user.email });
             if (existingUser) {
-                return res.status(400).json({ success: false, message: "User already exists. Please log in." });
+                return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "User already exists. Please log in." });
             }
             let codeUser;
             if (user.referralCode) {
@@ -247,16 +248,16 @@ const verifyOtp = async (req, res) => {
             return res.json({ success: true, redirectUrl: "/login" });
         }
 
-        res.status(400).json({ success: false, message: "Invalid OTP, please try again" });
+        res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Invalid OTP, please try again" });
     } catch (error) {
         console.error("Error verifying OTP:", error);
 
         // Handle MongoDB duplicate key error
         if (error.code === 11000) {
-            return res.status(400).json({ success: false, message: "User already exists. Please log in." });
+            return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "User already exists. Please log in." });
         }
 
-        res.status(500).json({ success: false, message: "An error occurred" });
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred" });
     }
 };
 
@@ -265,7 +266,7 @@ const resendOtp = async (req, res) => {
         const { email } = req.session.userData;
 
         if (!email) {
-            return res.status(400).json({ success: false, message: "Email not found in the session" });
+            return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Email not found in the session" });
         }
 
         const otp = generateotp();  // Corrected the variable name
@@ -275,13 +276,13 @@ const resendOtp = async (req, res) => {
 
         if (emailSent) {
             console.log("Resent OTP:", otp);
-            res.status(200).json({ success: true, message: "OTP sent successfully" });
+            res.status(StatusCode.OK).json({ success: true, message: "OTP sent successfully" });
         } else {
-            res.status(400).json({ success: false, message: "Failed to resend OTP, please try again" });
+            res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Failed to resend OTP, please try again" });
         }
     } catch (error) {
         console.error("Error resending OTP", error);
-        res.status(500).json({ success: false, message: "Internal server error, please try again later" });
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error, please try again later" });
     }
 };
 
@@ -290,159 +291,11 @@ const pageNotFound = async (req, res) => {
         return res.render('errorpage');
     } catch (error) {
         console.error(error);
-        res.status(500).send("Something went wrong");
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Something went wrong");
     }
 };
 
-const loadShoppingPage = async (req,res)=>{
-    try {
-  
-      const user = req.session.user;
-      const userData = user ? await User.findById(user._id) : null;
-      const categories = await Category.find({isListed:true});
-      const categoryIds = categories.map((category)=>category._id.toString());
-      const page = parseInt(req.query.page) || 1;
-      const limit = 9;
-      const skip = (page-1)*limit;
-      const products = await Product.find({
-        isBlocked:false,
-        category:{$in:categoryIds},
-        quantity:{$gt:0}
-      }).sort({createdOn:-1}).skip(skip).limit(limit);
-  
-      const totalProducts = await Product.countDocuments({
-        isBlocked:false,
-        category:{$in:categoryIds},
-        quantity:{$gt:0}
-      });
-      const totalPages = Math.ceil(totalProducts/limit);
-  
-      const brands = await Brand.find({isBlocked:false});
-      const categoriesWithIds = categories.map(category => ({_id:category._id,name:category.name}));
-  
-      res.render("shop",{
-        user : userData,
-        products : products,
-        category : categoriesWithIds,
-        brand : brands,
-        totalProducts : totalProducts,
-        currentPage : page,
-        totalPages : totalPages
-      })
-    } 
-    catch (error) {
-      res.redirect("/pageNotFound")
-    }
-  };
-
-  const filterProduct = async (req, res) => {
-    try {
-      const user = req.session.user;
-      const category = req.query.category;
-      const brand = req.query.brand;
-  
-      const findCategory = category ? await Category.findOne({ _id: category }) : null;
-      const findBrand = brand ? await Brand.findOne({ _id: brand }) : null;
-  
-      const brands = await Brand.find({}).lean();
-  
-      const query = {
-        isBlocked: false,
-        quantity: { $gt: 0 }
-      };
-  
-      if (findCategory) {
-        query.category = findCategory._id;
-      }
-      if (findBrand) {
-        query.brand = findBrand.brandName;
-      }
-  
-      let findProducts = await Product.find(query).lean();
-  
-      findProducts.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
-  
-      const categories = await Category.find({ isListed: true });
-  
-      let itemsPerPage = 6;
-      let currentPage = parseInt(req.query.page) || 1;
-      let startIndex = (currentPage - 1) * itemsPerPage;
-      let endIndex = startIndex + itemsPerPage;
-      let totalPages = Math.ceil(findProducts.length / itemsPerPage);
-  
-      const currentProduct = findProducts.slice(startIndex, endIndex);
-
-      let userData = null;
-    if (user) {
-      userData = await User.findOne({ _id: user });
-      if (userData) {
-        const searchEntry = {
-          category: findCategory ? findCategory._id : null,
-          brand: findBrand ? findBrand.brandName : null,
-          searchedOn: new Date(),
-        };
-        userData.searchHistory.push(searchEntry);
-        await userData.save();
-      }
-    }
-
-    req.session.filteredProducts = currentProduct;
-
-    res.render("shop", {
-      user: userData,
-      products: currentProduct,
-      category: categories,
-      brand: brands,
-      totalPages,
-      currentPage,
-      selectedCategory: category || null,
-      selectedBrand: brand || null,
-    });
-     
-  
-    } catch (error) {
-      res.redirect('/pageNotFound');
-    }
-  };
-
-  const filterByPrice = async (req, res) => {
-    try {
-      const user = req.session.user;
-      const userData = await User.findOne({ _id: user }).lean();
-      const brands = await Brand.find({}).lean();
-      const categories = await Category.find({ isListed: true }).lean();
-  
-      let findProducts = await Product.find({
-        salePrice: { $gt: req.query.gt, $lt: req.query.lt },
-        isBlocked: false,
-        quantity: { $gt: 0 }
-      }).lean();
-  
-      findProducts.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
-  
-      let itemsPerPage = 6;
-      let currentPage = parseInt(req.query.page) || 1;
-      let startIndex = (currentPage - 1) * itemsPerPage;
-      let endIndex = startIndex + itemsPerPage;
-      let totalPages = Math.ceil(findProducts.length / itemsPerPage);
-      const currentProduct = findProducts.slice(startIndex, endIndex);
-  
-      req.session.filteredProducts = findProducts;
-
-      res.render('shop',{
-        user :userData,
-        products:currentProduct,
-        category:categories,
-        brand:brands,
-        totalPages,
-        currentPage
-      })
-    } catch (error) {
-        res.redirect('/pageNotFound');
-    }
-  };
-
-  const searchProducts = async (req, res) => {
+const searchProducts = async (req, res) => {
     try {
       const user = req.session.user;
       const userData = await User.findOne({ _id: user });
@@ -488,29 +341,6 @@ const loadShoppingPage = async (req,res)=>{
     }
   };
 
-  const loadMoreProducts = async (req, res) => {
-    try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = 6;
-      const skip = (page - 1) * limit;
-  
-      const categories = await Category.find({ isListed: true });
-      const categoryIds = categories.map(cat => cat._id.toString());
-  
-      const products = await Product.find({
-        isBlocked: false,
-        category: { $in: categoryIds },
-        quantity: { $gt: 0 }
-      }).sort({ createdOn: -1 }).skip(skip).limit(limit);
-  
-      res.render('partials/product-cards', { products }, (err, html) => {
-        if (err) return res.status(500).send('Error loading more products');
-        res.send(html);
-      });
-    } catch (error) {
-      res.status(500).send('Something went wrong');
-    }
-  };
 
 module.exports = { loadHomepage,
      pageNotFound,
@@ -520,11 +350,7 @@ module.exports = { loadHomepage,
        verifyOtp ,
        resendOtp ,
        login ,
-       logout , 
-       loadShoppingPage ,
-       filterProduct,
-       filterByPrice,
+       logout ,    
        searchProducts,
-       loadMoreProducts,
 
 };

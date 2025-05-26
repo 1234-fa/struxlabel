@@ -24,11 +24,11 @@ const login = async (req, res) => {
           return res.redirect('/admin');  
         } else {
           console.log("Password mismatch");
-          return res.redirect('/admin/login');  
+          return res.render('admin-login',{message:"invalid credentials"});  
         }
       } else {
         console.log("Admin not found");
-        return res.redirect('/admin/login');  
+        return res.render('admin-login',{message:"invalid credentials"});    
       }
     } catch (error) {
       console.log("Admin login error:", error);

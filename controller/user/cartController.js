@@ -1,7 +1,9 @@
 const Cart = require('../../models/cartSchema');
 const Product = require('../../models/productSchema');
 const User = require('../../models/userSchema');
-const Wishlist = require('../../models/wishlistSchema')
+const Wishlist = require('../../models/wishlistSchema');
+const StatusCode = require('../../config/statuscode');
+
 
 const getCartPage = async (req, res) => {
   try {
@@ -49,7 +51,7 @@ const addToCart = async (req, res) => {
     const { productId, quantity } = req.body;
 
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).send("Product not found");
+    if (!product) return res.status(StatusCode.NOT_FOUND).send("Product not found");
 
     let cart = await Cart.findOne({ userId });
 
@@ -104,7 +106,7 @@ const addToCart = async (req, res) => {
 
   } catch (err) {
     console.error("Error adding to cart:", err.message);
-    res.status(500).send("Internal Server Error");
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -120,7 +122,7 @@ const removeCartItem = async (req, res) => {
     res.redirect('/cart');
   } catch (err) {
     console.error('Error removing item:', err);
-    res.status(500).send("Something went wrong");
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Something went wrong");
   }
 };
 
@@ -161,7 +163,7 @@ const updateCartQty = async (req, res) => {
     res.json({ success: true, message: 'Quantity updated successfully' });
   } catch (err) {
     console.error('Error:', err);
-    res.status(500).send('Something went wrong');
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Something went wrong');
   }
 };
 

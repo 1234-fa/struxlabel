@@ -1,0 +1,154 @@
+<%- include("../../views/partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  .contact-section {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f9f9f9;
+    padding: 3rem 1rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: auto;
+    text-align: center;
+  }
+
+  .section-title {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .social-icons {
+    margin-bottom: 2rem;
+  }
+
+  .social-icons a {
+    font-size: 1.6rem;
+    margin: 0 0.7rem;
+    color: #555;
+    transition: color 0.3s, transform 0.3s;
+  }
+
+  .social-icons a:hover {
+    color: #007BFF;
+    transform: scale(1.2);
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+    margin-top: 2rem;
+  }
+
+  .map {
+    height: 400px;
+}
+  .map iframe {
+    width: 100%;
+    height: 400px;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  .map a {
+    display: inline-block;
+    margin-top: 0.6rem;
+    color: #007BFF;
+    font-weight: 500;
+  }
+
+  .details {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.06);
+    text-align: left;
+  }
+
+  .details h4 {
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+    color: #222;
+  }
+
+  .details p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 1rem;
+  }
+
+  .timing {
+    margin-top: 3rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+  }
+
+  @media (max-width: 768px) {
+    .contact-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .details {
+      text-align: center;
+    }
+
+    .details h4 {
+      margin-top: 1rem;
+    }
+
+    .map iframe {
+      height: 250px;
+    }
+  }
+</style>
+
+<section class="contact-section">
+  <div class="container">
+    <h2 class="section-title">Connect Us With </h2>
+
+    <div class="social-icons">
+      <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+      <a href="#"><i class="fa-brands fa-discord"></i></a>
+      <a href="#"><i class="fa-brands fa-instagram"></i></a>
+      <a href="#"><i class="fa-brands fa-youtube"></i></a>
+    </div>
+
+    <div class="contact-grid">
+      <!-- Map -->
+      <div class="map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3653.5573432880774!2d76.57505707463157!3d9.474891981850789!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b062f68cab9bd29%3A0x9766dd80109f4873!2sLost%20%26%20Found%20(L%26F)!5e1!3m2!1sen!2sin!4v1748167904852!5m2!1sen!2sin"
+          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <a href="https://maps.app.goo.gl/gX46LW5MyWTSktd97" target="_blank">Open in Google Maps</a>
+      </div>
+
+      <!-- Details -->
+      <div class="details">
+        <div class="location">
+          <h4>Location</h4>
+          <p>FHFH+X3 Thengana, Kerala<br>
+            Opposite To Madapally Service Co-operative Bank,<br>
+            Vazhoor Road, Kottayam, Kerala 686536</p>
+        </div>
+        <div class="contact">
+          <h4>Contact Us</h4>
+          <p>+91-9744021175<br>help@lostandfound.com</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="timing">
+      <p>Available Mon – Fri, 10:00AM to 6:00PM</p>
+    </div>
+  </div>
+</section>
+
+<%- include("../../views/partials/user/footer") %>

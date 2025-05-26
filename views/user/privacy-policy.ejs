@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privacy Policy - LOST AND FOUND</title>
+  <style>
+/* Base Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #ffffff;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Main Wrapper */
+.privacy-wrapper {
+  padding: 30px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Content Container */
+.privacy-content {
+  width: 100%;
+  max-width: 900px;
+}
+
+.privacy-content h1 {
+  font-size: 2.2rem;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #111;
+}
+
+.privacy-content p {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.privacy-content h2 {
+  font-size: 1.5rem;
+  margin: 1.5rem 0 0.75rem;
+  color: #222;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.privacy-content ul {
+  margin-left: 1.2rem;
+  margin-bottom: 1.5rem;
+  list-style: disc;
+}
+
+.privacy-content ul li {
+  margin-bottom: 0.5rem;
+  font-size: 0.90rem;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .privacy-content h1 {
+    font-size: 1.8rem;
+  }
+
+  .privacy-content h2 {
+    font-size: 1.25rem;
+  }
+
+  .privacy-content p,
+  .privacy-content ul li {
+    font-size: 0.95rem;
+  }
+}
+  </style>
+</head>
+<body>
+
+<%- include("../../views/partials/user/header") %>
+
+  <main class="privacy-wrapper">
+    <div class="privacy-content">
+      <h1>Privacy Policy</h1>
+
+      <p>
+        At <strong>LOST AND FOUND</strong>, your privacy is important to us. This Privacy Policy explains how we collect, use,
+        disclose, and safeguard your information when you visit our website, make a purchase, or use any of our services.
+      </p>
+
+      <h4> What Information We Collect</h4>
+      <p>We collect information to provide better services to all our customers. This includes:</p>
+      <ul>
+  <li>
+    <strong>Personal Details:</strong> This includes your full name, email address, phone number, and both shipping and billing addresses. We collect this information during checkout or when you create an account, so we can process and deliver your orders efficiently and communicate with you if needed.
+  </li>
+  <li>
+    <strong>Order Data:</strong> Information about the products you purchase from our store, such as item type, size, quantity, and price. We also collect payment-related details which are securely processed through trusted third-party payment gateways to ensure safe transactions.
+  </li>
+  <li>
+    <strong>Account Info:</strong> If you create an account with us, we store your login credentials (such as email and password), your wishlist or saved items, and your communication preferences. This helps personalize your shopping experience and gives you easy access to your order history.
+  </li>
+  <li>
+    <strong>Usage Data:</strong> Technical information such as your IP address, the type of browser you’re using, the device model, and your interactions with the website (like the pages you visit or buttons you click). This data helps us improve website performance, navigation, and product recommendations.
+  </li>
+  <li>
+    <strong>Cookies:</strong> Small data files stored on your device that help us remember your login status, items in your shopping cart, recently viewed products, and your preferences. Cookies also allow us to analyze traffic patterns and deliver a smoother, more personalized shopping experience.
+  </li>
+</ul>
+
+      <h4> How We Use Your Information</h4>
+      <ul>
+        <li>To process transactions and deliver your orders</li>
+        <li>To improve user experience and customer support</li>
+        <li>To personalize marketing and promotional content</li>
+        <li>To comply with legal obligations</li>
+      </ul>
+
+      <h4> Sharing Your Information</h4>
+      <p>
+        We do not sell your personal data. We only share your data with trusted third parties like:
+      </p>
+      <ul>
+        <li>Payment gateways (e.g., Razorpay, Stripe)</li>
+        <li>Shipping and delivery partners</li>
+        <li>Email marketing platforms (only with your consent)</li>
+      </ul>
+
+      <h4> Data Retention</h4>
+      <p>
+        We retain your information only as long as necessary for order fulfillment, legal compliance, and dispute resolution.
+      </p>
+
+      <h4> Your Rights</h4>
+      <ul>
+        <li>Access or update your personal data</li>
+        <li>Request deletion of your account</li>
+        <li>Opt-out of promotional emails anytime</li>
+      </ul>
+
+      <h4> Cookies & Tracking Technologies</h4>
+      <p>
+        We use cookies to remember your login, keep items in your cart, and analyze website traffic. You can manage these preferences through your browser settings.
+      </p>
+
+      <h4> Changes to This Privacy Policy</h4>
+      <p>
+        We may update this policy occasionally. Significant changes will be communicated via email or website notification.
+      </p>
+
+      <h4> Contact Us</h4>
+      <p>
+        For questions, feel free to reach out to us at <a href="mailto:support@lostandfound.com">support@lostandfound.com</a>.
+      </p>
+    </div>
+  </main>
+
+  <%- include("../../views/partials/user/footer") %>
+
+</body>
+</html>
+
+

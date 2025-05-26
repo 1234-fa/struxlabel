@@ -90,11 +90,6 @@
             </div>
             <button type="button" class="resend-btn btn w-100" onclick="resendOtp()">Resend OTP</button>
         </form>
-        <%if(locals.message && message.length >0){%>
-            <div class="alert" alert-danger mt-3>
-                <%=message%>
-            </div>
-        <%}%>
         <div class="text-muted text-center pt-3">
             Already verified? <a href="/login" style="color: #fff;">Login now</a>
         </div>
@@ -224,8 +219,6 @@
 
     return false;
 }
-
-
 </script>
 
 </body>

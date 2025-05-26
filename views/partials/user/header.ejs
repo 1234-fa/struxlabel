@@ -1,34 +1,34 @@
 <!DOCTYPE html>
 <html lang="zxx">
 <head>
-   <meta charset="UTF-8">
-   <meta name="description" content="Male_Fashion Template">
-   <meta name="keywords" content="Male_Fashion, unica, creative, html">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-   <title>Male-Fashion</title>
-   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
-   rel="stylesheet">
-   <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
-   <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
-   <link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
-   <link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
-   <link rel="stylesheet" href="css/nice-select.css" type="text/css">
-   <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
-   <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
-   <link rel="stylesheet" href="css/style.css" type="text/css">
-   <link rel="stylesheet" href="./user-assets/css/maind134.css">
-   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-
-    <style>
-        .header__nav__option {
+<meta charset="UTF-8">
+<meta name="description" content="Male_Fashion Template">
+<meta name="keywords" content="Male_Fashion, unica, creative, html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Male-Fashion</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap"
+rel="stylesheet">
+<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+<link rel="stylesheet" href="css/font-awesome.min.css" type="text/css">
+<link rel="stylesheet" href="css/elegant-icons.css" type="text/css">
+<link rel="stylesheet" href="css/magnific-popup.css" type="text/css">
+<link rel="stylesheet" href="css/nice-select.css" type="text/css">
+<link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
+<link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="stylesheet" href="./user-assets/css/maind134.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<style>
+/* Base Styles */
+.header__nav__option {
     display: flex;
-    align-items: center; /* Aligns the items vertically in the center */
-    justify-content: flex-start; /* Ensures the items are aligned to the left */
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .header__nav__option a {
-    margin-right: 15px; /* Adds some space between each item */
+    margin-right: 15px;
 }
 
 .dropdown {
@@ -42,8 +42,8 @@
 }
 
 .header__logo img {
-    width: 40px;   /* Adjust size as needed */
-    height: 40px;  /* Square shape */
+    width: 40px;
+    height: 40px;
     object-fit: cover;
     margin-right: 8px;
 }
@@ -58,10 +58,11 @@
     display: none;
     position: absolute;
     background-color: white;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px, rgba(0, 0, 0, 0.2);
+    min-width: 100px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    right: 0;
+    right: 80;
+    border-radius: 4px;
 }
 
 .dropdown-content a {
@@ -79,65 +80,433 @@
 .dropdown:hover .dropdown-content {
     display: block;
 }
-    </style>
+
+/* Mobile Menu Styles */
+.canvas__open {
+    display: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+.mobile-nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    display: none;
+}
+
+.mobile-nav {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 300px;
+    height: 100%;
+    background-color: white;
+    z-index: 9999;
+    transition: right 0.3s ease;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+}
+
+.mobile-nav.active {
+    right: 0;
+}
+
+.mobile-nav-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-nav-close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+.mobile-nav-content {
+    padding: 20px;
+}
+
+.mobile-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-nav ul li {
+    margin-bottom: 15px;
+}
+
+.mobile-nav ul li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 10px 0;
+    display: block;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.mobile-nav ul li a:hover {
+    color: #007bff;
+}
+
+.mobile-nav-options {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.mobile-nav-options a {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.mobile-nav-options a img {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.mobile-nav-options a:hover {
+    color: #007bff;
+}
+
+.mobile-dropdown {
+    padding-left: 20px;
+    display: none;
+}
+
+.mobile-dropdown.active {
+    display: block;
+}
+
+.mobile-dropdown a {
+    font-size: 14px;
+    color: #666;
+    padding: 8px 0;
+}
+
+.dropdown-toggle {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+}
+
+.dropdown-toggle.active::after {
+    content: '-';
+}
+
+.search-box {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 10px 15px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+}
+
+#search-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#search-form input[type="text"] {
+  padding: 6px 10px;
+  font-size: 14px;
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#search-form button[type="submit"] {
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#close-search {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #555;
+}
+
+/* Responsive Styles */
+@media (max-width: 991px) {
+    .header__menu {
+        display: none;
+    }
     
+    .canvas__open {
+        display: block;
+    }
+    
+    .header__nav__option {
+        display: none;
+    }
+    
+    .mobile-nav-overlay.active {
+        display: block;
+    }
+}
+
+@media (max-width: 767px) {
+    .header__logo span {
+        font-size: 14px;
+    }
+    
+    .header__logo img {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .col-lg-3, .col-lg-6 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+
+@media (max-width: 480px) {
+    .mobile-nav {
+        width: 280px;
+        right: -280px;
+    }
+    
+    .header__logo span {
+        font-size: 12px;
+    }
+}
+</style>
 </head>
-
 <body>
-    <!-- Page Preloder -->
-    <div id="preloder">
-        <div class="loader"></div>
-    </div>
+<!-- Page Preloder -->
+<div id="preloder">
+<div class="loader"></div>
+</div>
 
-    <!-- Header Section Begin -->
-    <header class="header">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3 col-md-3">
-                    <div class="header__logo">
-                        <a href="/"><img src="img/logo.png" alt=""></a>
-                        <span>LOST AND FOUND</span>
-                    </div>
-                </div>
-                <div class="col-lg-6 col-md-6">
-                    <nav class="header__menu mobile-menu">
-                        <ul>
-                            <!-- <li><a href="./shop.html">Shop</a></li> -->
-                            <li><a href="/shop">Shop</a>
-                                <ul class="dropdown">
-                                    <li><a href="./about.html">About Us</a></li>
-                                    <li><a href="./shop-details.html">Shop Details</a></li>
-                                    <li><a href="./shopping-cart.html">Shopping Cart</a></li>
-                                    <li><a href="./checkout.html">Check Out</a></li>
-                                    <li><a href="./blog-details.html">Blog Details</a></li>
-                                </ul>
-                            </li>                       
-                            <!-- <li><a href="./blog.html">Caps</a></li> -->
-                            <li><a href="/shop">New Arrivals</a></li>
-                            <li><a href="./contact.html">Contacts</a></li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="col-lg-3 col-md-3">
-                    <div class="header__nav__option">
-                        <a href="#" class="search-switch"><img src="img/icon/search.png" alt=""></a>
-                        <a href="/wishlist"><img src="img/icon/heart.png" alt=""></a>
-                        <a href="/cart"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
-                        <% if (user) { %>
-                            <div class="dropdown">
-                                <a href="#" class="sign-in-link"><%= user.name %></a>
-                                <div class="dropdown-content">
-                                    <a href="/userProfile">Profile</a>
-                                    <a href="/logout">Logout</a>
-                                </div>
-                            </div>
-                        <% } else { %>
-                            <a href="/login" class="sign-in-link"><img src="img/icon/login.png" alt=""></a>
-                        <% } %>
-                    </div>
-                </div>
-            </div>
-            <div class="canvas__open"><i class="fa fa-bars"></i></div>
+<!-- Mobile Navigation Overlay -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+
+<!-- Mobile Navigation -->
+<div class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav-header">
+        <div class="header__logo">
+            <img src="img/logo.png" alt="">
+            <span>LOST AND FOUND</span>
         </div>
-    </header>
-    <!-- Header Section End -->
+        <div class="mobile-nav-close" id="mobileNavClose">
+            <i class="fa fa-times"></i>
+        </div>
+    </div>
+    <div class="mobile-nav-content">
+        <ul>
+            <li>
+                <a href="/shop" class="dropdown-toggle" data-target="shop-dropdown">Shop</a>
+                <div class="mobile-dropdown" id="shop-dropdown">
+                    <a href="/aboutUs">About Us</a>
+                    <a href="/privacyPolicy">Privacy Policy</a>
+                    <a href="/shippingPolicy">Shipping Policy</a>
+                    <a href="/termsAndConditions">Terms And Conditions</a>
+                </div>
+            </li>
+            <li><a href="/newArrivals">New Arrivals</a></li>
+            <li><a href="/contact">Contacts</a></li>
+        </ul>
+        
+        <div class="mobile-nav-options">
+            <a href="#" id="mobileSearchBtn">
+                <img src="img/icon/search.png" alt="">
+                Search
+            </a>
+            <a href="/wishlist">
+                <img src="img/icon/heart.png" alt="">
+                Wishlist
+            </a>
+            <a href="/cart">
+                <img src="img/icon/cart.png" alt="">
+                Cart <span>(0)</span>
+            </a>
+            
+            <% if (user) { %>
+                <div class="dropdown">
+                    <a href="#" class="sign-in-link"><%= user.name %></a>
+                    <div class="dropdown-content">
+                        <a href="/userProfile">Profile</a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                </div>
+                <% } else { %>
+                    <a href="/login" class="sign-in-link"><img src="img/icon/login.png" alt=""></a>
+                    <% } %>
+        1</div>
+    </div>
+</div>
+
+<!-- Header Section Begin -->
+<header class="header">
+<div class="container">
+<div class="row">
+<div class="col-lg-3 col-md-3">
+<div class="header__logo">
+<a href="/"><img src="img/logo.png" alt=""></a>
+<span>LOST AND FOUND</span>
+</div>
+</div>
+<div class="col-lg-6 col-md-6">
+<nav class="header__menu mobile-menu">
+<ul>
+<li><a href="/shop">Shop</a>
+<ul class="dropdown">
+<li><a href="/aboutUs">About Us</a></li>
+<li><a href="/privacyPolicy">Privacy Policy</a></li>
+<li><a href="/shippingPolicy">Shipping Policy</a></li>
+<li><a href="/termsAndConditions">Terms And Conditions</a></li>
+
+</ul>
+</li>
+<li><a href="/newArrivals">New Arrivals</a></li>
+<li><a href="/contact">Contacts</a></li>
+</ul>
+</nav>
+</div>
+<div class="col-lg-3 col-md-3">
+<div class="header__nav__option">
+<!-- Search Icon -->
+<a href="#" id="search-icon">
+  <img src="img/icon/search.png" alt="Search">
+</a>
+<a href="/wishlist"><img src="img/icon/heart.png" alt=""></a>
+<a href="/cart"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
+<!-- User Authentication Section for Desktop -->
+<% if (user) { %>
+<div class="dropdown">
+<a href="#" class="sign-in-link"><%= user.name %></a>
+<div class="dropdown-content">
+<a href="/userProfile">Profile</a>
+<a href="/logout">Logout</a>
+</div>
+</div>
+<% } else { %>
+<a href="/login" class="sign-in-link"><img src="img/icon/login.png" alt=""></a>
+<% } %>
+</div>
+</div>
+</div>
+<div class="canvas__open" id="mobileMenuToggle"><i class="fa fa-bars"></i></div>
+</div>
+
+<div id="search-box" class="search-box">
+  <form id="search-form" action="/searchFromHome" method="get">
+    <input type="text" name="q" placeholder="Search..." required />
+    <button type="submit">Search</button>
+    <button type="button" id="close-search" title="Close">✕</button>
+  </form>
+</div>
+
+
+</header>
+<!-- Header Section End -->
+
+<script>
+// Mobile Menu Toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileNav = document.getElementById('mobileNav');
+    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+    const mobileNavClose = document.getElementById('mobileNavClose');
+    
+    // Open mobile menu
+    mobileMenuToggle.addEventListener('click', function() {
+        mobileNav.classList.add('active');
+        mobileNavOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+    
+    // Close mobile menu
+    function closeMobileMenu() {
+        mobileNav.classList.remove('active');
+        mobileNavOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    mobileNavClose.addEventListener('click', closeMobileMenu);
+    mobileNavOverlay.addEventListener('click', closeMobileMenu);
+    
+    // Handle dropdown toggles in mobile menu
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-target');
+            const dropdown = document.getElementById(targetId);
+            
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+                this.classList.toggle('active');
+            }
+        });
+    });
+    
+    
+   
+    
+const searchIcon = document.getElementById('search-icon');
+  const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+  const searchBox = document.getElementById('search-box');
+  const closeSearch = document.getElementById('close-search');
+
+  function openSearchBox(e) {
+    e.preventDefault();
+    searchBox.style.display = 'block';
+    // Optional: focus the input
+    searchBox.querySelector('input[type="text"]').focus();
+  }
+
+  searchIcon.addEventListener('click', openSearchBox);
+  mobileSearchBtn.addEventListener('click', openSearchBox);
+
+  closeSearch.addEventListener('click', () => {
+    searchBox.style.display = 'none';
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchBox.style.display = 'none';
+    }
+  });
+    
+});
+</script>
+</body>
+</html>

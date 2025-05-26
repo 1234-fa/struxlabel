@@ -1,0 +1,103 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+  .dashboard-container { max-width: 1000px; margin: auto; padding: 20px; font-family: sans-serif; }
+  form, table { margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background-color: #f4f4f4; }
+  .pagination a { margin: 0 5px; padding: 6px 12px; border: 1px solid #ccc; text-decoration: none; }
+  .pagination .active { background-color: #007bff; color: white; }
+</style>
+
+<div class="dashboard-container">
+  <h2>Sales Dashboard</h2>
+
+  <form method="GET" action="/admin/salesReport">
+    <label>Date Range:</label>
+    <input type="date" name="startDate" value="<%= startDate || '' %>">
+    <input type="date" name="endDate" value="<%= endDate || '' %>">
+
+    <select name="filter">
+      <option value="">Custom</option>
+      <option value="day" <%= filter==='day'?'selected':'' %>>Last Day</option>
+      <option value="week" <%= filter==='week'?'selected':'' %>>Last Week</option>
+      <option value="month" <%= filter==='month'?'selected':'' %>>Last Month</option>
+    </select>
+
+    <input type="text" name="search" placeholder="Search by Order ID" value="<%= search || '' %>">
+    <button type="submit">Generate</button>
+  </form>
+
+  <p>Total Sales: ₹<%= totalSales %></p>
+  <p>Total Discount: ₹<%= totalDiscount %></p>
+  <p>Coupon Deduction: ₹<%= totalCoupon %></p>
+  <p>Total Orders: <%= orders.length %></p>
+
+  <form id="downloadForm" method="POST" action="/admin/sales-report/download">
+    <input type="hidden" name="startDate" value="<%= startDate %>">
+    <input type="hidden" name="endDate" value="<%= endDate %>">
+    <button name="format" value="pdf">Download PDF</button>
+    <button name="format" value="excel">Download Excel</button>
+    <p id="downloadError" style="color: rgb(238, 86, 86); display: none; margin-top: 10px;"></p>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Date</th>
+        <th>Total</th>
+        <th>Final Amount</th>
+        <th>Discount</th>
+        <th>Coupon</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (orders.length === 0) { %>
+        <tr><td colspan="5">No orders found for selected criteria.</td></tr>
+      <% } else { %>
+        <% orders.forEach(order => { %>
+          <tr>
+            <td><%= order.orderId %></td>
+            <td><%= order.createdAt.toDateString() %></td>
+            <td><%= order.totalPrice %></td>
+            <td>₹<%= order.finalAmount %></td>
+            <td>₹<%= order.discount %></td>
+            <td><%= order.coupon ? order.coupon.code : 'N/A' %></td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
+
+  <% if (totalPages > 1) { %>
+    <div class="pagination">
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <a class="<%= i === currentPage ? 'active' : '' %>" href="?page=<%= i %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>&filter=<%= filter || '' %>&search=<%= search || '' %>">
+          <%= i %>
+        </a>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  document.getElementById('downloadForm').addEventListener('submit', function (e) {
+    const startDate = this.querySelector('input[name="startDate"]').value;
+    const endDate = this.querySelector('input[name="endDate"]').value;
+    const errorElement = document.getElementById('downloadError');
+
+    // Clear any previous error
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+
+    if (!startDate || !endDate) {
+      e.preventDefault();
+      errorElement.textContent = 'Please select both start and end dates before downloading.';
+      errorElement.style.display = 'block';
+    }
+  });
+</script>
+
+<%- include("../../views/partials/admin/footer") %>

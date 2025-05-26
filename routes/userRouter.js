@@ -11,6 +11,7 @@ const walletController = require('../controller/user/walletController');
 const couponController = require('../controller/user/couponController');
 const checkoutController = require('../controller/user/checkoutController');
 const shopController = require('../controller/user/shopController');
+const shopDetailController = require('../controller/user/shopDetailController');
 const passport = require('passport');
 const multer=require('multer');
 const profileUpload = require('../helpers/profileUpload');
@@ -29,22 +30,31 @@ router.post('/resend-otp',userController.resendOtp);
 
 
 router.get('/', userController.loadHomepage);
-
-router.get('/filter',userAuth,userController.filterProduct)
-router.get('/filterPrice',userAuth,userController.filterByPrice);
 router.post('/search',userAuth,userController.searchProducts);
-router.get('/load-more-products',userAuth,userController.loadMoreProducts)
 
 
-router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}));
-router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect:'/signup'}),(req,res)=>{
-    res.redirect('/')
-})
+router.get('/auth/google',passport.authenticate('google',{scope:['profile','email'],prompt: 'select_account'}));
+router.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/signup' }),
+  (req, res) => {
+    
+    if (req.user && req.isAuthenticated()) {
+        req.session.user = req.user;
+      console.log('✅ User authenticated, redirecting to home');
+      res.redirect('/');
+    } else {
+      console.log('❌ Authentication failed - no user in session');
+      res.redirect('/signup');
+    }
+  }
+);
 
 
-router.get('/forgot-password',userAuth,profileController.getForgotPassPage)
-router.post('/forgot-email-valid',userAuth,profileController.forgotEmailValid)
-router.post('verify-passForgot-otp',userAuth,profileController.verifyForgotpassOtp);
+router.get('/forgot-password',profileController.getForgotPassPage)
+router.post('/forgot-email-valid',profileController.forgotEmailValid)
+router.post('/verify-passForgot-otp',profileController.verifyForgotpassOtp);
+router.get('/reset-password-forgot',profileController.getResetPassforgot)
+router.post('/reset-password-forgot',profileController.resetPasswordforgot)
 router.get('/reset-password',userAuth,profileController.getResetPassPage)
 router.post('/reset-password',userAuth,profileController.resetPassword)
 router.get('/userProfile',userAuth,profileController.userProfile);
@@ -117,5 +127,14 @@ router.get('/order-failure',userAuth,checkoutController.getorderFailurePage);
 
 router.post('/filter',userAuth,shopController.getfilter);
 router.get('/shop',userAuth,shopController.loadShoppingPage)
+router.get('/newArrivals',userAuth,shopController.loadNewArrivalPage);
+
+router.get('/privacyPolicy',userAuth,shopDetailController.getPrivacyPolicy)
+router.get('/aboutUs',userAuth,shopDetailController.getAboutPage);
+router.get('/shippingPolicy',userAuth,shopDetailController.getShippingDetails);
+router.get('/termsAndConditions',userAuth,shopDetailController.getTermsAndConditions);
+router.get('/contact',userAuth,shopDetailController.getContactPage);
+router.get('/searchFromHome',userAuth,shopDetailController.searchfromhome);
+
 
 module.exports = router;
