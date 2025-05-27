@@ -1,7 +1,7 @@
 const UserCoupon = require('../../models/userCouponSchema');
 const Coupon = require('../../models/coupenSchema');
 const Product = require('../../models/productSchema');
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 
 
 const showUserCoupon = async (req, res) => {

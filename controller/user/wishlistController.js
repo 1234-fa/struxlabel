@@ -3,7 +3,7 @@ const Cart = require('../../models/cartSchema');
 const Product = require('../../models/productSchema');
 const User = require('../../models/userSchema');
 const Wishlist  = require('../../models/wishlistSchema')
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 
 
 

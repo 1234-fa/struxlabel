@@ -2,7 +2,7 @@ const User = require("../../models/userSchema");
 const Category = require('../../models/categorySchema');
 const Brand = require('../../models/brandSchema')
 const Product = require('../../models/productSchema')
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 const mongoose = require('mongoose');
 
 const loadShoppingPage = async (req,res)=>{

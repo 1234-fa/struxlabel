@@ -1,6 +1,6 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 
 const getPrivacyPolicy = async (req,res)=>{
     try {

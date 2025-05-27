@@ -1,6 +1,6 @@
 const Order = require('../../models/orderSchema');
 const generateInvoice = require('../../config/invoice');
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 
 
 const downloadInvoice = async (req, res) => {

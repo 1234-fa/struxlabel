@@ -2,7 +2,7 @@ const User = require("../../models/userSchema");
 const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
 const Cart = require('../../models/cartSchema');
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 
 
 const productDetails = async (req, res) => {

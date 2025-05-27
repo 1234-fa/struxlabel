@@ -6,7 +6,7 @@ const Address = require('../../models/addressSchema');
 const Order = require('../../models/orderSchema');
 const Wallet = require('../../models/walletSchema');
 const Coupon = require('../../models/coupenSchema');
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 
 const { v4: uuidv4 } = require('uuid');
 

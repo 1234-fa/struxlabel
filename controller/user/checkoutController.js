@@ -7,7 +7,7 @@ const razorpay = require('../../config/payments');
 const Coupon = require('../../models/coupenSchema');
 const UserCoupon = require('../../models/userCouponSchema');
 const PaymentBackup = require('../../models/paymentBackup');
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 
 const crypto = require('crypto');
 const mongoose = require('mongoose');

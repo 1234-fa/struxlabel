@@ -1,7 +1,7 @@
 const User=require('../../models/userSchema');
 const Address=require('../../models/addressSchema');
 const nodemailer=require('nodemailer');
-const StatusCode = require('../../config/statuscode');
+const {StatusCode} = require('../../config/statuscode');
 const bcrypt=require('bcrypt');
 const env=require('dotenv').config();
 const session=require('express-session');
