@@ -397,41 +397,61 @@ const postAddAddress = async (req, res) => {
   }
 };
 
-const addAddressOrder = async (req,res)=>{
-  try {
-    const userId = req.session.user;
-    console.log("Session user:", userId); 
-
-    if (!userId) {
-      return res.redirect("/login"); 
+const addAddressOrder = async (req, res) => {
+    try {
+        console.log("Request body:", req.body); // Add this line to debug
+        console.log("Content-Type:", req.headers['content-type']); // Add this too
+        
+        const userId = req.session.user;
+        console.log("Session user:", userId);
+        
+        if (!userId) {
+            return res.json({ success: false, message: "Please login first" });
+        }
+        
+        const userData = await User.findOne({ _id: userId });
+        if (!userData) {
+            console.log("User not found");
+            return res.json({ success: false, message: "User not found" });
+        }
+        
+        const { addressType, name, city, landMark, state, pincode, phone, altphone } = req.body;
+        
+        // Validate that required fields are present
+        if (!addressType || !name || !city || !landMark || !state || !pincode || !phone) {
+            return res.json({ 
+                success: false, 
+                message: "All required fields must be filled" 
+            });
+        }
+        
+        let userAddress = await Address.findOne({ userId: userData._id });
+        let newAddressData; // Define this variable properly
+        
+        if (!userAddress) {
+            const newAddress = new Address({
+                userId: userData._id,
+                address: [{ addressType, name, city, landMark, state, pincode, phone, altphone }]
+            });
+            const savedAddress = await newAddress.save();
+            newAddressData = savedAddress.address[0]; // Get the newly added address
+        } else {
+            const newAddr = { addressType, name, city, landMark, state, pincode, phone, altphone };
+            userAddress.address.push(newAddr);
+            const savedAddress = await userAddress.save();
+            newAddressData = savedAddress.address[savedAddress.address.length - 1]; // Get the last added address
+        }
+        
+        res.json({
+            success: true,
+            message: "Address added successfully",
+            newAddress: newAddressData
+        });
+        
+    } catch (error) {
+        console.error("Error while adding address:", error);
+        res.json({ success: false, message: "An error occurred while adding the address" });
     }
-
-    const userData = await User.findOne({ _id: userId });
-
-    if (!userData) {
-      console.log("User not found");
-      return res.redirect("/login");
-    }
-
-    const { addressType, name, city, landMark, state, pincode, phone, altphone } = req.body;
-
-    let userAddress = await Address.findOne({ userId: userData._id });
-
-    if (!userAddress) {
-      const newAddress = new Address({
-        userId: userData._id,
-        address: [{ addressType, name, city, landMark, state, pincode, phone, altphone }]
-      });
-      await newAddress.save();
-    } else {
-      userAddress.address.push({ addressType, name, city, landMark, state, pincode, phone, altphone });
-      await userAddress.save();
-    }
-    res.redirect("/order");
-  } catch (error) {
-    console.error("Error while adding address:", error);
-    res.redirect("/pageNotFound");
-  }
 }
 
 const { ObjectId } = require('mongoose').Types;

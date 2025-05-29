@@ -13,45 +13,53 @@
    </div>
 
 
-   <section class="mt-50 mb-50">
-       <div class="container">
-           <div class="row">
-               <div class="col-12">
-                   <div class="table-responsive">
-                       <table class="table shopping-summery text-center clean">
-                           <thead>
-                               <tr class="main-heading">
-                                   <th scope="col">Image</th>
-                                   <th scope="col">Name</th>
-                                   <th scope="col">Price</th>
-                                   <th scope="col">Add to Cart</th>
-                                   <th scope="col">Remove</th>
-                               </tr>
-                           </thead>
-                           <tbody>
+   <section class="my-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="table-responsive shadow rounded-4 p-3 bg-white">
+                    <table class="table table-bordered table-hover text-center align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Image</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Add to Cart</th>
+                                <th scope="col">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <% if(wishlist.length > 0) { %>
                                 <% for(let product of wishlist) { %>
-                                    <tr>
+                                    <tr class="bg-light">
                                         <td class="image product-thumbnail">
                                             <a href="/productDetails?id=<%= product._id %>">
-                                                <img src="/uploads/product-images/<%= product.productImages[0] %>" />
+                                                <img src="/uploads/product-images/<%= product.productImages[0] %>" class="img-fluid rounded shadow-sm" style="max-width: 80px;" />
                                             </a>
                                         </td>
-                                        <td class="product-des product-name">
-                                            <h5 class="product-name">
-                                                <a href="/productDetails?id=<%= product._id %>"><%= product.productName %></a>
-                                            </h5>
-                                            <p class="font-xs">
-                                                <%= product.category.name %><br />
-                                                <%= product.brand %>
+                                        <td class="product-des product-name text-start">
+                                            <h6 class="mb-1">
+                                                <a href="/productDetails?id=<%= product._id %>" class="text-dark text-decoration-none">
+                                                    <%= product.productName %>
+                                                </a>
+                                            </h6>
+                                            <p class="small text-muted mb-0">
+                                                Category: <%= product.category.name %> <br>
+                                                Brand: <%= product.brand %>
                                             </p>
                                         </td>
-                                        <td class="price" data-title="Price">₹<span><%= product.salePrice %></span></td>
-                                        <td class="text-center" data-title="Add to Cart">
-                                            <a href="/order?id=<%= product._id %>" class="btn btn-sm">Buy Now</a>
+                                        <td class="price text-success fw-bold">₹<%= product.salePrice %></td>
+                                        <td>
+                                            <form action="/add-to-cart" method="POST">
+                                                <input type="hidden" name="productId" value="<%= product._id %>">
+                                                <input type="hidden" name="quantity" value="1">
+                                                <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                    Add to Cart
+                                                </button>
+                                            </form>
                                         </td>
-                                        <td class="action" data-title="Remove">
-                                            <a class="btn btn-sm" href="/removeFromWishlist?id=<%= product._id %>">
+                                        <td>
+                                            <a class="btn btn-outline-danger btn-sm" href="/removeFromWishlist?id=<%= product._id %>">
                                                 <i class="fi-rs-trash"></i>
                                             </a>
                                         </td>
@@ -59,18 +67,18 @@
                                 <% } %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="5" class="text-center">
-                                        <p class="lead mb-4">No items found in Wishlist</p>
+                                    <td colspan="5" class="text-center py-4">
+                                        <p class="lead text-muted">No items found in Wishlist</p>
                                     </td>
                                 </tr>
                             <% } %>
-                           </tbody>
-                       </table>
-                   </div>
-               </div>
-           </div>
-       </div>
-   </section>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
    <div class="row">
                   <div class="col-lg-12">

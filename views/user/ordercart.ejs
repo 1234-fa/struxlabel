@@ -331,92 +331,199 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function openAddressForm() {
-      document.getElementById('addressModal').style.display = 'flex';
+  document.getElementById('addressModal').style.display = 'flex';
+}
+
+function closeAddressForm() {
+  document.getElementById('addressModal').style.display = 'none';
+}
+
+// REMOVE THIS - DUPLICATE EVENT LISTENER
+// document.getElementById('addressForm').addEventListener('submit', function (event) {
+//   if (!validateForm()) {
+//     event.preventDefault();
+//   }
+// });
+
+function showFieldError(field, message) {
+  const input = document.getElementById(field);
+  const errorDiv = document.createElement('div');
+  errorDiv.className = "text-danger";
+  errorDiv.textContent = message;
+  errorDiv.id = field + "-error";
+  input.parentNode.appendChild(errorDiv);
+}
+
+function validateForm() {
+  let isValid = true;
+  const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
+  const formErrors = document.getElementById('formErrors');
+  formErrors.innerHTML = '';
+
+  requiredFields.forEach((field) => {
+    const existingError = document.getElementById(field + '-error');
+    if (existingError) existingError.remove();
+    const input = document.getElementById(field);
+    const value = input.value.trim();
+    if (!value) {
+      showFieldError(field, 'This field is required.');
+      isValid = false;
     }
+  });
+
+  const namePattern = /^[A-Za-z\s]+$/;
+  const pincodePattern = /^\d{6}$/;
+  const phonePattern = /^\d{10}$/;
+
+  const name = document.getElementById('name').value.trim();
+  const city = document.getElementById('city').value.trim();
+  const landMark = document.getElementById('landMark').value.trim();
+  const state = document.getElementById('state').value.trim();
+  const pincode = document.getElementById('pincode').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const altPhone = document.getElementById('altPhone').value.trim();
+
+  if (name && !namePattern.test(name)) {
+    showFieldError('name', 'Name should contain alphabets only.');
+    isValid = false;
+  }
+  if (city && !namePattern.test(city)) {
+    showFieldError('city', 'City should contain alphabets only.');
+    isValid = false;
+  }
+  if (landMark && !namePattern.test(landMark)) {
+    showFieldError('landMark', 'Landmark should contain alphabets only.');
+    isValid = false;
+  }
+  if (state && !namePattern.test(state)) {
+    showFieldError('state', 'State should contain alphabets only.');
+    isValid = false;
+  }
+  if (pincode && !pincodePattern.test(pincode)) {
+    showFieldError('pincode', 'Pincode should be a 6-digit number.');
+    isValid = false;
+  }
+  if (phone && !phonePattern.test(phone)) {
+    showFieldError('phone', 'Phone number should be a 10-digit number.');
+    isValid = false;
+  }
+  if (altPhone && !phonePattern.test(altPhone)) {
+    showFieldError('altPhone', 'Alternate phone should be a 10-digit number.');
+    isValid = false;
+  }
+  if (phone && altPhone && phone === altPhone) {
+    showFieldError('altPhone', 'Alternate number must be different.');
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+// KEEP ONLY THIS EVENT LISTENER
+document.getElementById('addressForm').addEventListener('submit', function (event) {
+  event.preventDefault(); // Always prevent default form submission
   
-    function closeAddressForm() {
-      document.getElementById('addressModal').style.display = 'none';
-    }
+  if (!validateForm()) {
+      return; // Stop if validation fails
+  }
   
-    document.getElementById('addressForm').addEventListener('submit', function (event) {
-      if (!validateForm()) {
-        event.preventDefault();
-      }
-    });
+  // Get form data as an object instead of FormData
+  const formData = {
+      addressType: document.getElementById('addressType').value,
+      name: document.getElementById('name').value,
+      city: document.getElementById('city').value,
+      landMark: document.getElementById('landMark').value,
+      state: document.getElementById('state').value,
+      pincode: document.getElementById('pincode').value,
+      phone: document.getElementById('phone').value,
+      altphone: document.getElementById('altPhone').value // Note: using altphone to match backend
+  };
   
-    function showFieldError(field, message) {
-      const input = document.getElementById(field);
-      const errorDiv = document.createElement('div');
-      errorDiv.className = "text-danger";
-      errorDiv.textContent = message;
-      errorDiv.id = field + "-error";
-      input.parentNode.appendChild(errorDiv);
-    }
+  console.log("Sending data:", formData); // Debug log
   
-    function validateForm() {
-      let isValid = true;
-      const requiredFields = ["addressType", "name", "city", "landMark", "state", "pincode", "phone", "altPhone"];
-      const formErrors = document.getElementById('formErrors');
-      formErrors.innerHTML = '';
+  fetch('/addAddressinorder', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json', // Send as JSON
+      },
+      body: JSON.stringify(formData)
+  })
+  .then(response => {
+      if (response.ok) {
+          return response.json();
+      }
+      throw new Error('Network response was not ok');
+  })
+  .then(data => {
+      if (data.success) {
+          // Close the modal
+          closeAddressForm();
+          
+          // Reset the form
+          document.getElementById('addressForm').reset();
+          
+          // Clear any existing error messages
+          document.getElementById('formErrors').innerHTML = '';
+          
+          // Dynamically add the new address to the list without reload
+          addNewAddressToList(data.newAddress);
+      } else {
+          showError(data.message || 'Failed to add address');
+      }
+  })
+  .catch(error => {
+      console.error('Error:', error);
+      showError('An error occurred while adding the address');
+  });
+});
+
+function showError(message) {
+  const formErrors = document.getElementById('formErrors');
+  formErrors.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+}
+
+function addNewAddressToList(newAddress) {
+  console.log("Adding new address to list:", newAddress); // Debug log
   
-      requiredFields.forEach((field) => {
-        const existingError = document.getElementById(field + '-error');
-        if (existingError) existingError.remove();
-        const input = document.getElementById(field);
-        const value = input.value.trim();
-        if (!value) {
-          showFieldError(field, 'This field is required.');
-          isValid = false;
-        }
-      });
+  // Find the address container more reliably
+  const addressContainer = document.querySelector('.card .mb-3').parentNode;
+  if (!addressContainer) {
+      console.log("Address container not found, reloading page");
+      location.reload();
+      return;
+  }
   
-      const namePattern = /^[A-Za-z\s]+$/;
-      const pincodePattern = /^\d{6}$/;
-      const phonePattern = /^\d{10}$/;
+  // Remove "No address found" message if it exists
+  const noAddressMsg = addressContainer.querySelector('p');
+  if (noAddressMsg && noAddressMsg.textContent.includes('No address found')) {
+      noAddressMsg.remove();
+  }
   
-      const name = document.getElementById('name').value.trim();
-      const city = document.getElementById('city').value.trim();
-      const landMark = document.getElementById('landMark').value.trim();
-      const state = document.getElementById('state').value.trim();
-      const pincode = document.getElementById('pincode').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const altPhone = document.getElementById('altPhone').value.trim();
+  // Get current address count for radio button indexing
+  const existingAddresses = document.querySelectorAll('input[name="selectedAddress"]').length;
   
-      if (name && !namePattern.test(name)) {
-        showFieldError('name', 'Name should contain alphabets only.');
-        isValid = false;
-      }
-      if (city && !namePattern.test(city)) {
-        showFieldError('city', 'City should contain alphabets only.');
-        isValid = false;
-      }
-      if (landMark && !namePattern.test(landMark)) {
-        showFieldError('landMark', 'Landmark should contain alphabets only.');
-        isValid = false;
-      }
-      if (state && !namePattern.test(state)) {
-        showFieldError('state', 'State should contain alphabets only.');
-        isValid = false;
-      }
-      if (pincode && !pincodePattern.test(pincode)) {
-        showFieldError('pincode', 'Pincode should be a 6-digit number.');
-        isValid = false;
-      }
-      if (phone && !phonePattern.test(phone)) {
-        showFieldError('phone', 'Phone number should be a 10-digit number.');
-        isValid = false;
-      }
-      if (altPhone && !phonePattern.test(altPhone)) {
-        showFieldError('altPhone', 'Alternate phone should be a 10-digit number.');
-        isValid = false;
-      }
-      if (phone && altPhone && phone === altPhone) {
-        showFieldError('altPhone', 'Alternate number must be different.');
-        isValid = false;
-      }
+  // Create new address HTML - match the exact format from your EJS template
+  const newAddressHTML = `
+      <div class="form-check mb-2">
+          <input class="form-check-input" type="radio" name="selectedAddress" id="address${existingAddresses}" value="${newAddress._id}">
+          <label class="form-check-label" for="address${existingAddresses}">
+              <strong>${newAddress.name}</strong><br>
+              ${newAddress.landMark}, ${newAddress.city}, ${newAddress.state} - ${newAddress.pincode}<br>
+              Phone: ${newAddress.phone}
+          </label>
+      </div>
+  `;
   
-      return isValid;
-    }
+  // Insert before the "Add New Address" button
+  const addButton = addressContainer.querySelector('button');
+  if (addButton) {
+      addButton.insertAdjacentHTML('beforebegin', newAddressHTML);
+      console.log("Address added successfully to DOM");
+  } else {
+      console.log("Add button not found, reloading page");
+      location.reload();
+  }
+}
   
     // Set selected address before submitting the payment form
     const paymentForm = document.querySelector('form[action="/payment-cart"]');
