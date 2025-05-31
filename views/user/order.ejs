@@ -35,11 +35,12 @@
       <div class="card p-4 shadow-sm d-flex flex-column align-items-start">
         <% if (item.product) { %>
           <div class="d-flex mb-3">
-            <img src="/uploads/product-images/<%= item.product.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 100px; height: 100px; object-fit: cover;">
+            <img src="<%= item.product.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 100px; height: 100px; object-fit: cover;">
             <div>
               <h5><%= item.product.productName %></h5>
               <p class="mb-1">Brand: <%= item.product.brand %></p>
               <p class="mb-1">Qty: <%= item.quantity %></p>
+              <p class="mb-1">Size: <%= item.variant %></p>
               <div class="d-flex align-items-center">
                 <strong class="me-2 final-price">₹<%= item.totalPrice %></strong>
                 <del class="text-muted">₹<%= item.product.regularPrice * item.quantity %></del>
@@ -62,6 +63,7 @@
             <form action="/payment" method="POST" class="w-100">
               <input type="hidden" name="productId" value="<%= item.product._id %>">
               <input type="hidden" name="quantity" value="<%= item.quantity %>">
+              <input type="hidden" name="variant" value="<%= item.variant %>">
               <input type="hidden" name="totalPrice" id="totalPriceInput" value="<%= item.totalPrice %>">
               <input type="hidden" id="selectedAddressInput" name="selectedAddress" value="">
               <!-- New hidden field for coupon ID -->

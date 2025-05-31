@@ -68,7 +68,7 @@
                 <% order.orderedItems.forEach(item => { %>
                   <li class="mb-2 d-flex align-items-center">
                     <% if (item.product && item.product.productImages && item.product.productImages.length > 0) { %>
-                      <img src="/uploads/product-images/<%= item.product.productImages[0] %>" 
+                      <img src="<%= item.product.productImages[0] %>" 
                            alt="Product Image"
                            style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
                     <% } else { %>

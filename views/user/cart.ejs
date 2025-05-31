@@ -1,74 +1,119 @@
 <%- include("../../views/partials/user/header") %>
-
 <style>
-  .cart-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-  }
+/* Layout and grid */
+.cart-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
 
-  .cart-card {
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
-    width: 100%;
-    max-width: 400px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    padding: 15px;
-    align-items: flex-start;
-  }
+.cart-card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  align-items: flex-start;
+  position: relative; /* Added for absolute positioning of remove button */
+}
 
-  .cart-image-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
+/* Image & button container */
+.cart-image-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
 
-  .cart-card img {
-    width: 120px;
-    height: auto;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
+.image-container {
+  width: 120px;
+}
 
-  .cart-card img:hover {
-    transform: scale(1.03);
-  }
+.image-container img {
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
 
-  .btn-group-inline {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+.image-container img:hover {
+  transform: scale(1.03);
+}
 
-  .btn-group-inline form {
-    margin: 0;
-  }
+/* Remove Button - Moved to top right of card */
+.remove-btn-form {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
 
-  .cart-info {
-    flex: 1;
-  }
+.remove-btn {
+  background-color: rgba(255, 0, 0, 0.85);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
 
-  .cart-info h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #333;
-  }
+.remove-btn:hover {
+  background-color: rgba(255, 0, 0, 1);
+}
 
-  .cart-info p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: #555;
-  }
+/* Product Information */
+.cart-info {
+  flex: 1;
+}
 
-  .qty-control {
+.cart-info h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  padding-right: 35px; /* Add padding to prevent overlap with remove button */
+}
+
+.cart-info p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Variant Selector */
+.variant-control {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.variant-control label {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.variant-control select {
+  width: 100%;
+  padding: 6px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* Quantity Controller */
+.qty-control {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -77,16 +122,16 @@
 
 .qty-control input[type="number"] {
   width: 60px;
-  text-align: center;
   padding: 6px;
+  text-align: center;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 5px;
   appearance: textfield;
 }
 
-.qty-control input::-webkit-outer-spin-button,
-.qty-control input::-webkit-inner-spin-button {
+.qty-control input::-webkit-inner-spin-button,
+.qty-control input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -96,8 +141,8 @@
   border: none;
   padding: 6px 12px;
   font-size: 18px;
-  cursor: pointer;
   border-radius: 5px;
+  cursor: pointer;
   transition: background-color 0.2s;
 }
 
@@ -105,70 +150,90 @@
   background-color: #e0e0e0;
 }
 
+/* Cart Total Section */
+.cart-total-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.cart-total {
+  background-color: #f9f9f9;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 300px;
+  text-align: right;
+}
+
+.cart-total h4 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #333;
+}
+
+.cart-total .btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Button Group Inline */
+.btn-group-inline {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Error Messages */
+.error-msg {
+  margin-top: 8px;
+  font-size: 13px;
+  color: red;
+}
+
+/* Responsive Layout */
+@media screen and (max-width: 768px) {
+  .cart-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .image-container {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  .cart-info {
+    width: 100%;
+  }
+
+  .cart-info h3 {
+    padding-right: 35px; /* Maintain padding on mobile */
+  }
+
   .cart-total-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 30px;
+    justify-content: center;
   }
 
   .cart-total {
-    background-color: #f9f9f9;
-    padding: 20px 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    max-width: 300px;
-    text-align: right;
-  }
-
-  .cart-total h4 {
-    margin-bottom: 15px;
-    font-size: 20px;
-    color: #333;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
   }
 
   .cart-total .btn {
-    width: 100%;
-    padding: 10px 0;
-    font-weight: 600;
-    font-size: 16px;
+    width: auto;
   }
 
-  @media screen and (max-width: 768px) {
-    .cart-card {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .cart-card img {
-      width: 100%;
-      max-width: 250px;
-    }
-
-    .cart-info {
-      width: 100%;
-    }
-
-    .cart-total-wrapper {
-      justify-content: center;
-    }
-
-    .cart-total {
-      width: 100%;
-      max-width: 100%;
-      text-align: center;
-    }
-
-    .cart-total .btn {
-      width: auto;
-    }
-
-    .btn-group-inline {
-      justify-content: center;
-    }
+  .btn-group-inline {
+    justify-content: center;
   }
+}
 </style>
-
 <main class="main">
   <section class="cart-section">
     <div class="container">
@@ -181,16 +246,34 @@
         <div class="cart-grid">
           <% cartItems.forEach(item => { %>
             <div class="cart-card">
+              <!-- Remove Button - Now at top right of card -->
+              <form action="/remove-from-cart/<%= item._id %>" method="POST"
+                    onsubmit="return confirm('Are you sure you want to remove this item?')"
+                    class="remove-btn-form">
+                <button type="submit" class="remove-btn">×</button>
+              </form>
+
               <div class="cart-image-btn">
-                <a href="/productDetails?id=<%= item.productId._id %>">
-                  <img src="/uploads/product-images/<%= item.productId.productImages[0] %>" alt="Product Image">
-                </a>
-                <div class="btn-group-inline">
-                  <form action="/remove-from-cart/<%= item._id %>" method="POST"
-                    onsubmit="return confirm('Are you sure you want to remove this item?')">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
-                  </form>
-                  <a href="/order?id=<%= item.productId._id %>" class="btn btn-outline-success btn-sm">Buy Now</a>
+                <div class="image-container">
+                  <a href="/productDetails?id=<%= item.productId._id %>">
+                    <img src="<%= item.productId.productImages[0] %>" alt="Product Image">
+                  </a>
+                </div>
+
+                <!-- Size Variant Selection -->
+                <div class="variant-control mt-2">
+                  <label><strong>Size:</strong></label>
+                  <select id="size-<%= item._id %>" onchange="changeVariant('<%= item._id %>')">
+                    <% if (item.productId.variants) { %>
+                      <% for (const [size, stock] of item.productId.variants) { %>
+                        <option value="<%= size %>" 
+                                <%= item.variant.size  === size ? 'selected' : '' %>
+                                <%= stock === 0 ? 'disabled' : '' %>>
+                          <%= size %> <%= stock === 0 ? '(Out of Stock)' : `(${stock} available)` %>
+                        </option>
+                      <% } %>
+                    <% } %>
+                  </select>
                 </div>
               </div>
 
@@ -199,10 +282,12 @@
                 <p><strong>Brand:</strong> <%= item.productId.brand %></p>
                 <p><strong>Price:</strong> ₹<%= item.productId.salePrice %></p>
                 <p><strong>Quantity:</strong> <%= item.quantity %></p>
+                <p><strong>Selected Size:</strong> <%= item.variant.size %></p>
                 <p><strong>Total:</strong> ₹<%= item.totalPrice %></p>
-                <p><strong>Availability:</strong><%= item.productId.quantity %> items in stock</p>
 
-                <div class="qty-control" data-item-id="<%= item._id %>" data-stock="<%= item.productId.quantity %>">
+                <div class="qty-control" 
+     data-item-id="<%= item._id %>" 
+     data-stock="<%= item.productId.variants ? item.productId.variants.get(item.variant.size) || 0 : item.productId.quantity %>">
                   <button class="qty-btn minus" id="minus-<%= item._id %>" onclick="changeQty('<%= item._id %>', -1)">−</button>
                   <input
                     type="number"
@@ -215,11 +300,37 @@
                   <button class="qty-btn plus" id="plus-<%= item._id %>" onclick="changeQty('<%= item._id %>', 1)">+</button>
                 </div>
                 <div id="error-msg-<%= item._id %>" class="error-msg" style="color: red;"></div>
-                <% if (item.productId.quantity < item.quantity) { hasInsufficientStock = true; } %>
-                <%if(item.productId.quantity<item.quantity){%>
-                  <div class="error-msg" style="color: red;">Insufficient stock available for the selected quantity. Please reduce the quantity to proceed with your order.</div>
-                  <%}%>
-              </div>
+                
+                <% 
+  let selectedSize = item.variant.size;
+  let sizeExists = false;
+  let selectedStock = 0;
+
+  if (item.productId.variants) {
+    for (const [size, stock] of item.productId.variants) {
+      if (size === selectedSize) {
+        sizeExists = true;
+        selectedStock = stock;
+        break;
+      }
+    }
+  }
+%>
+
+<% if (!sizeExists) { %>
+  <%{ hasInsufficientStock = true; }%>
+  <div class="error-msg" style="color: red;">
+    Selected size "<%= selectedSize %>" is no longer available. Please choose another size.
+  </div>
+<% } else if (selectedStock === 0 || item.quantity > selectedStock) { %>
+  <%{ hasInsufficientStock = true; }%>
+  <div class="error-msg" style="color: red;">
+    <%= selectedStock === 0 ? 'Selected variant is out of stock.' : 'Insufficient stock available for the selected variant. Please reduce the quantity to proceed with your order.' %>
+  </div>
+<% } %>
+
+
+</div>
             </div>
           <% }) %>
         </div>
@@ -241,47 +352,17 @@
 </main>
 
 <script>
-  function changeQty(id, delta) {
-  const input = document.getElementById('qty-' + id);
-  const control = document.querySelector(`.qty-control[data-item-id="${id}"]`);
-  const plusBtn = document.getElementById('plus-' + id);
-  const minusBtn = document.getElementById('minus-' + id);
-  const errorMsg = document.getElementById('error-msg-' + id);
-  const stock = parseInt(control.dataset.stock);
-
-  let qty = parseInt(input.value) || 1;
-  qty += delta;
-
-  let message = '';
-  if (qty < 1) {
-    qty = 1;
-  }
-  if (qty > stock) {
-    qty = stock;
-    message = `Only ${stock} in stock.`;
-  }
-  if (qty > 10) {
-    qty = 10;
-    message = `Maximum allowed quantity is 10.`;
-  }
-
-  input.value = qty;
-  errorMsg.innerText = message;
-  errorMsg.style.display = message ? 'block' : 'none'; 
-  plusBtn.disabled = qty >= Math.min(stock, 10);
-  minusBtn.disabled = qty <= 1;
-
-  updateCartQtyAjax(id, qty);
-}
-
-  
+  // Updated quantity control function that considers variant stock
 function changeQty(id, delta) {
   const input = document.getElementById('qty-' + id);
   const control = document.querySelector(`.qty-control[data-item-id="${id}"]`);
   const plusBtn = document.getElementById('plus-' + id);
   const minusBtn = document.getElementById('minus-' + id);
   const errorMsg = document.getElementById('error-msg-' + id);
-  const stock = parseInt(control.dataset.stock);
+  
+  // Get the current selected variant stock instead of general product stock
+  const variantStock = getCurrentVariantStock(id);
+  const stock = variantStock || parseInt(control.dataset.stock); // Fallback to general stock
 
   let currentQty = parseInt(input.value) || 1;
   let newQty = currentQty + delta;
@@ -292,7 +373,7 @@ function changeQty(id, delta) {
   }
 
   if (newQty > stock) {
-    message = `Only ${stock} in stock.`;
+    message = `Only ${stock} in stock for this size.`;
     newQty = stock;
   }
 
@@ -305,13 +386,111 @@ function changeQty(id, delta) {
   errorMsg.innerText = message;
   errorMsg.style.display = message ? 'block' : 'none';
 
+  // Update button states based on variant stock
   plusBtn.disabled = newQty >= Math.min(stock, 10);
   minusBtn.disabled = newQty <= 1;
 
   updateCartQtyAjax(id, newQty);
 }
 
-  function updateCartQtyAjax(id, qty) {
+// Helper function to get current variant stock
+function getCurrentVariantStock(itemId) {
+  const sizeSelect = document.getElementById(`size-${itemId}`);
+  if (!sizeSelect) return null;
+  
+  const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+  if (!selectedOption) return null;
+  
+  // Extract stock number from option text like "M (5 available)" or "L (Out of Stock)"
+  const optionText = selectedOption.textContent;
+  const stockMatch = optionText.match(/\((\d+) available\)/);
+  
+  if (stockMatch) {
+    return parseInt(stockMatch[1]);
+  }
+  
+  // If it says "Out of Stock", return 0
+  if (optionText.includes('Out of Stock')) {
+    return 0;
+  }
+  
+  return null; // Fallback to general stock
+}
+
+// Updated changeVariant function
+function changeVariant(id) {
+    console.log('changeVariant called for:', id);
+    
+    const select = document.getElementById(`size-${id}`);
+    const newSize = select.value;
+
+    console.log('Triggered for:', id, 'newSize:', newSize);
+
+    select.disabled = true;
+
+    fetch(`/update-variant/${id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ newSize })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log(data.message);
+        
+        // After variant change, update quantity controls based on new variant stock
+        updateQuantityControlsForVariant(id);
+        
+        showToast('Size updated successfully!', 'success');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to update size. Please try again.', 'error');
+    })
+    .finally(() => {
+        select.disabled = false;
+    });
+}
+
+// Function to update quantity controls when variant changes
+function updateQuantityControlsForVariant(itemId) {
+  const input = document.getElementById('qty-' + itemId);
+  const plusBtn = document.getElementById('plus-' + itemId);
+  const minusBtn = document.getElementById('minus-' + itemId);
+  const errorMsg = document.getElementById('error-msg-' + itemId);
+  
+  const variantStock = getCurrentVariantStock(itemId);
+  const currentQty = parseInt(input.value) || 1;
+  
+  if (variantStock !== null) {
+    let message = '';
+    let newQty = currentQty;
+    
+    
+    // Update button states
+    plusBtn.disabled = newQty >= Math.min(variantStock, 10) || variantStock === 0;
+    minusBtn.disabled = newQty <= 1;
+    
+    // Show/hide error message
+    errorMsg.innerText = message;
+    errorMsg.style.display = message ? 'block' : 'none';
+    
+    // If variant is out of stock, show appropriate message
+    if (variantStock === 0) {
+      errorMsg.innerText = 'This size is out of stock.';
+      errorMsg.style.display = 'block';
+      input.disabled = true;
+    } else {
+      input.disabled = false;
+    }
+  }
+}
+
+function updateCartQtyAjax(id, qty) {
     fetch(`/update-cart/${id}`, {
       method: 'POST',
       headers: {
@@ -332,7 +511,22 @@ function changeQty(id, delta) {
       console.error('AJAX Error:', err);
       alert('Something went wrong');
     });
-  }
+}
+
+// Helper function for toast notifications
+function showToast(message, type = 'info') {
+    console.log(`${type.toUpperCase()}: ${message}`);
+}
+
+// Initialize quantity controls on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all quantity controls based on current variant selection
+    const allQuantityControls = document.querySelectorAll('[data-item-id]');
+    allQuantityControls.forEach(control => {
+        const itemId = control.dataset.itemId;
+        updateQuantityControlsForVariant(itemId);
+    });
+});
 </script>
 
 <%- include('../../views/partials/user/footer') %>

@@ -48,7 +48,9 @@ const addToCart = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.redirect('/login');
 
-    const { productId, quantity } = req.body;
+    const { productId, variant,  quantity = 1 } = req.body;
+
+    console.log('add to cart req.body',req.body);
 
     const product = await Product.findById(productId);
     if (!product) return res.status(StatusCode.NOT_FOUND).send("Product not found");
@@ -73,6 +75,9 @@ const addToCart = async (req, res) => {
       cart.items.push({
         productId: product._id,
         quantity: qty,
+        variant: {
+          size: variant || null
+        },
         totalPrice: itemPrice * qty
       });
     }
@@ -100,7 +105,7 @@ const addToCart = async (req, res) => {
       console.log("Wishlist products is not an array or no wishlist found."); 
     }
 
-    // await Wishlist.updateOne({userId},{$pull:{items:{productId:product._id}}});
+    
 
     res.redirect('/cart');
 
@@ -167,11 +172,44 @@ const updateCartQty = async (req, res) => {
   }
 };
 
+const updateVariant = async (req, res) => {
+  try {
+    console.log('its workingsss');
+    const cartItemId = req.params.id;
+    const { newSize } = req.body;
+    console.log(cartItemId);
+    console.log(req.body);
+    console.log(newSize);
+
+    const cart = await Cart.findOne({ userId: req.session.user._id });
+    if (!cart) {
+      return res.json({ success: false, message: 'Cart not found' });
+    }
+
+    const item = cart.items.find(item => item._id.toString() === cartItemId);
+    if (!item) {
+      return res.json({ success: false, message: 'Item not found in cart' });
+    }
+
+    item.variant.size = newSize;
+
+    await cart.save();
+
+    res.status(200).json({ 
+      message: 'Variant updated successfully',
+      newSize: newSize 
+    });
+  } catch (error) {
+    console.error('Error updating variant:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 
 module.exports = {
   getCartPage,
   addToCart,
   removeCartItem,
-  updateCartQty
+  updateCartQty,
+  updateVariant
 };

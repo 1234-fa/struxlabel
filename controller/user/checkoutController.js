@@ -32,7 +32,7 @@ const getorderFailurePage =async (req,res)=>{
 // Create Razorpay order
 const createRazorpayOrder = async (req, res) => {
     try {
-      const { productId, quantity, totalPrice ,deliveryCharge} = req.body;
+      const { productId, quantity,variant, totalPrice ,deliveryCharge} = req.body;
       const userId = req.session.user;
       
       if (!userId) {
@@ -108,6 +108,7 @@ const createRazorpayOrder = async (req, res) => {
         razorpay_signature,
         productId,
         quantity,
+        variant,
         totalPrice,
         selected,
         couponId,
@@ -135,9 +136,16 @@ const createRazorpayOrder = async (req, res) => {
       }
   
       const orderQty = Number(quantity);
-      if (product.quantity < orderQty) {
-        return res.status(StatusCode.BAD_REQUEST).json({ message: 'Insufficient stock available' });
-      }
+        
+        // ✅ Fix: Check variant-specific stock
+        const availableStock = product.variants.get(variant) || 0;
+        console.log(`Stock check - Size: ${variant}, Available: ${availableStock}, Requested: ${orderQty}`);
+        
+        if (availableStock < orderQty) {
+            return res.status(StatusCode.BAD_REQUEST).json({ 
+                message: `Insufficient stock available for size ${variant}. Only ${availableStock} items left.` 
+            });
+        }
   
       const address = {
         addressType: selected.addressType,
@@ -154,6 +162,10 @@ const createRazorpayOrder = async (req, res) => {
         product: product._id,
         quantity: orderQty,
         price: product.salePrice,
+        variant: { 
+                size: variant || null // Add fallback but investigate why variant is undefined
+            },
+            status: 'processing'
       };
   
       const originalPrice = product.regularPrice * orderQty;
@@ -199,12 +211,21 @@ const createRazorpayOrder = async (req, res) => {
   
       await newOrder.save();
   
-      // Decrease product quantity
-      await Product.findByIdAndUpdate(
-        productId,
-        { $inc: { quantity: -orderQty } },
-        { new: true }
-      );
+      console.log('Saved order variant:', newOrder.orderedItems[0].variant);
+              
+              // ✅ Fix: Update variant-specific stock
+              const updatedProduct = await Product.findByIdAndUpdate(
+                  productId,
+                  { $inc: { [`variants.${variant}`]: -orderQty } },
+                  { new: true }
+              );
+              
+              if (!updatedProduct) {
+                  console.error('Stock update failed.');
+              } else {
+                  const remainingStock = updatedProduct.variants.get(variant);
+                  console.log(`Stock updated for size ${variant}. Remaining: ${remainingStock}`);
+              }
   
       // Assign best next coupon if no coupon was used
       if (!couponId) {
@@ -313,10 +334,28 @@ const createRazorpayOrder = async (req, res) => {
               const price = product.salePrice || product.price || 0;
               const originalPrice = product.regularPrice || 0;
               const quantity = item.quantity;
+              const variant = item.variant;
         
-              if (product.quantity < quantity) {
-                return res.status(StatusCode.BAD_REQUEST).json({ message: `Insufficient stock for ${product.name}` });
-              }
+              let availableStock;
+        if (product.variants && variant?.size) {
+          // For products with variants, check variant-specific stock
+          availableStock = product.variants.get(variant.size) || 0;
+          
+          if (availableStock < quantity) {
+            return res.status(StatusCode.BAD_REQUEST).json({ 
+              message: `Insufficient stock for ${product.name} (Size: ${variant.size}). Only ${availableStock} available.` 
+            });
+          }
+        } else {
+          // For products without variants, check general stock
+          availableStock = product.quantity || 0;
+          
+          if (availableStock < quantity) {
+            return res.status(StatusCode.BAD_REQUEST).json({ 
+              message: `Insufficient stock for ${product.name}. Only ${availableStock} available.` 
+            });
+          }
+        }
         
               const itemTotal = price * quantity;
               const itemOriginalTotal = originalPrice * quantity;
@@ -327,6 +366,7 @@ const createRazorpayOrder = async (req, res) => {
               orderItems.push({
                 product: product._id,
                 quantity,
+                variant: variant || { size: null },
                 price,
                 totalPrice: itemTotal,
                 status: "processing"
@@ -381,13 +421,30 @@ const createRazorpayOrder = async (req, res) => {
   console.log(newOrder.discount);
       await newOrder.save();
   
-      // Update product stock
+      // Update product stock (variant-specific or general)
       for (const item of orderItems) {
-        await Product.findByIdAndUpdate(
-          item.product,
-          { $inc: { quantity: -item.quantity } },
-          { new: true }
-        );
+        const product = await Product.findById(item.product);
+        
+        if (product.variants && item.variant?.size) {
+          // Update variant-specific stock
+          const currentVariantStock = product.variants.get(item.variant.size) || 0;
+          const newVariantStock = Math.max(0, currentVariantStock - item.quantity);
+          
+          await Product.findByIdAndUpdate(
+            item.product,
+            { 
+              $set: { [`variants.${item.variant.size}`]: newVariantStock }
+            },
+            { new: true }
+          );
+        } else {
+          // Update general product stock for products without variants
+          await Product.findByIdAndUpdate(
+            item.product,
+            { $inc: { quantity: -item.quantity } },
+            { new: true }
+          );
+        }
       }
   
       // Remove ordered items from cart

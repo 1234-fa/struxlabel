@@ -85,12 +85,13 @@
             <div class="mb-3 border-bottom pb-2">
               <p><strong>Product:</strong> <%= item.productId.productName %></p>
               <% if (item.productId.productImages && item.productId.productImages[0]) { %>
-                <img src="/uploads/product-images/<%= item.productId.productImages[0] %>" alt="Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                <img src="<%= item.productId.productImages[0] %>" alt="Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
               <% } else { %>
                 <img src="/uploads/product-images/default-image.png" alt="Default Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
               <% } %>
               <p><strong>Qty:</strong> <%= item.quantity %></p>
               <p><strong>Price :</strong> ₹<%= item.productId.regularPrice %></p>
+              <p><strong>Size:</strong> <%= item.variant?.size || 'Not selected' %></p>
               <p><strong>Offer Price (each):</strong> ₹<%= item.productId.salePrice %></p>
               <p><strong>Total:</strong> ₹<%= item.totalPrice %></p>
             </div>

@@ -80,11 +80,12 @@
     <% cartItems.forEach(item => { %>
       <% if (item.product) { %>
         <div class="d-flex mb-3">
-          <img src="/uploads/product-images/<%= item.product.productImages[0] %>" alt="Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
+          <img src="<%= item.product.productImages[0] %>" alt="Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
           <div>
             <h5><%= item.product.productName %></h5>
             <p class="mb-1">Brand: <%= item.product.brand %></p>
             <p class="mb-1">Qty: <%= item.quantity %></p>
+            <p class="mb-1">Size: <%= item.variant?.size || 'Not selected' %></p>
             <div class="d-flex align-items-center">
               <strong class="me-2">₹<%= item.totalPrice %></strong>
               <del class="text-muted">₹<%= item.product.regularPrice * item.quantity %></del>

@@ -17,6 +17,12 @@ const cartSchema = new Schema({
       type: Number,
       default: 1
     },
+    variant: {
+            size: {
+                type: String,
+                default: null
+            }
+    },
     totalPrice: {
       type: Number,
       default: 0

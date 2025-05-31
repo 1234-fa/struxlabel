@@ -93,7 +93,7 @@
                   <% if (item.product) { %>
                     <div class="border p-3 mb-3">
                       <div class="d-flex align-items-center border-bottom pb-2 mb-2">
-                        <img src="/uploads/product-images/<%= item.product.productImages[0] %>" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
+                        <img src="<%= item.product.productImages[0] %>" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
                         <div>
                           <strong><%= item.product.productName %></strong><br>
                           Qty: <%= item.quantity %>, Price: ₹<%= item.price.toFixed(2) %>, Total: ₹<%= (item.quantity * item.price).toFixed(2) %>

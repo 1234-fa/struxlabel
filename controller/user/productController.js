@@ -41,6 +41,7 @@ const productDetails = async (req, res) => {
         }
       }
       console.log(existingQtyincart);
+      console.log(product.productImages);
   
       res.render('product-details', {
         user: userData,

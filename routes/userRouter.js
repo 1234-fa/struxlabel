@@ -86,11 +86,12 @@ router.get('/cart', userAuth, cartController.getCartPage);
 router.post('/add-to-cart', userAuth, cartController.addToCart);
 router.post('/remove-from-cart/:id',userAuth,cartController.removeCartItem);
 router.post('/update-cart/:id',userAuth,cartController.updateCartQty);
+router.post('/update-variant/:id',userAuth,cartController.updateVariant);
 
 
 
 router.get('/orderOfCart',userAuth,orderController.getOrderPage);
-router.get('/order', userAuth,orderController.getSingleOrderPage);
+router.post('/order', userAuth,orderController.getSingleOrderPage);
 router.post('/place-order',userAuth,orderController.postPlaceOrder);
 router.post('/payment', userAuth,orderController.getPaymentPage);
 router.get('/order-success',userAuth,orderController.orderSuccess);

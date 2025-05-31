@@ -10,6 +10,7 @@
         <!-- Hidden Fields to carry data forward -->
         <input type="hidden" name="productId" value="<%= orderSummary.productId %>">
         <input type="hidden" name="quantity" value="<%= orderSummary.quantity %>">
+        <input type="hidden" name="variant" value="<%= orderSummary.variant %>">
         <input type="hidden" name="totalPrice" value="<%= orderSummary.total %>">
         <input type="hidden" name="deliveryCharge" value="<%= orderSummary.deliveryCharge %>">
         
@@ -30,23 +31,6 @@
         <!-- Store selected address ID in hidden field -->
         <input type="hidden" name="selectedAddress" value="<%= selected._id %>">
 
-        <!-- <div class="card p-3 mb-3">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="credit_card" checked>
-            <label class="form-check-label" for="creditCard">
-              Credit/Debit Card
-            </label>
-          </div>
-        </div>
-        
-        <div class="card p-3 mb-3">
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="upi" value="upi">
-            <label class="form-check-label" for="upi">
-              UPI
-            </label>
-          </div>
-        </div> -->
         
         <div class="card p-3 mb-3">
           <div class="form-check">
@@ -85,10 +69,11 @@
       <h4 class="mb-4">Order Summary</h4>
       <div class="card p-4 shadow-sm">
         <div class="d-flex mb-3">
-          <img src="/uploads/product-images/<%= orderSummary.productImages[0] %>" alt="<%= orderSummary.productName %>" class="me-3 rounded" style="width: 100px; height: 100px; object-fit: cover;">
+          <img src="<%= orderSummary.productImages[0] %>" alt="<%= orderSummary.productName %>" class="me-3 rounded" style="width: 100px; height: 100px; object-fit: cover;">
           <div>
             <h5><%= orderSummary.productName %></h5>
             <p class="mb-1">Qty: <%= orderSummary.quantity %></p>
+            <p class="mb-1">Size: <%= orderSummary.variant %></p>
             <div class="d-flex align-items-center">
               <strong class="me-2">₹<%= orderSummary.price %></strong>
               <% if (orderSummary.regularPrice > orderSummary.price) { %>
@@ -166,6 +151,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       // Get form data for Razorpay
       const productId = document.querySelector('input[name="productId"]').value;
       const quantity = document.querySelector('input[name="quantity"]').value;
+      const variant = document.querySelector('input[name="variant"]').value;
       const totalPrice = document.querySelector('input[name="totalPrice"]').value;
       const couponId = document.querySelector('input[name="couponId"]').value;
       const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
@@ -188,6 +174,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         body: JSON.stringify({
           productId,
           quantity,
+          variant,
           totalPrice,
           deliveryCharge,
           selected,
@@ -215,6 +202,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
               selected,
               productId,
               quantity,
+              variant,
               deliveryCharge,
               totalPrice,
               couponId

@@ -39,10 +39,18 @@ specifications: {
     type: Number,
     default: 0
   },
-  quantity: {
-    type: Number,
-    required: true
-  },
+  variants: {
+  type: Map,
+  of: Number,
+  default: {
+    XS: 0,
+    S: 0,
+    M: 0,
+    L: 0,
+    XL: 0,
+    XXL: 0
+  }
+},
   size: {
     type: [String],
     default: []
@@ -51,18 +59,30 @@ specifications: {
     type: String,
     required: true
   },
+  material: {
+    type: String,
+    required: true
+  },
+  design: {
+    type: String,
+    required: true
+  },
+  occasion: {
+    type: String,
+    required: true
+  },
   productImages: {
     type: [String],
     default:[],
     required: true
   },
-  isBlocked: { // ✅ fixed typo
+  isBlocked: { 
     type: Boolean,
     default: false
   },
   status: {
     type: String,
-    enum: ['Available', 'Out of Stock', 'Discount'], // ✅ fixed typo in "Discound"
+    enum: ['Available', 'Out of Stock', 'Discount'], 
     required: true,
     default: 'Available'
   }

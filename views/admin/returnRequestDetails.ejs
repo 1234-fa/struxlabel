@@ -39,7 +39,7 @@
       <% if (item.status === 'return request') { %>
         <li class="list-group-item d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center">
-            <img src="/uploads/product-images/<%= item.product?.productImages[0] %>" 
+            <img src="<%= item.product?.productImages[0] %>" 
               style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 15px;">
             <div>
               <strong><%= item.product?.productName || 'Deleted Product' %></strong><br>

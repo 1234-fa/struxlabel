@@ -42,6 +42,7 @@ const getOrderPage = async (req, res) => {
       cartItems = cart.items.map(item => {
         const product = item.productId;
         const quantity = item.quantity;
+        const variant = item.variant;
         const totalPrice = product ? product.salePrice * quantity : 0;
 
         total += totalPrice;
@@ -49,6 +50,7 @@ const getOrderPage = async (req, res) => {
         return {
           product,
           quantity,
+          variant,
           totalPrice
         };
       });
@@ -76,44 +78,59 @@ const getOrderPage = async (req, res) => {
 
 const getSingleOrderPage = async (req, res) => {
     try {
-      const userId = req.session.user;
-      const productId = req.query.id;
-  
-      if (!userId) return res.redirect('/login');
-      if (!productId) return res.redirect('/shop');
-  
-      const user = await User.findById(userId);
-      if (!user) return res.redirect('/login');
-  
-      const product = await Product.findById(productId);
-      if (!product) return res.redirect('/shop');
-      const coupons = await Coupon.find();
-      console.log("coupons are ",coupons)
-      const quantity = 1;
-      const totalPrice = product.salePrice * quantity;
-  
-      const item = {
-        product,
-        quantity,
-        totalPrice,
-      };
-  
-      const userAddress = await Address.findOne({ userId });
-      const addresses = userAddress ? userAddress.address : [];
-  
-      res.render('order', {
-        item,
-        user,
-        addresses,
-        coupons, 
-        isLoggedIn: true,
-      });
-  
+        const userId = req.session.user;
+        const { productId, variant, variantStock, quantity = 1 } = req.body;
+        
+        console.log("Request body:", req.body); // Debug log
+        
+        if (!userId) return res.redirect('/login');
+        if (!productId || !variant || !variantStock) {
+            console.log("Missing required fields:", { productId, variant, variantStock });
+            return res.redirect('/shop');
+        }
+        
+        const user = await User.findById(userId);
+        if (!user) return res.redirect('/login');
+        
+        const product = await Product.findById(productId);
+        if (!product) return res.redirect('/shop');
+        
+        // Check if selected variant has enough stock
+        const availableStock = product.variants?.get(variant) || 0;
+        if (availableStock < quantity) {
+            return res.redirect('/shop?error=insufficient_stock');
+        }
+        
+        const coupons = await Coupon.find();
+        console.log("coupons are ", coupons);
+        
+        // Fix: Use quantity for price calculation, not stock
+        const totalPrice = product.salePrice * parseInt(quantity);
+        
+        const item = {
+            product,
+            variant,
+            quantity: parseInt(quantity),
+            availableStock: parseInt(variantStock),
+            totalPrice,
+        };
+        
+        const userAddress = await Address.findOne({ userId });
+        const addresses = userAddress ? userAddress.address : [];
+        
+        res.render('order', {
+            item,
+            user,
+            addresses,
+            coupons,
+            isLoggedIn: true,
+        });
+        
     } catch (error) {
-      console.error("Error loading single product order page:", error.message);
-      res.redirect('/pageNotFound');
+        console.error("Error loading single product order page:", error.message);
+        res.redirect('/pageNotFound');
     }
-  };
+};
 
 
   const postPlaceOrder = async (req, res) => {
@@ -125,10 +142,16 @@ const getSingleOrderPage = async (req, res) => {
         selected,
         paymentMethod,
         couponId ,
-        deliveryCharge
+        deliveryCharge,
+        variant
       } = req.body;
       
-      console.log('Received data:', req.body);
+      console.log('=== ORDER PLACEMENT DEBUG ===');
+        console.log('Raw req.body:', req.body);
+        console.log('Extracted variant:', variant);
+        console.log('Variant type:', typeof variant);
+        console.log('Variant value:', JSON.stringify(variant));
+        console.log('===============================');
       
       const userId = req.session.user?._id;
       if (!userId) {
@@ -141,9 +164,16 @@ const getSingleOrderPage = async (req, res) => {
       }
       
       const orderQty = Number(quantity);
-      if (product.quantity < orderQty) {
-        return res.status(StatusCode.BAD_REQUEST).json({ message: 'Insufficient stock available' });
-      }
+        
+        // ✅ Fix: Check variant-specific stock
+        const availableStock = product.variants.get(variant) || 0;
+        console.log(`Stock check - Size: ${variant}, Available: ${availableStock}, Requested: ${orderQty}`);
+        
+        if (availableStock < orderQty) {
+            return res.status(StatusCode.BAD_REQUEST).json({ 
+                message: `Insufficient stock available for size ${variant}. Only ${availableStock} items left.` 
+            });
+        }
       
       // Ensure selected data is being passed correctly
       console.log('Selected Address:', selected);
@@ -164,6 +194,10 @@ const getSingleOrderPage = async (req, res) => {
         product: product._id,
         quantity: orderQty,
         price: product.salePrice,
+        variant: { 
+                size: variant || null // Add fallback but investigate why variant is undefined
+            },
+            status: 'processing'
       };
       
       // Calculate pricing details
@@ -174,14 +208,13 @@ const getSingleOrderPage = async (req, res) => {
       let couponDiscount = 0;
       let appliedCoupon = null;
       
-      // Check if a coupon was applied
+      
       if (couponId) {
         appliedCoupon = await Coupon.findById(couponId);
         
         if (appliedCoupon) {
           couponDiscount = (salePrice * appliedCoupon.discount / 100);
           console.log('coupon discount is :',couponDiscount);
-          // Mark the coupon as used by this user
           if (!appliedCoupon.usersUsed.includes(userId)) {
             await Coupon.findByIdAndUpdate(
               couponId,
@@ -195,34 +228,36 @@ const getSingleOrderPage = async (req, res) => {
         orderId: generateOrderId(),
         user: userId,
         orderedItems: [orderedItem],
-        totalPrice: originalPrice, // Original price before any discounts
-        discount: productDiscount + couponDiscount, // Total discount (product + coupon)
-        finalAmount: originalPrice-(productDiscount + couponDiscount), // Final amount after all discounts
+        totalPrice: originalPrice, 
+        discount: productDiscount + couponDiscount, 
+        finalAmount: originalPrice-(productDiscount + couponDiscount), 
         address: address,
         invoiceDate: new Date(),
         status: 'processing',
         createdOn: new Date(),
-        coupon: couponId ? couponId : null, // Store coupon ID if applied
-        couponApplied: !!couponId, // Boolean flag for coupon applied
+        coupon: couponId ? couponId : null, 
+        couponApplied: !!couponId, 
         paymentMethod: paymentMethod,
         deliveryCharge:deliveryCharge
       });
       
       // Save the order
       await newOrder.save();
-      
-      // Update product stock
-      const updatedProduct = await Product.findByIdAndUpdate(
-        productId,
-        { $inc: { quantity: -orderQty } },
-        { new: true }
-      );
-      
-      if (!updatedProduct) {
-        console.error('Stock update failed.');
-      } else {
-        console.log(`Stock updated. Remaining quantity: ${updatedProduct.quantity}`);
-      }
+      console.log('Saved order variant:', newOrder.orderedItems[0].variant);
+        
+        // ✅ Fix: Update variant-specific stock
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { $inc: { [`variants.${variant}`]: -orderQty } },
+            { new: true }
+        );
+        
+        if (!updatedProduct) {
+            console.error('Stock update failed.');
+        } else {
+            const remainingStock = updatedProduct.variants.get(variant);
+            console.log(`Stock updated for size ${variant}. Remaining: ${remainingStock}`);
+        }
       
       // Clear any coupon from session
       if (req.session.appliedCoupon) {
@@ -285,7 +320,7 @@ const getSingleOrderPage = async (req, res) => {
 
   const getPaymentPage = async (req, res) => {
     try {
-      const { selectedAddress, productId, quantity, totalPrice, couponId } = req.body;
+      const { selectedAddress, productId, quantity, totalPrice, couponId ,variant} = req.body;
       const userId = req.session.user;
       if (!userId) return res.redirect('/login');
       
@@ -346,6 +381,7 @@ const getSingleOrderPage = async (req, res) => {
         orderSummary: {
           productId,
           quantity,
+          variant,
           total: finalTotal,
           productName: product.productName,
           productImages: product.productImages,
@@ -787,6 +823,7 @@ const getSingleOrderPage = async (req, res) => {
         cartItems = cart.items.filter(item => item.productId).map(item => {
           const product = item.productId;
           const quantity = item.quantity;
+          const variant = item.variant;
           const itemOriginal = product ? product.regularPrice * quantity : 0;
           const itemSale = product ? product.salePrice * quantity : 0;
   
@@ -798,6 +835,7 @@ const getSingleOrderPage = async (req, res) => {
           return {
             product,
             quantity,
+            variant,
             totalPrice: itemSale
           };
         });
@@ -917,6 +955,7 @@ const getSingleOrderPage = async (req, res) => {
         const price = product.salePrice || product.price || 0;
         const originalPrice = product.regularPrice || 0;
         const quantity = item.quantity;
+        const variant = item.variant;
   
         if (product.quantity < quantity) {
           return res.status(StatusCode.BAD_REQUEST).json({ message: `Insufficient stock for ${product.name}` });
@@ -931,6 +970,7 @@ const getSingleOrderPage = async (req, res) => {
         orderItems.push({
           product: product._id,
           quantity,
+          variant,
           price,
           totalPrice: itemTotal,
           status: "processing"
@@ -987,14 +1027,31 @@ const getSingleOrderPage = async (req, res) => {
   
       await newOrder.save();
   
-      // Update product stock
-      for (const item of orderItems) {
-        await Product.findByIdAndUpdate(
-          item.product,
-          { $inc: { quantity: -item.quantity } },
-          { new: true }
-        );
-      }
+      // Update product stock (variant-specific or general)
+            for (const item of orderItems) {
+              const product = await Product.findById(item.product);
+              
+              if (product.variants && item.variant?.size) {
+                // Update variant-specific stock
+                const currentVariantStock = product.variants.get(item.variant.size) || 0;
+                const newVariantStock = Math.max(0, currentVariantStock - item.quantity);
+                
+                await Product.findByIdAndUpdate(
+                  item.product,
+                  { 
+                    $set: { [`variants.${item.variant.size}`]: newVariantStock }
+                  },
+                  { new: true }
+                );
+              } else {
+                // Update general product stock for products without variants
+                await Product.findByIdAndUpdate(
+                  item.product,
+                  { $inc: { quantity: -item.quantity } },
+                  { new: true }
+                );
+              }
+            }
   
       // Remove ordered items from cart
       cart.items = cart.items.filter(item =>
