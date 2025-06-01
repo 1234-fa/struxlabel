@@ -315,7 +315,6 @@ const searchProducts = async (req, res) => {
         searchResult = await Product.find({
           productName: { $regex: ".*" + search + ".*", $options: "i" },
           isBlocked: false,
-          quantity: { $gt: 0 },
           category: { $in: categoryIds }
         });
       }

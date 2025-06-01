@@ -51,8 +51,7 @@ const searchfromhome = async (req, res) => {
 
     const filter = {
       productName: { $regex: query, $options: 'i' },
-      isBlocked: false,
-      quantity: { $gt: 0 }
+      isBlocked: false
     };
 
     const totalProducts = await Product.countDocuments(filter);

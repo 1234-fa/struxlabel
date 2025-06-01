@@ -126,7 +126,7 @@ router.post('/create-razorpay-order-cart', userAuth, checkoutController.createRa
 router.post('/verify-razorpay-payment-cart', userAuth, checkoutController.verifyRazorpayPaymentCart);
 router.get('/order-failure',userAuth,checkoutController.getorderFailurePage);
 
-router.post('/filter',userAuth,shopController.getfilter);
+router.post('/filterSearchSort',userAuth,shopController.getfilter);
 router.get('/shop',userAuth,shopController.loadShoppingPage)
 router.get('/newArrivals',userAuth,shopController.loadNewArrivalPage);
 
