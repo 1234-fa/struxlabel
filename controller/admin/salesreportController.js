@@ -454,195 +454,292 @@ const loadsalesreport = async (req, res) => {
 
 
   const downloadSalesReport = async (req, res) => {
-    try {
-      const { format, startDate, endDate } = req.body;
-  
-      // Validate dates
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return res.status(StatusCode.BAD_REQUEST).json({ error: 'Invalid start or end date' });
+  try {
+    const { format, startDate, endDate } = req.body;
+
+    // Validate dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(StatusCode.BAD_REQUEST).json({ error: 'Invalid start or end date' });
+    }
+
+    const query = {
+      createdAt: {
+        $gte: start,
+        $lte: end
       }
-  
-      const query = {
-        createdAt: {
-          $gte: start,
-          $lte: end
-        }
-      };
-  
-      const orders = await Order.find(query).populate('coupon');
-  
-      if (format === 'excel') {
-        const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet('Sales Report');
-  
-        sheet.columns = [
-          { header: 'Order ID', key: 'orderId', width: 30 },
-          { header: 'Date', key: 'date', width: 20 },
-          { header: 'Final Amount', key: 'finalAmount', width: 15 },
-          { header: 'Discount', key: 'discount', width: 15 },
-          { header: 'Coupon Discount', key: 'coupon', width: 15 }
-        ];
-  
-        orders.forEach(order => {
-          sheet.addRow({
-            orderId: order.orderId,
-            date: order.createdAt.toDateString(),
-            finalAmount: order.finalAmount,
-            discount: order.discount,
-            coupon: order.coupon ? `${order.coupon.discount}%` : 'N/A'
+    };
+
+    const orders = await Order.find(query).populate('coupon');
+
+    // Calculate summary statistics
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.finalAmount, 0);
+    const totalDiscount = orders.reduce((sum, order) => sum + order.discount, 0);
+    const totalCouponDiscount = orders.reduce((sum, order) => {
+      return sum + (order.coupon ? (order.finalAmount * order.coupon.discount / 100) : 0);
+    }, 0);
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    // Payment method statistics
+    const paymentMethodStats = orders.reduce((stats, order) => {
+      const method = order.paymentMethod || 'Unknown';
+      stats[method] = (stats[method] || 0) + 1;
+      return stats;
+    }, {});
+
+    if (format === 'excel') {
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet('Sales Report');
+
+      // Add summary section
+      sheet.addRow(['SALES REPORT SUMMARY']);
+      sheet.addRow([]);
+      sheet.addRow(['Report Period:', `${start.toDateString()} to ${end.toDateString()}`]);
+      sheet.addRow(['Total Orders:', totalOrders]);
+      sheet.addRow(['Total Revenue:', `Rs.${totalRevenue.toFixed(2)}`]);
+      sheet.addRow(['Total Discount:', `Rs.${totalDiscount.toFixed(2)}`]);
+      sheet.addRow(['Total Coupon Discount:', `Rs.${totalCouponDiscount.toFixed(2)}`]);
+      sheet.addRow(['Average Order Value:', `Rs.${averageOrderValue.toFixed(2)}`]);
+      sheet.addRow([]);
+      
+      // Payment method breakdown
+      sheet.addRow(['Payment Method Breakdown:']);
+      Object.entries(paymentMethodStats).forEach(([method, count]) => {
+        sheet.addRow([`${method}:`, count]);
+      });
+      sheet.addRow([]);
+      sheet.addRow([]);
+
+      // Style the summary section
+      sheet.getCell('A1').font = { bold: true, size: 14 };
+      sheet.getCell('A3').font = { bold: true };
+      sheet.getCell('A4').font = { bold: true };
+      sheet.getCell('A5').font = { bold: true };
+      sheet.getCell('A6').font = { bold: true };
+      sheet.getCell('A7').font = { bold: true };
+      sheet.getCell('A8').font = { bold: true };
+      sheet.getCell('A10').font = { bold: true };
+
+      // Add table headers
+      const headerRow = sheet.addRow([]);
+      sheet.columns = [
+        { header: 'Order ID', key: 'orderId', width: 25 },
+        { header: 'Date', key: 'date', width: 20 },
+        { header: 'Final Amount', key: 'finalAmount', width: 15 },
+        { header: 'Discount', key: 'discount', width: 15 },
+        { header: 'Coupon Discount', key: 'coupon', width: 18 },
+        { header: 'Payment Method', key: 'paymentMethod', width: 20 }
+      ];
+
+      // Add data rows
+      orders.forEach(order => {
+        sheet.addRow({
+          orderId: order.orderId,
+          date: order.createdAt.toDateString(),
+          finalAmount: `Rs.${order.finalAmount}`,
+          discount: `Rs.${order.discount}`,
+          coupon: order.coupon ? `${order.coupon.discount}%` : 'N/A',
+          paymentMethod: order.paymentMethod || 'Unknown'
+        });
+      });
+
+      // Style the data table headers
+      const dataStartRow = sheet.rowCount - orders.length;
+      const headerRowNum = dataStartRow;
+      for (let col = 1; col <= 6; col++) {
+        const cell = sheet.getCell(headerRowNum, col);
+        cell.font = { bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE0E0E0' }
+        };
+      }
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      res.setHeader('Content-Disposition', 'attachment; filename=sales-report.xlsx');
+
+      await workbook.xlsx.write(res);
+      res.end();
+
+    } else if (format === 'pdf') {
+      const doc = new PDFDocument({ 
+        margin: 50, 
+        size: 'A4',
+        font: 'Helvetica'
+      });
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=sales-report.pdf');
+      doc.pipe(res);
+      
+      // Title
+      doc.fontSize(24).text('Sales Report', { align: 'center' });
+      doc.moveDown(1);
+      
+      // Summary Section
+      doc.fontSize(16).font('Helvetica-Bold').text('Summary', { align: 'left' });
+      doc.moveDown(0.5);
+      
+      doc.fontSize(11).font('Helvetica');
+      doc.text(`Report Period: ${start.toDateString()} to ${end.toDateString()}`);
+      doc.text(`Total Orders: ${totalOrders}`);
+      doc.text(`Total Revenue: Rs.${totalRevenue.toFixed(2)}`);
+      doc.text(`Total Discount: Rs.${totalDiscount.toFixed(2)}`);
+      doc.text(`Total Coupon Discount: Rs.${totalCouponDiscount.toFixed(2)}`);
+      doc.text(`Average Order Value: Rs.${averageOrderValue.toFixed(2)}`);
+      doc.moveDown(0.5);
+      
+      // Payment Method Breakdown
+      doc.font('Helvetica-Bold').text('Payment Method Breakdown:');
+      doc.font('Helvetica');
+      Object.entries(paymentMethodStats).forEach(([method, count]) => {
+        doc.text(`${method}: ${count} orders`);
+      });
+      
+      doc.moveDown(1);
+      
+      // Calculate table width for 6 columns
+      const pageWidth = doc.page.width - 2 * doc.page.margins.left;
+      
+      // Adjusted column widths for 6 columns
+      const colWidths = [
+        pageWidth * 0.20, // Order ID (20%)
+        pageWidth * 0.15, // Date (15%)
+        pageWidth * 0.15, // Final Amount (15%)
+        pageWidth * 0.15, // Discount (15%)
+        pageWidth * 0.15, // Coupon (15%)
+        pageWidth * 0.20  // Payment Method (20%)
+      ];
+      
+      // Table settings
+      const startX = doc.page.margins.left;
+      let startY = doc.y;
+      const rowHeight = 30;
+      
+      // Draw headers
+      let x = startX;
+      doc.font('Helvetica-Bold').fontSize(10);
+      
+      ['Order ID', 'Date', 'Final Amount', 'Discount', 'Coupon', 'Payment Method'].forEach((header, i) => {
+        // Draw cell border
+        doc.rect(x, startY, colWidths[i], rowHeight).stroke();
+        
+        // Draw header text
+        const textX = x + 5;
+        const textY = startY + 10;
+        const align = (i >= 2 && i <= 4) ? 'right' : 'left'; // Right align amount columns
+        
+        if (align === 'right') {
+          doc.text(header, textX, textY, {
+            width: colWidths[i] - 10,
+            align: 'right'
           });
-        });
-  
-        res.setHeader(
-          'Content-Type',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        );
-        res.setHeader('Content-Disposition', 'attachment; filename=sales-report.xlsx');
-  
-        await workbook.xlsx.write(res);
-        res.end();
-      } else if (format === 'pdf') {
-        const doc = new PDFDocument({ 
-          margin: 50, 
-          size: 'A4',
-          font: 'Helvetica' // Explicitly set font
-        });
-        
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=sales-report.pdf');
-        doc.pipe(res);
-        
-        // Title
-        doc.fontSize(24).text('Sales Report', { align: 'center' });
-        doc.moveDown(2);
-        
-        // Calculate table width
-        const pageWidth = doc.page.width - 2 * doc.page.margins.left;
-        
-        // Table layout
-        const colWidths = [
-          pageWidth * 0.25, // Order ID (25%)
-          pageWidth * 0.2,  // Date (20%)
-          pageWidth * 0.18, // Final Amount (18%)
-          pageWidth * 0.18, // Discount (18%)
-          pageWidth * 0.19  // Coupon (19%)
-        ];
-        
-        // Table settings
-        const startX = doc.page.margins.left;
-        let startY = doc.y;
-        const rowHeight = 35;
-        
-        // Draw headers
-        let x = startX;
-        doc.font('Helvetica-Bold').fontSize(12);
-        
-        ['Order ID', 'Date', 'Final Amount', 'Discount', 'Coupon'].forEach((header, i) => {
-          // Draw cell border
-          doc.rect(x, startY, colWidths[i], rowHeight).stroke();
-          
-          // Draw header text
-          const textX = x + 10;
-          const textY = startY + 12;
-          const align = i >= 2 ? 'right' : 'left'; // Right align amount columns
-          
-          if (align === 'right') {
-            doc.text(header, textX, textY, {
-              width: colWidths[i] - 20,
-              align: 'right'
-            });
-          } else {
-            doc.text(header, textX, textY);
-          }
-          
-          x += colWidths[i];
-        });
-        
-        // Move to data rows
-        startY += rowHeight;
-        doc.font('Helvetica').fontSize(11);
-        
-        // Function to add a new page if needed
-        function checkNewPage() {
-          if (startY + rowHeight > doc.page.height - doc.page.margins.bottom) {
-            doc.addPage();
-            startY = doc.page.margins.top;
-            
-            // Redraw headers on new page
-            x = startX;
-            doc.font('Helvetica-Bold').fontSize(12);
-            
-            ['Order ID', 'Date', 'Final Amount', 'Discount', 'Coupon'].forEach((header, i) => {
-              doc.rect(x, startY, colWidths[i], rowHeight).stroke();
-              
-              const textX = x + 10;
-              const textY = startY + 12;
-              const align = i >= 2 ? 'right' : 'left';
-              
-              if (align === 'right') {
-                doc.text(header, textX, textY, {
-                  width: colWidths[i] - 20,
-                  align: 'right'
-                });
-              } else {
-                doc.text(header, textX, textY);
-              }
-              
-              x += colWidths[i];
-            });
-            
-            startY += rowHeight;
-            doc.font('Helvetica').fontSize(11);
-          }
+        } else {
+          doc.text(header, textX, textY, {
+            width: colWidths[i] - 10,
+            align: 'left'
+          });
         }
         
-        // Draw data rows
-        orders.forEach(order => {
-          checkNewPage();
+        x += colWidths[i];
+      });
+      
+      // Move to data rows
+      startY += rowHeight;
+      doc.font('Helvetica').fontSize(9);
+      
+      // Function to add a new page if needed
+      function checkNewPage() {
+        if (startY + rowHeight > doc.page.height - doc.page.margins.bottom) {
+          doc.addPage();
+          startY = doc.page.margins.top;
           
+          // Redraw headers on new page
           x = startX;
-          const rowData = [
-            order.orderId,
-            order.createdAt.toDateString(),
-            `Rs.${order.finalAmount}`, // Using "Rs." instead of ₹ symbol
-            `Rs.${order.discount}`,    // Using "Rs." instead of ₹ symbol
-            order.coupon ? order.coupon.code : 'N/A'
-          ];
+          doc.font('Helvetica-Bold').fontSize(10);
           
-          rowData.forEach((cell, i) => {
-            // Draw cell border
+          ['Order ID', 'Date', 'Final Amount', 'Discount', 'Coupon', 'Payment Method'].forEach((header, i) => {
             doc.rect(x, startY, colWidths[i], rowHeight).stroke();
             
-            // Draw cell text
-            const textX = x + 10;
-            const textY = startY + 12;
-            const align = i >= 2 ? 'right' : 'left'; // Right align amount columns
+            const textX = x + 5;
+            const textY = startY + 10;
+            const align = (i >= 2 && i <= 4) ? 'right' : 'left';
             
             if (align === 'right') {
-              doc.text(cell, textX, textY, {
-                width: colWidths[i] - 20,
+              doc.text(header, textX, textY, {
+                width: colWidths[i] - 10,
                 align: 'right'
               });
             } else {
-              doc.text(cell, textX, textY);
+              doc.text(header, textX, textY, {
+                width: colWidths[i] - 10,
+                align: 'left'
+              });
             }
             
             x += colWidths[i];
           });
           
           startY += rowHeight;
-        });
-        
-        doc.end();
+          doc.font('Helvetica').fontSize(9);
+        }
       }
       
-    } catch (error) {
-      console.error("Error generating report:", error);
-      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Internal Server Error' });
+      // Draw data rows
+      orders.forEach(order => {
+        checkNewPage();
+        
+        x = startX;
+        const rowData = [
+          order.orderId,
+          order.createdAt.toDateString(),
+          `Rs.${order.finalAmount}`,
+          `Rs.${order.discount}`,
+          order.coupon ? `${order.coupon.discount}%` : 'N/A',
+          order.paymentMethod || 'Unknown'
+        ];
+        
+        rowData.forEach((cell, i) => {
+          // Draw cell border
+          doc.rect(x, startY, colWidths[i], rowHeight).stroke();
+          
+          // Draw cell text
+          const textX = x + 5;
+          const textY = startY + 10;
+          const align = (i >= 2 && i <= 4) ? 'right' : 'left'; // Right align amount columns
+          
+          if (align === 'right') {
+            doc.text(cell, textX, textY, {
+              width: colWidths[i] - 10,
+              align: 'right'
+            });
+          } else {
+            doc.text(cell, textX, textY, {
+              width: colWidths[i] - 10,
+              align: 'left'
+            });
+          }
+          
+          x += colWidths[i];
+        });
+        
+        startY += rowHeight;
+      });
+      
+      doc.end();
     }
-  };
+    
+  } catch (error) {
+    console.error("Error generating report:", error);
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Internal Server Error' });
+  }
+};
 
 
 module.exports ={loadsalesreport,downloadSalesReport,loaddashboard,getLedger};
