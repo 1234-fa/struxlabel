@@ -188,250 +188,173 @@
         .hidden-input {
             display: none;
         }
+        .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
     </style>
 </head>
 <body>
-    <div class="content-wrapper">
-        <div class="content-header sticky-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2 class="content-title mb-0">Edit Product</h2>
-                <button class="btn-update" type="submit" form="product-form">Update Product</button>
-            </div>
+    <div class="container-fluid p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Edit Product</h2>
+            <button class="btn btn-primary" type="submit" form="product-form">Update Product</button>
         </div>
         
-        <form id="product-form" method="post" action="/admin/editProduct/<%= product._id %>" enctype="multipart/form-data" onsubmit="return validateForm(event)">
+        <form id="product-form" method="post" action="/admin/editProduct/<%= product._id %>" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-lg-9">
-                    <!-- Tabs for better organization -->
-                    <ul class="nav nav-tabs" id="productTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">Basic Information</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="variants-tab" data-bs-toggle="tab" data-bs-target="#variants" type="button" role="tab">Variants</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">Description & Specs</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="media-tab" data-bs-toggle="tab" data-bs-target="#media" type="button" role="tab">Media</button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="productTabContent">
-                        <!-- Basic Information Tab -->
-                        <div class="tab-pane fade show active" id="basic" role="tabpanel">
-                            <div class="card mt-3">
-                                <div class="card-header">
-                                    <h4>Product Information</h4>
+                    <!-- Basic Information -->
+                    <div class="card mb-4">
+                        <div class="card-header"><h4>Basic Information</h4></div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Product Name *</label>
+                                    <input type="text" class="form-control" name="productName" value="<%= product.productName %>" required>
                                 </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="product_name" class="form-label">Product Title</label>
-                                        <input type="text" placeholder="Enter product name" class="form-control" id="product_name" name="productName" value="<%= product.productName %>" required>
-                                        <div id="productName-error" class="error-message"></div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Category</label>
-                                            <select class="form-select form-control" name="category" id="category" required>
-                                                <option value="">Select a category</option>
-                                                <% for(let i=0; i<cat.length; i++) { %>
-                                                <option value="<%= cat[i]._id %>" <%= product.category.toString() === cat[i]._id.toString() ? 'selected' : '' %>><%= cat[i].name %></option>
-                                            <% } %>
-                                            </select>
-                                            <div id="category-error" class="error-message"></div>
-                                        </div>
-                                        
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Brand</label>
-                                            <select class="form-select form-control" name="brand" id="brand">
-                                                <option value="">Select a brand</option>
-                                                <% for (let i = 0; i < brand.length; i++) { %>
-                                                    <option value="<%= brand[i].brandName %>" <%= product.brand === brand[i].brandName ? 'selected' : '' %>><%= brand[i].brandName %></option>
-                                                <% } %>
-                                            </select>
-                                            <div id="brand-error" class="error-message"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Regular Price</label>
-                                            <input placeholder="$" type="number" class="form-control" name="regularPrice" id="regularPrice" value="<%= product.regularPrice %>" required>
-                                            <div id="regularPrice-error" class="error-message"></div>
-                                        </div>
-                                        
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Sale Price</label>
-                                            <input placeholder="$" type="number" class="form-control" name="salePrice" id="salePrice" value="<%= product.salePrice %>" required>
-                                            <div id="salePrice-error" class="error-message"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Variants Tab -->
-                        <div class="tab-pane fade" id="variants" role="tabpanel">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h4>Product Variant</h4>
-                                </div>
-                                <div class="card-body">
-                                    <div class="variant-section">
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Color</label>
-                                                <input name="color" id="color" type="text" class="form-control" placeholder="Enter the color" value="<%= product.color|| '' %>"required>
-                                                <div id="color-error" class="error-message"></div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Material</label>
-                                                <input name="material" id="material" type="text" class="form-control" placeholder="Material of the cloth" value="<%= product.material || '' %>">
-                                                <div id="material-error" class="error-message"></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Design</label>
-                                                <input name="design" id="design" type="text" class="form-control" placeholder="Design of the cloth" value="<%= product.design || '' %>">
-                                                <div id="design-error" class="error-message"></div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Occasion</label>
-                                                <input name="occasion" id="occasion" type="text" class="form-control" placeholder="Occasion of the cloth" value="<%= product.occasion || '' %>">
-                                                <div id="occasion-error" class="error-message"></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="mb-3">
-                                            <label class="form-label">Sizes & Quantities</label>
-                                            <div class="size-grid">
-                                                <div>
-                                                    <label class="form-label">XS</label>
-                                                    <input name="quantity_xs" id="quantity_xs" type="number" class="form-control" min="0" value="<%= product.variants?.get('XS') || 0 %>">
-                                                    <div id="quantity_xs-error" class="error-message"></div>
-                                                </div>
-                                                <div>
-                                                    <label class="form-label">S</label>
-                                                    <input name="quantity_s" id="quantity_s" type="number" class="form-control" min="0" value="<%= product.variants?.get('S') || 0 %>">
-                                                    <div id="quantity_s-error" class="error-message"></div>
-                                                </div>
-                                                <div>
-                                                    <label class="form-label">M</label>
-                                                    <input name="quantity_m" id="quantity_m" type="number" class="form-control" min="0" value="<%= product.variants?.get('M') || 0 %>">
-                                                    <div id="quantity_m-error" class="error-message"></div>
-                                                </div>
-                                                <div>
-                                                    <label class="form-label">L</label>
-                                                    <input name="quantity_l" id="quantity_l" type="number" class="form-control" min="0" value="<%= product.variants?.get('L') || 0 %>">
-                                                    <div id="quantity_l-error" class="error-message"></div>
-                                                </div>
-                                                <div>
-                                                    <label class="form-label">XL</label>
-                                                    <input name="quantity_xl" id="quantity_xl" type="number" class="form-control" min="0" value="<%= product.variants?.get('XL') || 0 %>">
-                                                    <div id="quantity_xl-error" class="error-message"></div>
-                                                </div>
-                                                <div>
-                                                    <label class="form-label">XXL</label>
-                                                    <input name="quantity_xxl" id="quantity_xxl" type="number" class="form-control" min="0" value="<%= product.variants?.get('XXL') || 0 %>">
-                                                    <div id="quantity_xxl-error" class="error-message"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div id="variants-error" class="error-message"></div>
-                                        <small class="text-muted">At least one size quantity must be specified</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Description Tab -->
-                        <div class="tab-pane fade" id="description" role="tabpanel">
-                            <div class="card mt-3">
-                                <div class="card-header">
-                                    <h4>Product Details</h4>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Short Description</label>
-                                        <textarea placeholder="Brief product description" class="form-control" rows="3" name="description" id="description" required><%= product.description %></textarea>
-                                        <div id="description-error" class="error-message"></div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">Full Description</label>
-                                        <textarea placeholder="Detailed product description" class="form-control" rows="5" name="longDescription" id="longDescription" required><%= product.longDescription %></textarea>
-                                        <div id="longDescription-error" class="error-message"></div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">Specifications</label>
-                                        <textarea placeholder="Technical specifications" class="form-control" rows="5" name="specifications" id="specifications" required><%= product.specifications %></textarea>
-                                        <div id="specifications-error" class="error-message"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Media Tab -->
-                        <div class="tab-pane fade" id="media" role="tabpanel">
-                            <div class="card mt-3">
-                                <div class="card-header">
-                                    <h4>Product Images</h4>
-                                </div>
-                                <div class="card-body">
-                                    <div class="media-grid">
-                                        <% if (product.productImages && product.productImages.length > 0) { %>
-                                            <% product.productImages.forEach((image, index) => { %>
-                                                <div class="image-container" id="imageContainer<%= index %>">
-                                                    <img src="<%= image %>" alt="Image <%= index + 1 %>" class="image-preview" id="imagePreview<%= index %>">
-                                                    <div class="image-actions">
-                                                        <button type="button" class="btn-replace" onclick="replaceImage(<%= index %>)">Replace</button>
-                                                    </div>
-                                                    <input type="file" id="replaceInput<%= index %>" class="hidden-input" accept="image/*" onchange="handleImageReplace(event, <%= index %>)">
-                                                </div>
-                                            <% }) %>
-                                            <% } else { %>
-                                            <p>No product images available.</p>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Category *</label>
+                                    <select class="form-select" name="category" required>
+                                        <option value="">Select Category</option>
+                                        <% for(let i=0; i<cat.length; i++) { %>
+                                        <option value="<%= cat[i]._id %>" <%= product.category.toString() === cat[i]._id.toString() ? 'selected' : '' %>><%= cat[i].name %></option>
                                         <% } %>
-                                    </div>
-                                    <div id="image-error" class="error-message mt-3"></div>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Brand</label>
+                                    <select class="form-select" name="brand">
+                                        <option value="">Select Brand</option>
+                                        <% for (let i = 0; i < brand.length; i++) { %>
+                                        <option value="<%= brand[i].brandName %>" <%= product.brand === brand[i].brandName ? 'selected' : '' %>><%= brand[i].brandName %></option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Regular Price *</label>
+                                    <input type="number" class="form-control" name="regularPrice" value="<%= product.regularPrice %>" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Sale Price *</label>
+                                    <input type="number" class="form-control" name="salePrice" value="<%= product.salePrice %>" required>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Right Sidebar -->
-                <div class="col-lg-3">
-                    <div class="card mt-3">
+
+                    <!-- Variants -->
+                    <div class="card mb-4">
+                        <div class="card-header"><h4>Variants</h4></div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Color *</label>
+                                    <input type="text" class="form-control" name="color" value="<%= product.color %>" required>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Material</label>
+                                    <input type="text" class="form-control" name="material" value="<%= product.material || '' %>">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Design</label>
+                                    <input type="text" class="form-control" name="design" value="<%= product.design || '' %>">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Occasion</label>
+                                    <input type="text" class="form-control" name="occasion" value="<%= product.occasion || '' %>">
+                                </div>
+                            </div>
+                            
+                            <label class="form-label">Sizes & Quantities *</label>
+                            <div class="row">
+                                <% const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']; %>
+                                <% sizes.forEach(size => { %>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label"><%= size %></label>
+                                    <input type="number" class="form-control" name="quantity_<%= size.toLowerCase() %>" 
+                                           value="<%= product.variants?.get(size) || 0 %>" min="0">
+                                </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Descriptions -->
+                    <div class="card mb-4">
+                        <div class="card-header"><h4>Descriptions</h4></div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Short Description *</label>
+                                <textarea class="form-control" rows="3" name="description" required><%= product.description %></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Full Description *</label>
+                                <textarea class="form-control" rows="5" name="longDescription" required><%= product.longDescription %></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Specifications *</label>
+                                <textarea class="form-control" rows="5" name="specifications" required><%= product.specifications %></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Images -->
+                    <div class="card mb-4">
                         <div class="card-header">
-                            <h4>Checklist</h4>
+                            <h4>Product Images (4-10 required)</h4>
+                            <small class="text-muted">Current: <span id="imageCount"><%= product.productImages?.length || 0 %></span> images</small>
                         </div>
                         <div class="card-body">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item checklist-item d-flex justify-content-between align-items-center">
-                                    <span>Basic Information</span>
-                                    <span class="badge completed rounded-pill" id="basic-check">✓</span>
-                                </li>
-                                <li class="list-group-item checklist-item d-flex justify-content-between align-items-center">
-                                    <span>Variants</span>
-                                    <span class="badge pending rounded-pill" id="variants-check">-</span>
-                                </li>
-                                <li class="list-group-item checklist-item d-flex justify-content-between align-items-center">
-                                    <span>Description & Specs</span>
-                                    <span class="badge pending rounded-pill" id="desc-check">-</span>
-                                </li>
-                                <li class="list-group-item checklist-item d-flex justify-content-between align-items-center">
-                                    <span>Media (4-10 images)</span>
-                                    <span class="badge pending rounded-pill" id="media-check">-</span>
-                                </li>
-                            </ul>
+                            <!-- Existing Images -->
+                            <div id="existingImages" class="row mb-4">
+                                <% if (product.productImages && product.productImages.length > 0) { %>
+                                    <% product.productImages.forEach((image, index) => { %>
+                                    <div class="col-md-3 mb-3" id="imageContainer<%= index %>">
+                                        <div class="card">
+                                            <img src="<%= image %>" class="card-img-top" style="height: 200px; object-fit: cover;">
+                                            <div class="card-body p-2 text-center">
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteImage(<%= index %>)">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% }); %>
+                                <% } %>
+                            </div>
+
+                            <!-- Add New Images -->
+                            <div class="mb-3">
+                                <label class="form-label">Add New Images</label>
+                                <input type="file" class="form-control" name="images" multiple accept="image/*" 
+                                       onchange="previewNewImages(this)">
+                                <small class="text-muted">Select multiple images (JPEG, PNG, GIF, WebP)</small>
+                            </div>
+
+                            <!-- Preview New Images -->
+                            <div id="newImagesPreview" class="row"></div>
+
+                            <!-- Hidden inputs for deleted images -->
+                            <div id="deletedImagesInputs"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="col-lg-3">
+                    <div class="card">
+                        <div class="card-header"><h4>Status</h4></div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <span class="badge bg-info">Total Images: <span id="totalImages"><%= product.productImages?.length || 0 %></span></span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="badge bg-success">Status: <%= product.status %></span>
+                            </div>
+                            <small class="text-muted">Product requires 4-10 images to be valid</small>
                         </div>
                     </div>
                 </div>
@@ -439,454 +362,125 @@
         </form>
     </div>
 
-    <!-- Image Crop Modal -->
-    <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Crop Replacement Image</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="cropper-container">
-                        <img id="cropImage" style="max-width: 100%;max-height: 100%;">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveCroppedImage()">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
-        let cropper = null;
-        let currentImageIndex = null;
-        let replacedImages = {};
+        let deletedImages = [];
 
-        // Form validation functions
-        function showError(fieldId, message) {
-            const errorElement = document.getElementById(fieldId + '-error');
-            const field = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
-            
-            if (errorElement) {
-                errorElement.textContent = message;
-                errorElement.classList.add('show');
-            }
-            
-            if (field) {
-                field.classList.add('is-invalid');
+        function deleteImage(index) {
+            if (confirm('Are you sure you want to delete this image?')) {
+                // Add to deleted images array
+                deletedImages.push(index);
+                
+                // Hide the image container
+                document.getElementById(`imageContainer${index}`).style.display = 'none';
+                
+                // Update hidden inputs
+                updateDeletedImagesInputs();
+                updateImageCount();
             }
         }
 
-        function hideError(fieldId) {
-            const errorElement = document.getElementById(fieldId + '-error');
-            const field = document.getElementById(fieldId) || document.querySelector(`[name="${fieldId}"]`);
+        function updateDeletedImagesInputs() {
+            const container = document.getElementById('deletedImagesInputs');
+            container.innerHTML = '';
             
-            if (errorElement) {
-                errorElement.classList.remove('show');
+            deletedImages.forEach(index => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'deletedImages';
+                input.value = index;
+                container.appendChild(input);
+            });
+        }
+
+        function previewNewImages(input) {
+            const preview = document.getElementById('newImagesPreview');
+            preview.innerHTML = '';
+
+            if (input.files) {
+                Array.from(input.files).forEach((file, index) => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const col = document.createElement('div');
+                            col.className = 'col-md-3 mb-3';
+                            col.innerHTML = `
+                                <div class="card">
+                                    <img src="${e.target.result}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                                    <div class="card-body p-2 text-center">
+                                        <small class="text-success">New Image ${index + 1}</small>
+                                    </div>
+                                </div>
+                            `;
+                            preview.appendChild(col);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
             }
+            updateImageCount();
+        }
+
+        function updateImageCount() {
+            const existingCount = document.querySelectorAll('#existingImages [id^="imageContainer"]:not([style*="display: none"])').length;
+            const newCount = document.querySelectorAll('#newImagesPreview .col-md-3').length;
+            const total = existingCount + newCount;
             
-            if (field) {
-                field.classList.remove('is-invalid');
+            document.getElementById('imageCount').textContent = existingCount;
+            document.getElementById('totalImages').textContent = total;
+            
+            // Update validation message
+            const statusBadge = document.querySelector('.badge.bg-info');
+            if (total < 4) {
+                statusBadge.className = 'badge bg-warning';
+                statusBadge.innerHTML = `Total Images: ${total} (Need ${4 - total} more)`;
+            } else if (total > 10) {
+                statusBadge.className = 'badge bg-danger';
+                statusBadge.innerHTML = `Total Images: ${total} (${total - 10} too many)`;
+            } else {
+                statusBadge.className = 'badge bg-success';
+                statusBadge.innerHTML = `Total Images: ${total} (Valid)`;
             }
         }
 
-        function validateField(field, validationRules) {
-            const value = field.value.trim();
-            const fieldName = field.name || field.id;
-            let isValid = true;
-
-            // Clear previous errors
-            hideError(fieldName);
-
-            // Required validation
-            if (validationRules.required && !value) {
-                showError(fieldName, `${validationRules.label || fieldName} is required`);
-                isValid = false;
+        // Form validation
+        document.getElementById('product-form').addEventListener('submit', function(e) {
+            const existingCount = document.querySelectorAll('#existingImages [id^="imageContainer"]:not([style*="display: none"])').length;
+            const newCount = document.querySelectorAll('#newImagesPreview .col-md-3').length;
+            const total = existingCount + newCount;
+            
+            if (total < 4 || total > 10) {
+                e.preventDefault();
+                alert(`Product must have between 4-10 images. Current: ${total} images.`);
+                return false;
             }
 
-            // Min length validation
-            if (value && validationRules.minLength && value.length < validationRules.minLength) {
-                showError(fieldName, `${validationRules.label || fieldName} must be at least ${validationRules.minLength} characters`);
-                isValid = false;
-            }
-
-            // Max length validation
-            if (value && validationRules.maxLength && value.length > validationRules.maxLength) {
-                showError(fieldName, `${validationRules.label || fieldName} must not exceed ${validationRules.maxLength} characters`);
-                isValid = false;
-            }
-
-            // Number validation
-            if (validationRules.type === 'number' && value) {
-                const numValue = parseFloat(value);
-                if (isNaN(numValue) || numValue < 0) {
-                    showError(fieldName, `${validationRules.label || fieldName} must be a valid positive number`);
-                    isValid = false;
-                }
-            }
-
-            // Price validation
-            if (validationRules.type === 'price' && value) {
-                const price = parseFloat(value);
-                if (isNaN(price) || price <= 0) {
-                    showError(fieldName, `${validationRules.label || fieldName} must be greater than 0`);
-                    isValid = false;
-                }
-            }
-
-            return isValid;
-        }
-
-        function validateQuantities() {
+            // Check if at least one size has quantity
             const quantities = ['quantity_xs', 'quantity_s', 'quantity_m', 'quantity_l', 'quantity_xl', 'quantity_xxl'];
-            let hasQuantity = false;
-            let allValid = true;
-
-            quantities.forEach(qty => {
+            const hasQuantity = quantities.some(qty => {
                 const field = document.querySelector(`[name="${qty}"]`);
-                if (field) {
-                    const value = parseInt(field.value) || 0;
-                    if (value > 0) {
-                        hasQuantity = true;
-                    }
-                    if (value < 0) {
-                        showError(qty, 'Quantity cannot be negative');
-                        allValid = false;
-                    } else {
-                        hideError(qty);
-                    }
-                }
+                return field && parseInt(field.value) > 0;
             });
 
             if (!hasQuantity) {
-                showError('variants', 'At least one size quantity must be specified');
-                allValid = false;
-            } else {
-                hideError('variants');
+                e.preventDefault();
+                alert('At least one size quantity must be specified.');
+                return false;
             }
 
-            return allValid;
-        }
-
-        function validateForm(event) {
-            let isFormValid = true;
-            
-            // Define validation rules for each field
-            const validationRules = {
-                productName: { required: true, minLength: 3, maxLength: 100, label: 'Product Name' },
-                category: { required: true, label: 'Category' },
-                regularPrice: { required: true, type: 'price', label: 'Regular Price' },
-                salePrice: { required: true, type: 'price', label: 'Sale Price' },
-                color: { required: true, minLength: 2, maxLength: 50, label: 'Color' },
-                description: { required: true, minLength: 10, maxLength: 500, label: 'Short Description' },
-                longDescription: { required: true, minLength: 20, maxLength: 2000, label: 'Full Description' },
-                specifications: { required: true, minLength: 10, maxLength: 1000, label: 'Specifications' }
-            };
-
-            // Validate each field
-            Object.keys(validationRules).forEach(fieldName => {
-                const field = document.querySelector(`[name="${fieldName}"]`);
-                if (field && !validateField(field, validationRules[fieldName])) {
-                    isFormValid = false;
-                }
-            });
-
-            // Special validation for prices
+            // Price validation
             const regularPrice = parseFloat(document.querySelector('[name="regularPrice"]').value);
             const salePrice = parseFloat(document.querySelector('[name="salePrice"]').value);
             
             if (salePrice >= regularPrice) {
-                showError('salePrice', 'Sale price must be less than regular price');
-                isFormValid = false;
-            }
-
-            // Validate quantities
-            if (!validateQuantities()) {
-                isFormValid = false;
-            }
-
-            // Update checklist
-            updateChecklist();
-
-            if (!isFormValid) {
-                event.preventDefault();
-                // Show first error tab
-                showFirstErrorTab();
+                e.preventDefault();
+                alert('Sale price must be less than regular price.');
                 return false;
             }
-
-            // Add replaced images to form data before submission
-            addReplacedImagesToForm();
-            
-            // Form is valid, allow submission
-            return true;
-        }
-
-        function showFirstErrorTab() {
-            const errorElements = document.querySelectorAll('.error-message.show');
-            if (errorElements.length > 0) {
-                const firstError = errorElements[0];
-                const tabPane = firstError.closest('.tab-pane');
-                if (tabPane) {
-                    const tabId = tabPane.id;
-                    const tabButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
-                    if (tabButton) {
-                        tabButton.click();
-                    }
-                }
-            }
-        }
-
-        function updateChecklist() {
-            // Basic Information
-            const basicFields = ['productName', 'category', 'regularPrice', 'salePrice'];
-            const basicComplete = basicFields.every(field => {
-                const element = document.querySelector(`[name="${field}"]`);
-                return element && element.value.trim() !== '';
-            });
-            updateChecklistItem('basic-check', basicComplete);
-
-            // Variants
-            const colorField = document.querySelector('[name="color"]');
-            const hasQuantity = ['quantity_xs', 'quantity_s', 'quantity_m', 'quantity_l', 'quantity_xl', 'quantity_xxl']
-                .some(qty => {
-                    const field = document.querySelector(`[name="${qty}"]`);
-                    return field && parseInt(field.value) > 0;
-                });
-            const variantsComplete = colorField && colorField.value.trim() !== '' && hasQuantity;
-            updateChecklistItem('variants-check', variantsComplete);
-
-            // Description & Specs
-            const descFields = ['description', 'longDescription', 'specifications'];
-            const descComplete = descFields.every(field => {
-                const element = document.querySelector(`[name="${field}"]`);
-                return element && element.value.trim() !== '';
-            });
-            updateChecklistItem('desc-check', descComplete);
-
-            // Media - assuming 4 images are required
-            const mediaComplete = true; // Since we have placeholder images
-            updateChecklistItem('media-check', mediaComplete);
-            }
-
-        function updateChecklistItem(itemId, isComplete) {
-            const item = document.getElementById(itemId);
-            if (item) {
-                if (isComplete) {
-                    item.textContent = '✓';
-                    item.className = 'badge completed rounded-pill';
-                } else {
-                    item.textContent = '-';
-                    item.className = 'badge pending rounded-pill';
-                }
-            }
-        }
-
-        // Image replacement functions
-        function replaceImage(index) {
-            currentImageIndex = index;
-            document.getElementById(`replaceInput${index}`).click();
-        }
-
-        function handleImageReplace(event, index) {
-            const file = event.target.files[0];
-            if (file) {
-                if (!file.type.startsWith('image/')) {
-                    alert('Please select a valid image file');
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('cropImage').src = e.target.result;
-                    currentImageIndex = index;
-                    
-                    // Show crop modal
-                    const modal = new bootstrap.Modal(document.getElementById('cropModal'));
-                    modal.show();
-                    
-                    // Initialize cropper
-                    setTimeout(() => {
-                        if (cropper) {
-                            cropper.destroy();
-                        }
-                        cropper = new Cropper(document.getElementById('cropImage'), {
-                            aspectRatio: 1,
-                            viewMode: 1,
-                            dragMode: 'move',
-                            autoCropArea: 1,
-                            restore: false,
-                            guides: false,
-                            center: false,
-                            highlight: false,
-                            cropBoxMovable: false,
-                            cropBoxResizable: false,
-                            toggleDragModeOnDblclick: false,
-                        });
-                    }, 300);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function saveCroppedImage() {
-            if (cropper && currentImageIndex !== null) {
-                const canvas = cropper.getCroppedCanvas({
-                    width: 800,
-                    height: 800,
-                    imageSmoothingEnabled: true,
-                    imageSmoothingQuality: 'high',
-                });
-                
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    document.getElementById(`imagePreview${currentImageIndex}`).src = url;
-                    
-                    // Store the blob for form submission
-                    replacedImages[currentImageIndex] = blob;
-                    
-                    // Hide modal
-                    bootstrap.Modal.getInstance(document.getElementById('cropModal')).hide();
-                    
-                    // Cleanup
-                    cropper.destroy();
-                    cropper = null;
-                    currentImageIndex = null;
-                    
-                    updateChecklist();
-                }, 'image/jpeg', 0.9);
-            }
-        }
-
-        function addReplacedImagesToForm() {
-            // Create hidden inputs for replaced images
-            Object.keys(replacedImages).forEach(index => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.name = `replacedImage_${index}`;
-                input.style.display = 'none';
-                
-                // Create a DataTransfer object to set the file
-                const dt = new DataTransfer();
-                const file = new File([replacedImages[index]], `image_${index}.jpg`, {
-                    type: 'image/jpeg'
-                });
-                dt.items.add(file);
-                input.files = dt.files;
-                
-                document.getElementById('product-form').appendChild(input);
-            });
-        }
-
-        // Real-time validation
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add event listeners for real-time validation
-            const fieldsToValidate = [
-                { name: 'productName', rules: { required: true, minLength: 3, maxLength: 100, label: 'Product Name' }},
-                { name: 'category', rules: { required: true, label: 'Category' }},
-                { name: 'regularPrice', rules: { required: true, type: 'price', label: 'Regular Price' }},
-                { name: 'salePrice', rules: { required: true, type: 'price', label: 'Sale Price' }},
-                { name: 'color', rules: { required: true, minLength: 2, maxLength: 50, label: 'Color' }},
-                { name: 'description', rules: { required: true, minLength: 10, maxLength: 500, label: 'Short Description' }},
-                { name: 'longDescription', rules: { required: true, minLength: 20, maxLength: 2000, label: 'Full Description' }},
-                { name: 'specifications', rules: { required: true, minLength: 10, maxLength: 1000, label: 'Specifications' }}
-            ];
-
-            fieldsToValidate.forEach(fieldConfig => {
-                const field = document.querySelector(`[name="${fieldConfig.name}"]`);
-                if (field) {
-                    field.addEventListener('blur', function() {
-                        validateField(this, fieldConfig.rules);
-                        updateChecklist();
-                    });
-                    
-                    field.addEventListener('input', function() {
-                        if (this.classList.contains('is-invalid')) {
-                            validateField(this, fieldConfig.rules);
-                        }
-                        updateChecklist();
-                    });
-                }
-            });
-
-            // Add listeners for quantity fields
-            const quantityFields = ['quantity_xs', 'quantity_s', 'quantity_m', 'quantity_l', 'quantity_xl', 'quantity_xxl'];
-            quantityFields.forEach(qty => {
-                const field = document.querySelector(`[name="${qty}"]`);
-                if (field) {
-                    field.addEventListener('input', function() {
-                        validateQuantities();
-                        updateChecklist();
-                    });
-                }
-            });
-
-            // Price comparison validation
-            const regularPriceField = document.querySelector('[name="regularPrice"]');
-            const salePriceField = document.querySelector('[name="salePrice"]');
-            
-            function validatePriceComparison() {
-                const regularPrice = parseFloat(regularPriceField.value);
-                const salePrice = parseFloat(salePriceField.value);
-                
-                if (!isNaN(regularPrice) && !isNaN(salePrice) && salePrice >= regularPrice) {
-                    showError('salePrice', 'Sale price must be less than regular price');
-                } else if (salePriceField.classList.contains('is-invalid') && !isNaN(salePrice) && salePrice < regularPrice) {
-                    hideError('salePrice');
-                }
-            }
-
-            if (regularPriceField && salePriceField) {
-                regularPriceField.addEventListener('input', validatePriceComparison);
-                salePriceField.addEventListener('input', validatePriceComparison);
-            }
-
-            // Initial checklist update
-            updateChecklist();
         });
 
-        // Clean up cropper when modal is hidden
-        document.getElementById('cropModal').addEventListener('hidden.bs.modal', function() {
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-        });
-
-        // Tab switching with validation
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function(e) {
-                updateChecklist();
-            });
-        });
-
-        // Prevent form submission with Enter key in input fields
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                }
-            });
-        });
-
-        // Auto-save functionality (optional)
-        let autoSaveTimeout;
-        function autoSave() {
-            clearTimeout(autoSaveTimeout);
-            autoSaveTimeout = setTimeout(() => {
-                console.log('Auto-saving draft...');
-                // Implement auto-save logic here if needed
-            }, 5000);
-        }
-
-        // Trigger auto-save on form changes
-        document.getElementById('product-form').addEventListener('input', autoSave);
-        document.getElementById('product-form').addEventListener('change', autoSave);
+        // Initialize
+        updateImageCount();
     </script>
 </body>
 </html>
