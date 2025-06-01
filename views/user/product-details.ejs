@@ -4,7 +4,7 @@
     <style>
         /* Minimal custom CSS - mostly Bootstrap utilities */
         .product-image-main {
-            height: 450px;
+            height: 550px;
             object-fit: cover;
         }
         
@@ -51,7 +51,7 @@
           <div class="col-md-6 mb-4">
             <div class="sticky-top" style="top: 20px;">
               <!-- Main Image -->
-              <div class="mb-3">
+              <div class="mb-3" style="overflow: hidden;">
                 <% if (product.productImages && product.productImages.length > 0) { %>
                   <img id="mainProductImage" src="<%= product.productImages[0] %>" alt="product-image" 
                        class="img-fluid rounded product-image-main w-100">
@@ -163,10 +163,10 @@
                       </form>
                       <% } else { %>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#variantModal">Add to Cart</button>
-                        <% } %>
                         <a href="/addToWishlist?id=<%= product._id %>" class="btn btn-outline-danger btn-sm">
                           <i class="fas fa-heart"></i>
                         </a>
+                        <% } %>
                         <% } %>
                       </div>
             
@@ -327,12 +327,19 @@
                     <i class="fas fa-heart"></i>
                   </a>
                 </div>
+                <% const discount = Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);%>
                 <div class="card-body d-flex flex-column">
-                  <h6 class="card-title text-truncate"><%= item.productName %></h6>
-                  <h5 class="text-success fw-bold">₹ <%= item.salePrice %></h5>
-                  <div class="mt-auto">
-                    <a href="/addToCart?id=<%= item._id %>" class="btn btn-primary w-100">Add to cart</a>
-                  </div>
+                  <h6><%= product.productName %></h6>
+              <div class="d-flex align-items-center gap-3"><h5 class="mb-0">₹ <%= product.salePrice %></h5>
+                <span class="text-muted small text-decoration-line-through">₹<%= product.regularPrice %></span>
+                <span class="badge bg-warning ms-2"><%= discount %>% OFF</span>
+              </div>
+               <div class="small ">
+                 <%= product.description.split('').slice(0, 25).join('') %>...      
+              </div>
+              <div class="small ">
+                Material : <%= product.material %>         
+              </div>
                 </div>
               </div>
             </div>
@@ -507,6 +514,24 @@
         submitBtn.disabled = false;
       }
     });
+  });
+
+
+  const img = document.getElementById('mainProductImage');
+
+  let isZoomed = false;
+
+  img.addEventListener('click', () => {
+    if (!isZoomed) {
+      img.style.transform = 'scale(2)';
+      img.style.cursor = 'zoom-out';
+      img.style.transition = 'transform 0.3s ease';
+      img.style.zIndex = '1000';
+    } else {
+      img.style.transform = 'scale(1)';
+      img.style.cursor = 'zoom-in';
+    }
+    isZoomed = !isZoomed;
   });
 
 </script>

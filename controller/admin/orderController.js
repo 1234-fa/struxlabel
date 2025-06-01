@@ -202,11 +202,26 @@ const approveReturnItem = async (req, res) => {
     
     // Update product inventory
     const productId = item.product;
-    const quantityToAdd = item.quantity;
+    const variant =item.variant.size;
+
+    console.log(variant);
+    console.log(productId);
+
+    const quantity = item.quantity;
     const product = await Product.findById(productId);
     if (product) {
-      product.quantity += quantityToAdd;
-      await product.save();
+      const updatedProduct = await Product.findByIdAndUpdate(
+                  productId,
+                  { $inc: { [`variants.${variant}`]: quantity } },
+                  { new: true }
+              );
+              
+              if (!updatedProduct) {
+                  console.error('Stock update failed.');
+              } else {
+                  const remainingStock = updatedProduct.variants.get(variant);
+                  console.log(`Stock updated for size ${variant}. Remaining: ${remainingStock}`);
+              }
     }
     
     // Process refund to wallet

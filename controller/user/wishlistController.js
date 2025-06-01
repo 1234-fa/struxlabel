@@ -11,7 +11,7 @@ const getWishlist = async (req, res) => {
     try {
         const userId = req.session.user._id;
         const page = parseInt(req.query.page) || 1;
-        const limit = 3;
+        const limit = 8;
         const skip = (page - 1) * limit;
 
         const user = await User.findById(userId);

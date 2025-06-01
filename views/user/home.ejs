@@ -68,7 +68,7 @@ body {
   background-color: white;
   padding: 8px;
   border-radius: 50%;
-  color: #e90d0d;
+  color: #0f0e0e;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   font-size: 16px;
   z-index: 10;
@@ -127,7 +127,7 @@ body {
 
 .product-content-wrap h5 {
   font-size: 18px;
-  color: #ff6b6b;
+  color: #080707;
   margin-bottom: 12px;
   font-weight: 700;
 }
@@ -146,7 +146,7 @@ body {
 }
 
 .product-content-wrap a:hover {
-  background-color: #ff6b6b;
+  background-color: #070707;
   color: white;
 }
 
@@ -170,10 +170,10 @@ body {
   font-size: 14px;
 }
 
-.filter__controls li:hover {
+/* .filter__controls li:hover {
   background-color: #ff6b6b;
   transform: translateY(-2px);
-}
+} */
 
 .swiper-container {
   max-width: 85%;
@@ -401,10 +401,19 @@ body {
                 <i class="fas fa-heart"></i>
               </a>
             </div>
+            <% const discount = Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);%>
             <div class="product-content-wrap">
               <h6><%= product.productName %></h6>
-              <h5>₹ <%= product.salePrice %></h5>
-              <a href="/order?id=<%= product._id %>">Buy Now</a>
+              <div class="d-flex align-items-center gap-4"><h5 class="mb-0">₹ <%= product.salePrice %></h5>
+                <span class="text-muted small text-decoration-line-through">₹<%= product.regularPrice %></span>
+                <span class="badge bg-warning ms-2"><%= discount %>% OFF</span>
+              </div>
+               <div class="small ">
+                 <%= product.description.split('').slice(0, 25).join('') %>...      
+              </div>
+              <div class="small ">
+                Material : <%= product.material %>         
+              </div>
             </div>
           </div>
         </div>
@@ -438,10 +447,19 @@ body {
                 <i class="fas fa-heart"></i>
               </a>
             </div>
+            <% const discount = Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);%>
             <div class="product-content-wrap">
               <h6><%= product.productName %></h6>
-              <h5>₹ <%= product.salePrice %></h5>
-              <a href="/order?id=<%= product._id %>">Buy Now</a>
+              <div class="d-flex align-items-center gap-4"><h5 class="mb-0">₹ <%= product.salePrice %></h5>
+                <span class="text-muted small text-decoration-line-through">₹<%= product.regularPrice %></span>
+                <span class="badge bg-warning ms-2"><%= discount %>% OFF</span>
+              </div>
+               <div class="small ">
+                 <%= product.description.split('').slice(0, 25).join('') %>...      
+              </div>
+              <div class="small ">
+                Material : <%= product.material %>         
+              </div>
             </div>
           </div>
         </div>

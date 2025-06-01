@@ -43,12 +43,12 @@ const getContactPage = async (req,res)=>{
 }
 
 const searchfromhome = async (req, res) => {
-  const query = req.query.q || '';
-  const page = parseInt(req.query.page) || 1;
-  const limit = 8; 
-  const skip = (page - 1) * limit;
-
   try {
+    const query = req.query.q || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 8; 
+    const skip = (page - 1) * limit;
+
     const filter = {
       productName: { $regex: query, $options: 'i' },
       isBlocked: false,

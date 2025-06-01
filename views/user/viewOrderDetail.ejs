@@ -96,7 +96,8 @@
                         <img src="<%= item.product.productImages[0] %>" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
                         <div>
                           <strong><%= item.product.productName %></strong><br>
-                          Qty: <%= item.quantity %>, Price: ₹<%= item.price.toFixed(2) %>, Total: ₹<%= (item.quantity * item.price).toFixed(2) %>
+                          Quantity: <%= item.quantity %>, Price: ₹<%= item.price.toFixed(2) %>, Total: ₹<%= (item.quantity * item.price).toFixed(2) %><br>
+                          Ordered Size : <%= item.variant.size%>
                         </div>
                       </div>
                       <% if (item.status === 'cancelled' || order.status === 'cancelled') { %>

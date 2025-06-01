@@ -78,44 +78,53 @@
 
 <!-- Apply Coupon Modal -->
 <div class="modal fade" id="applyCouponModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="couponForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Apply Coupon</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-2">
-          <h4 class="mb-3">Apply Coupon</h4>
-          <% const eligibleCoupons = coupons.filter(coupon => item.product.salePrice >= coupon.price); %>
-          <% if (eligibleCoupons && eligibleCoupons.length > 0) { %>
-            <% eligibleCoupons.forEach(function(coupon, index) { %>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="radio" 
-                       name="selectedCoupons" 
-                       id="coupon<%= index %>" 
-                       value="<%= coupon._id %>"
-                       data-discount="<%= coupon.discount %>"
-                       <%= index === 0 ? 'checked' : '' %>>
-                <label class="form-check-label" for="coupon<%= index %>">
-                  <strong><%= coupon.name %></strong><br>
-                  Coupon Code: <%= coupon.code %><br>
-                  Coupon Validity: <%= coupon.validDays %> days<br>
-                  Discount: <%= coupon.discount %>%
-                </label>
-              </div>
-            <% }) %>
-          <% } else { %>
-            <p>No eligible coupons found for this purchase.</p>
-          <% } %>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Apply</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-      </div>
-    </form>
+<div class="modal-dialog">
+<form id="couponForm" class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Apply Coupon</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div class="mb-2">
+<h4 class="mb-3">Apply Coupon</h4>
+
+<!-- Show remove option if coupon is already applied -->
+<div id="removeCouponSection" class="alert alert-info" style="display: none;">
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="fw-bold text-success">✓ Coupon Applied</div>
+    <button type="button" id="removeCouponBtn" class="btn btn-sm btn-outline-danger">Remove Coupon</button>
   </div>
+</div>
+
+<% const eligibleCoupons = coupons.filter(coupon => item.product.salePrice >= coupon.price); %>
+<% if (eligibleCoupons && eligibleCoupons.length > 0) { %>
+<% eligibleCoupons.forEach(function(coupon, index) { %>
+<div class="form-check mb-2">
+<input class="form-check-input" type="radio"
+name="selectedCoupons"
+id="coupon<%= index %>"
+value="<%= coupon._id %>"
+data-discount="<%= coupon.discount %>"
+<%= index === 0 ? 'checked' : '' %>>
+<label class="form-check-label" for="coupon<%= index %>">
+<strong><%= coupon.name %></strong><br>
+ Coupon Code: <%= coupon.code %><br>
+ Coupon Validity: <%= coupon.validDays %> days<br>
+ Discount: <%= coupon.discount %>%
+</label>
+</div>
+<% }) %>
+<% } else { %>
+<p>No eligible coupons found for this purchase.</p>
+<% } %>
+</div>
+</div>
+<div class="modal-footer">
+<button type="submit" class="btn btn-success">Apply</button>
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+</div>
+</form>
+</div>
 </div>
 
 <!-- Address Modal -->
@@ -232,6 +241,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const discountAmountElement = document.querySelector('.discount-amount');
   const couponIdInput = document.getElementById('couponIdInput');
   const couponBtn = document.querySelector('[data-bs-target="#applyCouponModal"]');
+  const removeCouponSection = document.getElementById('removeCouponSection');
+  const removeCouponBtn = document.getElementById('removeCouponBtn');
   
   // Track if a coupon has been applied
   let activeCouponId = null;
@@ -299,6 +310,60 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // NEW: Handle coupon removal
+  removeCouponBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Reset to original price
+    totalPriceInput.value = originalPrice.toFixed(2);
+    couponIdInput.value = '';
+    
+    // Update the displayed price on the page
+    finalPriceElements.forEach(el => {
+      el.textContent = originalPrice.toFixed(2);
+    });
+    
+    // Reset the discount amount display
+    if (discountAmountElement) {
+      discountAmountElement.textContent = '';
+      discountAmountElement.classList.remove('fw-bold', 'text-success');
+    }
+    
+    // Update the coupon button to show default state
+    updateCouponButton(false);
+    
+    // Clear the active coupon
+    activeCouponId = null;
+    
+    // Clear all radio button selections
+    const coupons = document.querySelectorAll('input[name="selectedCoupons"]');
+    coupons.forEach(coupon => {
+      coupon.checked = false;
+    });
+    
+    // Close the modal
+    const modalElement = document.getElementById('applyCouponModal');
+    const modalBackdrop = document.querySelector('.modal-backdrop');
+    
+    // Hide the modal properly
+    jQuery(modalElement).modal('hide');
+    
+    // Remove modal backdrop if it exists
+    if (modalBackdrop) {
+      modalBackdrop.remove();
+    }
+    
+    // Remove modal-open class from body
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // Show success message after modal closes
+    setTimeout(() => {
+      showAlert('Coupon removed successfully!', 'info');
+    }, 300);
+  });
+  
   // Function to update the coupon button appearance
   function updateCouponButton(isApplied) {
     if (isApplied) {
@@ -342,11 +407,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const couponModal = document.getElementById('applyCouponModal');
   if (couponModal) {
     couponModal.addEventListener('show.bs.modal', function() {
+      // Show/hide remove coupon section based on whether a coupon is applied
       if (activeCouponId) {
+        removeCouponSection.style.display = 'block';
         const coupons = document.querySelectorAll('input[name="selectedCoupons"]');
         coupons.forEach(coupon => {
           coupon.checked = (coupon.value === activeCouponId);
         });
+      } else {
+        removeCouponSection.style.display = 'none';
       }
     });
   }

@@ -120,46 +120,58 @@
 </div>
 
 
+
 <!-- Apply Coupon Modal -->
 <div class="modal fade" id="applyCouponModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="couponForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Apply Coupon</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-2">
-          <h4 class="mb-3">Available Coupons</h4>
-          <% const eligibleCoupons = coupons.filter(coupon => totalAmount >= coupon.price); %>
-          <% if (eligibleCoupons.length > 0) { %>
-            <% eligibleCoupons.forEach((coupon, index) => { %>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="radio" 
-                       name="selectedCoupons" 
-                       id="coupon<%= index %>" 
-                       value="<%= coupon._id %>"
-                       data-discount="<%= coupon.discount %>"
-                       <%= index === 0 ? 'checked' : '' %>>
-                <label class="form-check-label" for="coupon<%= index %>">
-                  <strong><%= coupon.name %></strong><br>
-                  Code: <%= coupon.code %><br>
-                  Valid for: <%= coupon.validDays %> days<br>
-                  Discount: <%= coupon.discount %>%
-                </label>
-              </div>
-            <% }) %>
-          <% } else { %>
-            <p>No eligible coupons found for this purchase.</p>
-          <% } %>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Apply</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-      </div>
-    </form>
+<div class="modal-dialog">
+<form id="couponForm" class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Apply Coupon</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div class="mb-2">
+<!-- Remove Coupon Section (shown only when coupon is applied) -->
+<div id="removeCouponSection" class="alert alert-info justify-content-between align-items-center mb-3 d-none">
+  <div>
+    <i class="fas fa-check-circle text-success me-2"></i>
+    <span class="fw-bold">Coupon Applied Successfully</span>
   </div>
+  <button type="button" id="removeCouponBtn" class="btn btn-sm btn-outline-danger">
+    <i class="fas fa-times me-1"></i>Remove Coupon
+  </button>
+</div>
+
+<h4 class="mb-3">Available Coupons</h4>
+<% const eligibleCoupons = coupons.filter(coupon => totalAmount >= coupon.price); %>
+<% if (eligibleCoupons.length > 0) { %>
+<% eligibleCoupons.forEach((coupon, index) => { %>
+<div class="form-check mb-2">
+<input class="form-check-input" type="radio"
+name="selectedCoupons"
+id="coupon<%= index %>"
+value="<%= coupon._id %>"
+data-discount="<%= coupon.discount %>"
+<%= index === 0 ? 'checked' : '' %>>
+<label class="form-check-label" for="coupon<%= index %>">
+<strong><%= coupon.name %></strong><br>
+ Code: <%= coupon.code %><br>
+ Valid for: <%= coupon.validDays %> days<br>
+ Discount: <%= coupon.discount %>%
+</label>
+</div>
+<% }) %>
+<% } else { %>
+<p>No eligible coupons found for this purchase.</p>
+<% } %>
+</div>
+</div>
+<div class="modal-footer">
+<button type="submit" class="btn btn-success">Apply</button>
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+</div>
+</form>
+</div>
 </div>
 
 
@@ -227,104 +239,144 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const couponForm = document.getElementById('couponForm');
-  const totalPriceInput = document.getElementById('totalPriceInput');
-  const finalPriceElements = document.querySelectorAll('.final-price');
-  const discountAmountElement = document.querySelector('.discount-amount');
-  const couponIdInput = document.getElementById('couponIdInput');
-  const couponBtn = document.querySelector('[data-bs-target="#applyCouponModal"]');
+ const couponForm = document.getElementById('couponForm');
+const totalPriceInput = document.getElementById('totalPriceInput');
+const finalPriceElements = document.querySelectorAll('.final-price');
+const discountAmountElement = document.querySelector('.discount-amount');
+const couponIdInput = document.getElementById('couponIdInput');
+const couponBtn = document.querySelector('[data-bs-target="#applyCouponModal"]');
+const removeCouponSection = document.getElementById('removeCouponSection');
+const removeCouponBtn = document.getElementById('removeCouponBtn');
+
+let activeCouponId = null;
+let originalPrice = parseFloat(totalPriceInput.value);
+
+couponForm.addEventListener('submit', function(e) {
+e.preventDefault();
+const selectedCoupon = document.querySelector('input[name="selectedCoupons"]:checked');
+if (selectedCoupon) {
+const couponId = selectedCoupon.value;
+const discountPercent = parseFloat(selectedCoupon.dataset.discount);
+const discountAmount = (originalPrice * discountPercent / 100);
+const newPrice = originalPrice - discountAmount;
+totalPriceInput.value = newPrice.toFixed(2);
+couponIdInput.value = couponId;
+finalPriceElements.forEach(el => {
+el.textContent = newPrice.toFixed(2);
+ });
+if (discountAmountElement) {
+discountAmountElement.textContent = `You save ₹${discountAmount.toFixed(2)} with coupon`;
+discountAmountElement.classList.add('fw-bold', 'text-success');
+ }
+const modalElement = document.getElementById('applyCouponModal');
+jQuery(modalElement).modal('hide');
+document.body.classList.remove('modal-open');
+document.body.style.overflow = '';
+document.body.style.paddingRight = '';
+const backdrop = document.querySelector('.modal-backdrop');
+if (backdrop) backdrop.remove();
+updateCouponButton(true);
+activeCouponId = couponId;
+setTimeout(() => {
+showAlert('Coupon applied successfully!', 'success');
+ }, 300);
+ }
+ });
+
+// NEW: Remove Coupon Event Listener
+removeCouponBtn.addEventListener('click', function(e) {
+  e.preventDefault();
   
-  let activeCouponId = null;
-  let originalPrice = parseFloat(totalPriceInput.value);
+  // Reset to original price
+  totalPriceInput.value = originalPrice.toFixed(2);
+  couponIdInput.value = '';
   
-  couponForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const selectedCoupon = document.querySelector('input[name="selectedCoupons"]:checked');
-    
-    if (selectedCoupon) {
-      const couponId = selectedCoupon.value;
-      const discountPercent = parseFloat(selectedCoupon.dataset.discount);
-      
-      const discountAmount = (originalPrice * discountPercent / 100);
-      const newPrice = originalPrice - discountAmount;
-      
-      totalPriceInput.value = newPrice.toFixed(2);
-      couponIdInput.value = couponId;
-      
-      finalPriceElements.forEach(el => {
-        el.textContent = newPrice.toFixed(2);
-      });
-      
-      if (discountAmountElement) {
-        discountAmountElement.textContent = `You save ₹${discountAmount.toFixed(2)} with coupon`;
-        discountAmountElement.classList.add('fw-bold', 'text-success');
-      }
-      
-      const modalElement = document.getElementById('applyCouponModal');
-      jQuery(modalElement).modal('hide');
-      
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-      
-      const backdrop = document.querySelector('.modal-backdrop');
-      if (backdrop) backdrop.remove();
-      
-      updateCouponButton(true);
-      
-      activeCouponId = couponId;
-      setTimeout(() => {
-        showAlert('Coupon applied successfully!', 'success');
-      }, 300);
-    }
+  // Update displayed prices
+  finalPriceElements.forEach(el => {
+    el.textContent = originalPrice.toFixed(2);
   });
   
-  function updateCouponButton(isApplied) {
-    if (isApplied) {
-      couponBtn.textContent = 'Coupon Applied ✓';
-      couponBtn.classList.remove('btn-warning');
-      couponBtn.classList.add('btn-success');
-    } else {
-      couponBtn.textContent = 'Apply Coupon';
-      couponBtn.classList.remove('btn-success');
-      couponBtn.classList.add('btn-warning');
-    }
+  // Clear discount amount display
+  if (discountAmountElement) {
+    discountAmountElement.textContent = '';
+    discountAmountElement.classList.remove('fw-bold', 'text-success');
   }
+  
+  // Update button appearance
+  updateCouponButton(false);
+  
+  // Clear active coupon
+  activeCouponId = null;
+  
+  // Uncheck all radio buttons
+  const coupons = document.querySelectorAll('input[name="selectedCoupons"]');
+  coupons.forEach(coupon => {
+    coupon.checked = false;
+  });
+  
+  // Close modal
+  const modalElement = document.getElementById('applyCouponModal');
+  jQuery(modalElement).modal('hide');
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) backdrop.remove();
+  
+  // Show success message
+  setTimeout(() => {
+    showAlert('Coupon removed successfully!', 'info');
+  }, 300);
+});
 
-  function showAlert(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
-    alertDiv.role = 'alert';
-    alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+function updateCouponButton(isApplied) {
+if (isApplied) {
+couponBtn.textContent = 'Coupon Applied ✓';
+couponBtn.classList.remove('btn-warning');
+couponBtn.classList.add('btn-success');
+ } else {
+couponBtn.textContent = 'Apply Coupon';
+couponBtn.classList.remove('btn-success');
+couponBtn.classList.add('btn-warning');
+ }
+ }
+function showAlert(message, type) {
+const alertDiv = document.createElement('div');
+alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+alertDiv.role = 'alert';
+alertDiv.innerHTML = `
+${message}
+ <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+ `;
+const targetContainer = document.querySelector('.card.p-3.shadow-sm');
+if (targetContainer && targetContainer.parentNode) {
+targetContainer.parentNode.insertBefore(alertDiv, targetContainer);
+setTimeout(() => {
+alertDiv.classList.remove('show');
+setTimeout(() => {
+alertDiv.remove();
+ }, 300);
+ }, 5000);
+ }
+ }
 
-    const targetContainer = document.querySelector('.card.p-3.shadow-sm');
-    if (targetContainer && targetContainer.parentNode) {
-      targetContainer.parentNode.insertBefore(alertDiv, targetContainer);
-
-      setTimeout(() => {
-        alertDiv.classList.remove('show');
-        setTimeout(() => {
-          alertDiv.remove();
-        }, 300);
-      }, 5000);
-    }
-  }
-
-  const couponModal = document.getElementById('applyCouponModal');
-  if (couponModal) {
-    couponModal.addEventListener('show.bs.modal', function() {
-      if (activeCouponId) {
-        const coupons = document.querySelectorAll('input[name="selectedCoupons"]');
-        coupons.forEach(coupon => {
-          coupon.checked = (coupon.value === activeCouponId);
-        });
-      }
-    });
-  }
+const couponModal = document.getElementById('applyCouponModal');
+if (couponModal) {
+couponModal.addEventListener('show.bs.modal', function() {
+// Show/hide remove coupon section based on active coupon
+if (activeCouponId) {
+  removeCouponSection.classList.remove('d-none');
+  removeCouponSection.classList.add('d-flex');
+  const coupons = document.querySelectorAll('input[name="selectedCoupons"]');
+  coupons.forEach(coupon => {
+    coupon.checked = (coupon.value === activeCouponId);
+  });
+} else {
+  removeCouponSection.classList.add('d-none');
+  removeCouponSection.classList.remove('d-flex');
+}
+ });
+ }
 });
 
 

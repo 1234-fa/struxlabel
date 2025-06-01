@@ -78,8 +78,9 @@
                     <% } %>
                     <div>
                       <strong><%= item.product?.productName || 'Product Not Found' %></strong><br>
-                      Qty: <%= item.quantity %><br>
-                      ₹<%= item.price.toFixed(2) %>
+                      Quantity : <%= item.quantity %><br>
+                      ₹<%= item.price.toFixed(2) %> <br>
+                      Size : <%= item.variant.size%>
                     </div>
                   </li>
                 <% }) %>

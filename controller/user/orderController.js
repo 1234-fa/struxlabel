@@ -495,11 +495,29 @@ const getSingleOrderPage = async (req, res) => {
       // Cancel each item
       for (let item of order.orderedItems) {
         if (item.status === 'cancelled') continue;
+
+        let productId =item.product;
+        console.log(productId);
   
-        // Return stock
-        await Product.findByIdAndUpdate(item.product, {
-          $inc: { quantity: item.quantity }
-        });
+        const variant = item.variant.size;
+      const quantity =item.quantity;
+
+      console.log('variant of the product to candel',variant);
+      console.log('Quantity of the product to candel',quantity);
+
+      // Update variant-specific stock
+      const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { $inc: { [`variants.${variant}`]: quantity } },
+            { new: true }
+        );
+        
+        if (!updatedProduct) {
+            console.error('Stock update failed.');
+        } else {
+            const remainingStock = updatedProduct.variants.get(variant);
+            console.log(`Stock updated for size ${variant}. Remaining: ${remainingStock}`);
+        }
   
         // Mark as cancelled with reason
         item.status = 'cancelled';
@@ -596,7 +614,7 @@ const getSingleOrderPage = async (req, res) => {
     try {
       const { orderId, productId } = req.params;
       const { reason } = req.body;
-      
+
       const order = await Order.findById(orderId);
       if (!order || !order.orderedItems || !Array.isArray(order.orderedItems)) {
         return res.status(StatusCode.NOT_FOUND).send('Order not found');
@@ -605,15 +623,29 @@ const getSingleOrderPage = async (req, res) => {
       const item = order.orderedItems.find(
         i => i.product.toString() === productId
       );
-      
+      const variant = item.variant.size;
+      const quantity =item.quantity;
+
+      console.log('variant of the product to candel',variant);
+      console.log('Quantity of the product to candel',quantity);
+
+
       if (!item) {
         return res.status(StatusCode.NOT_FOUND).send('Product not found in order');
       }
-      
-      // Update product inventory - add the cancelled quantity back
-      await Product.findByIdAndUpdate(productId, {
-        $inc: { quantity: item.quantity }
-      });
+      // Update variant-specific stock
+      const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { $inc: { [`variants.${variant}`]: quantity } },
+            { new: true }
+        );
+        
+        if (!updatedProduct) {
+            console.error('Stock update failed.');
+        } else {
+            const remainingStock = updatedProduct.variants.get(variant);
+            console.log(`Stock updated for size ${variant}. Remaining: ${remainingStock}`);
+        }
       
       // Update the item status to cancelled
       item.status = 'cancelled';

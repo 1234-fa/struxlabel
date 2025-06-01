@@ -326,6 +326,8 @@ const searchProducts = async (req, res) => {
       let endIndex = startIndex + itemsPerPage;
       let totalPages = Math.ceil(searchResult.length / itemsPerPage);
       const currentProduct = searchResult.slice(startIndex, endIndex);
+
+      console.log("searched products are ",currentProduct)
       
       res.render("shop", {
         user: userData,
