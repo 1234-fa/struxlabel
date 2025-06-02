@@ -336,11 +336,21 @@ console.log('product images ',product.productImages);
 const editProduct = async (req, res) => {
   try {
     const productId = req.params.id;
+    
+    // ✅ ADD DEBUG LOGGING
+    console.log('=== EDIT PRODUCT DEBUG ===');
+    console.log('Product ID:', productId);
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Deleted Images:', req.body.deletedImages);
+    console.log('Cropped Images count:', Array.isArray(req.body.croppedImages) ? req.body.croppedImages.length : 'Not array or undefined');
+    console.log('Regular uploaded files:', req.files ? req.files.length : 0);
+    
     const {
       productName, category, brand, regularPrice, salePrice, color, material,
       design, occasion, quantity_xs, quantity_s, quantity_m, quantity_l,
       quantity_xl, quantity_xxl, description, longDescription, specifications,
-      deletedImages = []  // Array of image indices to delete
+      deletedImages = [],  // Array of image indices to delete
+      croppedImages = []   // Array of base64 cropped images
     } = req.body;
 
     // Find existing product
@@ -348,6 +358,8 @@ const editProduct = async (req, res) => {
     if (!existingProduct) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
+
+    console.log('Existing product images count:', existingProduct.productImages?.length || 0);
 
     // Validate required fields
     if (!productName || !category || !regularPrice || !salePrice || !color || !description || !longDescription || !specifications) {
@@ -390,13 +402,16 @@ const editProduct = async (req, res) => {
 
     // Handle image operations
     let finalImages = [...existingProduct.productImages];
+    console.log('Initial final images count:', finalImages.length);
 
     // Delete specified images
     const deletedIndices = Array.isArray(deletedImages) ? deletedImages.map(idx => parseInt(idx)) : 
                           typeof deletedImages === 'string' ? [parseInt(deletedImages)] : [];
     
+    console.log('Processed deleted indices:', deletedIndices);
+
     // Remove deleted images (reverse sort to maintain indices)
-    deletedIndices.sort((a, b) => b - a).forEach(async (index) => {
+    for (const index of deletedIndices.sort((a, b) => b - a)) {
       if (index >= 0 && index < finalImages.length) {
         // Delete file from server - handle both path formats
         const imageToDelete = finalImages[index];
@@ -406,22 +421,93 @@ const editProduct = async (req, res) => {
         
         try {
           await fs.unlink(imagePath);
+          console.log('Deleted image file:', imageToDelete);
         } catch (err) {
           console.warn('Could not delete image:', imageToDelete, err.message);
         }
         finalImages.splice(index, 1);
       }
-    });
-
-    // Add new images (Multer has already saved them to disk)
-    if (req.files && req.files.length > 0) {
-      // ✅ FIXED: Add full path like in addProducts function
-      const newImagePaths = req.files.map(file => `/uploads/product-images/${file.filename}`);
-      finalImages.push(...newImagePaths);
     }
+
+    console.log('Final images after deletion:', finalImages.length);
+
+    // ✅ FIXED: Handle cropped images with proper async/await
+    const newImagePaths = [];
+    
+    // Process cropped images (base64 data)
+    if (croppedImages && croppedImages.length > 0) {
+      try {
+        // Handle both array and single image cases
+        const croppedImagesArray = Array.isArray(croppedImages) ? croppedImages : [croppedImages];
+        console.log('Processing cropped images:', croppedImagesArray.length);
+        
+        for (let i = 0; i < croppedImagesArray.length; i++) {
+          const base64Data = croppedImagesArray[i];
+          
+          if (base64Data && base64Data.startsWith('data:image/')) {
+            try {
+              // Extract base64 data
+              const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, '');
+              const buffer = Buffer.from(base64Content, 'base64');
+              
+              // Generate unique filename
+              const timestamp = Date.now();
+              const random = Math.random().toString(36).substring(2, 15);
+              const filename = `product-${timestamp}-${random}-${i}.jpg`;
+              const filePath = path.join('public/uploads/product-images/', filename);
+              
+              // ✅ FIXED: Use proper async directory creation and file operations
+              const uploadDir = path.join('public/uploads/product-images/');
+              
+              try {
+                // Check if directory exists and create if it doesn't
+                await fs.access(uploadDir);
+              } catch (error) {
+                // Directory doesn't exist, create it
+                await fs.mkdir(uploadDir, { recursive: true });
+                console.log('Created upload directory:', uploadDir);
+              }
+              
+              // ✅ FIXED: Use async writeFile instead of sync
+              await fs.writeFile(filePath, buffer);
+              
+              // Add to new images array with consistent path format
+              const imagePath = `/uploads/product-images/${filename}`;
+              newImagePaths.push(imagePath);
+              
+              console.log(`Successfully processed cropped image ${i + 1}:`, filename, 'Size:', buffer.length, 'bytes');
+              
+            } catch (error) {
+              console.error(`Error processing cropped image ${i}:`, error);
+              // Continue with other images instead of failing completely
+            }
+          } else {
+            console.warn(`Invalid base64 data for cropped image ${i}:`, base64Data ? base64Data.substring(0, 50) + '...' : 'null/undefined');
+          }
+        }
+      } catch (error) {
+        console.error('Error processing cropped images array:', error);
+      }
+    } else {
+      console.log('No cropped images to process');
+    }
+
+    console.log('New cropped image paths:', newImagePaths);
+
+    // Add regular uploaded files (if any)
+    if (req.files && req.files.length > 0) {
+      const regularImagePaths = req.files.map(file => `/uploads/product-images/${file.filename}`);
+      newImagePaths.push(...regularImagePaths);
+      console.log('Added regular uploaded files:', regularImagePaths.length);
+    }
+
+    // Add new images to final array
+    finalImages.push(...newImagePaths);
+    console.log('Final total images:', finalImages.length);
 
     // Validate image count (4-10 images required)
     if (finalImages.length < 4 || finalImages.length > 10) {
+      console.error('Invalid image count:', finalImages.length);
       return res.status(400).json({ 
         success: false, 
         message: `Product must have between 4-10 images. Current: ${finalImages.length}` 
@@ -433,6 +519,13 @@ const editProduct = async (req, res) => {
       productName: { $regex: new RegExp(`^${productName}$`, 'i') },
       _id: { $ne: productId }
     });
+
+    if (existingProductWithName) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Product name already exists' 
+      });
+    }
 
     const status = totalQuantity > 0 ? 'Available' : 'out of stock';
 
@@ -460,6 +553,9 @@ const editProduct = async (req, res) => {
     if (!updatedProduct) {
       return res.status(500).json({ success: false, message: 'Failed to update product' });
     }
+
+    console.log('Product updated successfully. Final image count:', updatedProduct.productImages.length);
+    console.log('=== END EDIT PRODUCT DEBUG ===');
 
     return res.redirect("/admin/products");
 
