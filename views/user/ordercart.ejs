@@ -391,12 +391,7 @@ function closeAddressForm() {
   document.getElementById('addressModal').style.display = 'none';
 }
 
-// REMOVE THIS - DUPLICATE EVENT LISTENER
-// document.getElementById('addressForm').addEventListener('submit', function (event) {
-//   if (!validateForm()) {
-//     event.preventDefault();
-//   }
-// });
+
 
 function showFieldError(field, message) {
   const input = document.getElementById(field);

@@ -19,7 +19,7 @@ const getProductPage = async (req, res) => {
         {productName:{$regex:new RegExp(".*"+search+".*","i")}},
         {brand:{$regex:new RegExp(".*"+search+".*","i")}}
       ],  
-    }).limit(limit*1).skip((page-1)*limit).populate('category').exec();
+    }).sort({createdAt: -1}).limit(limit*1).skip((page-1)*limit).populate('category').exec();
 
     const count= await Product.find({
       $or:[
@@ -514,18 +514,17 @@ const editProduct = async (req, res) => {
       });
     }
 
-    // Check for duplicate product name
-    const existingProductWithName = await Product.findOne({
-      productName: { $regex: new RegExp(`^${productName}$`, 'i') },
-      _id: { $ne: productId }
-    });
+    // const existingProductWithName = await Product.findOne({
+    //   productName: { $regex: new RegExp(`^${productName}$`, 'i') },
+    //   _id: { $ne: productId }
+    // });
 
-    if (existingProductWithName) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Product name already exists' 
-      });
-    }
+    // if (existingProductWithName) {
+    //   return res.status(400).json({ 
+    //     success: false, 
+    //     message: 'Product name already exists' 
+    //   });
+    // }
 
     const status = totalQuantity > 0 ? 'Available' : 'out of stock';
 

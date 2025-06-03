@@ -39,7 +39,7 @@
               <p><strong>Payment Method:</strong> <%= order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1) %></p>
               <p><strong>Total Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %></p>
               <p><strong>Discount Applied:</strong> ₹<%= order.discount.toFixed(2) %></p>
-              <p><strong>Coupon Applied:</strong> <%= order.coupenApplied ? 'Yes' : 'No' %></p>
+              <p><strong>Coupon Applied:</strong> <%= order.coupon ? order.coupon.code || order.coupon.name || 'Yes' : 'No' %></p>
             </div>
           </div>
         </div>

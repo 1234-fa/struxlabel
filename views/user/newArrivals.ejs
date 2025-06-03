@@ -112,6 +112,25 @@ rel="stylesheet">
   .card-body {
     padding: 0 0 15px 0;
   }
+  .wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  margin-right: 5px;
+  background-color: white;
+  padding: 5px;
+  border-radius: 50%;
+  color: #0f0e0e;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  z-index: 10;
+  transition: 0.3s ease;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
 
 <!-- Shop Section Begin -->
@@ -251,12 +270,27 @@ rel="stylesheet">
                               <div class="product__item__pic set-bg" data-setbg="<%= products[i].productImages[0] %>">
                               </div>
                             </a>
-                              <div class="product__item__text">
-                                  <h6><%= products[i].productName %></h6>
-                                  <a href="/order?id=<%= products[i]._id %>">Buy Now</a>
-                                  <h6><%= products[i].brand %></h6>
-                                  <h5>₹<%= products[i].salePrice.toLocaleString('en-IN') %></h5>
-                              </div>
+                            <a href="/addToWishlist?id=<%= products[i]._id %>" class="wishlist-btn">
+                                    <i class="fas fa-heart"></i>
+                            </a>
+ <div class="text-center">
+  <!-- Sale price and Regular price in one line -->
+  <div class="d-flex justify-content-center align-items-center gap-2 mb-1 flex-wrap">
+    <h5 class="text-dark fw-bold m-0">₹<%= products[i].salePrice.toLocaleString('en-IN') %></h5>
+    <span class="text-muted text-decoration-line-through small">
+      ₹<%= products[i].regularPrice.toLocaleString('en-IN') %>
+    </span>
+  </div>
+
+  <!-- Product name and brand in one line -->
+  <div class="d-flex justify-content-center align-items-center flex-wrap gap-1 mb-1">
+    <h6 class="text-dark fw-semibold m-0"><%= products[i].productName %></h6>
+    <span class="small text-muted">| <%= products[i].brand %></span>
+  </div>
+  <p class="text-secondary small m-0">
+    <%= products[i].description.length > 15 ? products[i].description.slice(0, 30) + '...' : products[i].description %>
+  </p>
+</div>
                           </div>
                       </div>
                   <% } %>
@@ -364,12 +398,27 @@ function applyFilters() {
                             <div class="product__item__pic set-bg" data-setbg="${product.productImages[0]}">
                             </div>
                         </a>
-                        <div class="product__item__text">
-                            <h6>${product.productName}</h6>
-                            <a href="/order?id=${product._id}">Buy Now</a>
-                            <h6>${product.brand}</h6>
-                            <h5>₹${product.salePrice.toLocaleString('en-IN')}</h5>
-                        </div>
+                        <a href="/addToWishlist?id=${product._id}"" class="wishlist-btn">
+                                    <i class="fas fa-heart"></i>
+                            </a>
+                        <div class="text-center">
+                            <!-- Sale price and Regular price in one line -->
+                            <div class="d-flex justify-content-center align-items-center gap-2 mb-1 flex-wrap">
+                                <h5 class="text-dark fw-bold m-0">₹${product.salePrice.toLocaleString('en-IN')}</h5>
+                                <span class="text-muted text-decoration-line-through small">
+                                    ₹${product.regularPrice.toLocaleString('en-IN')}
+                                    </span>
+                                    </div>
+                                    <!-- Product name and brand in one line -->
+                                    <div class="d-flex justify-content-center align-items-center flex-wrap gap-1 mb-1">
+                                        <h6 class="text-dark fw-semibold m-0">${product.productName}</h6>
+                                        <span class="small text-muted">| ${product.brand}</span>
+                                        </div>
+                                        <!-- Description -->
+                                        <p class="text-secondary small m-0">
+                                            ${product.description.length > 30 ? product.description.slice(0, 30) + '...' : product.description}
+                                        </p>
+                                    </div>
                     </div>
                 </div>
             `;

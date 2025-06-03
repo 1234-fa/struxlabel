@@ -33,6 +33,30 @@
         .offer-badge {
             animation: pulse 2s infinite;
         }
+        .wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: white;
+  padding: 8px;
+  border-radius: 50%;
+  color: #0f0e0e;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  z-index: 10;
+  transition: 0.3s ease;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wishlist-btn:hover {
+  background-color: #ffeded;
+  color: #e60023;
+  text-decoration: none;
+}
         
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -322,10 +346,9 @@
                       class="card-img-top img-fluid" 
                       style="height: 220px; object-fit: cover;">
                   </a>
-                  <a href="/addToWishlist?id=<%= item._id %>" 
-                     class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-2">
-                    <i class="fas fa-heart"></i>
-                  </a>
+                  <a href="/addToWishlist?id=<%= item._id %>" class="wishlist-btn">
+                <i class="fas fa-heart"></i>
+              </a>
                 </div>
                 <% const discount = Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100);%>
                 <div class="card-body d-flex flex-column">

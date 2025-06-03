@@ -8,48 +8,57 @@ const {StatusCode} = require('../../config/statuscode');
 
 
 const getWishlist = async (req, res) => {
-    try {
-        const userId = req.session.user._id;
-        const page = parseInt(req.query.page) || 1;
-        const limit = 8;
-        const skip = (page - 1) * limit;
+  try {
+    const userId = req.session.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 8;
+    const skip = (page - 1) * limit;
+    const user = await User.findById(userId);
 
-        const user = await User.findById(userId);
+    // Fetch wishlist
+    const wishlistDoc = await Wishlist.findOne({ userId }).populate({
+      path: 'products.productId',
+      populate: { path: 'category' }
+    });
 
-        const wishlistDoc = await Wishlist.findOne({ userId }).populate({
-            path: 'products.productId',
-            populate: { path: 'category' }
-        });
+    // Fetch cart to check which products are in cart
+    const cartDoc = await Cart.findOne({ userId });
+    const cartProductIds = (cartDoc && cartDoc.items)  // ← Changed from 'products' to 'items'
+      ? cartDoc.items.map(p => p.productId.toString())  // ← Changed from 'products' to 'items'
+      : [];
 
-        if (!wishlistDoc) {
-            return res.render('wishlist', {
-                user,
-                wishlist: [],
-                totalPages: 0,
-                currentPage: 1
-            });
-        }
-
-        const validProducts = wishlistDoc.products.filter(p => p.productId);
-
-        const totalCount = validProducts.length;
-        const totalPages = Math.ceil(totalCount / limit);
-
-        const wishlistProducts = validProducts
-            .slice(skip, skip + limit)
-            .map(p => p.productId);
-
-        res.render('wishlist', {
-            user,
-            wishlist: wishlistProducts,
-            totalPages,
-            currentPage: page
-        });
-
-    } catch (error) {
-        console.log("Error in wishlist:", error);
-        res.redirect('/pageNotFound');
+    if (!wishlistDoc) {
+      return res.render('wishlist', {
+        user,
+        wishlist: [],
+        totalPages: 0,
+        currentPage: 1
+      });
     }
+
+    const validProducts = wishlistDoc.products.filter(p => p.productId);
+    const totalCount = validProducts.length;
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // Add isInCart property to each wishlist product
+    const wishlistProducts = validProducts
+      .slice(skip, skip + limit)
+      .map(p => ({
+        ...p.productId.toObject(),
+        isInCart: cartProductIds.includes(p.productId._id.toString())
+      }));
+
+    console.log('cartdata', wishlistProducts);
+    res.render('wishlist', {
+      user,
+      wishlist: wishlistProducts,
+      totalPages,
+      currentPage: page
+    });
+  } catch (error) {
+    console.log("Error in wishlist:", error);
+    res.redirect('/pageNotFound');
+  }
 };
 
 const addToWishlist = async (req, res) => {
@@ -88,6 +97,8 @@ const addToWishlist = async (req, res) => {
         res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
 };
+
+
 
 const removeFromWishlist = async (req, res) => {
     try {

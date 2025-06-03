@@ -249,6 +249,11 @@
                                 
                                 <div class="mt-auto">
                                     <div class="d-flex btn-group-actions">
+                                      <% if (product.isInCart) { %>
+                                        <form action="/cart" method="GET">
+                                          <button type="submit" class="btn btn-outline-primary btn-sm flex-fill"><i class="fas fa-shopping-cart me-1"></i> Go to Cart   </button>
+                                        </form>
+                                        <% } else { %>
                                         <button 
                                             type="button" 
                                             class="btn btn-outline-primary btn-sm flex-fill open-variant-modal" 
@@ -258,6 +263,7 @@
                                             <i class="fas fa-shopping-cart me-1"></i>
                                             Add to Cart
                                         </button>
+                                        <%}%>
                                         <a class="btn btn-outline-danger btn-sm" 
                                            href="/removeFromWishlist?id=<%= product._id %>"
                                            title="Remove from Wishlist">
