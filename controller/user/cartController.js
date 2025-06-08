@@ -22,7 +22,6 @@ const getCartPage = async (req, res) => {
       });
     }
 
-    // Filter out items with null productId
     const validItems = cart.items.filter(item => item.productId);
 
     let total = 0;

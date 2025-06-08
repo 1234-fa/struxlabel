@@ -133,8 +133,8 @@ const login = async (req, res) => {
             return res.render("login", { message: "Wrong password" });
         }
 
-        req.session.user = findUser;  // Store the full user object in session
-        res.redirect('/');  // Redirect to homepage after login
+        req.session.user = findUser; 
+        res.redirect('/');  
     } catch (error) {
         console.error("login error", error);
         res.render('login', { message: "Login failed, Please try again later" });
@@ -208,7 +208,6 @@ const verifyOtp = async (req, res) => {
                 return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: "Error processing password" });
             } 
 
-            // **Check if the user already exists before saving**
             const existingUser = await User.findOne({ email: user.email });
             if (existingUser) {
                 return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "User already exists. Please log in." });
@@ -269,9 +268,8 @@ const resendOtp = async (req, res) => {
             return res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Email not found in the session" });
         }
 
-        const otp = generateotp();  // Corrected the variable name
-        req.session.userOtp = otp;  // Store new OTP in session
-
+        const otp = generateotp(); 
+        req.session.userOtp = otp;  
         const emailSent = await sendVerificationEmail(email, otp);
 
         if (emailSent) {

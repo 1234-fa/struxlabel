@@ -72,11 +72,22 @@
 .line.completed {
   background-color: #198754;
 }
+  .order-form-wrapper {
+    margin-left: 250px; /* Adjust if you have a sidebar */
+    padding: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .order-form-wrapper {
+      margin-left: 0;
+      padding: 15px;
+    }
+  }
+
 </style>
-<div class="container-fluid mt-4">
-  <div class="row">
-    <div class="col-md-3"><!-- Sidebar --></div>
-    <div class="col-md-9">
+<div class="order-form-wrapper">
+  <div class="card">
+    <div class="col-md-12">
       <h4 class="text-center mb-4">Order Details</h4>
 
       <% if (!order || !order.orderedItems || order.orderedItems.length === 0) { %>

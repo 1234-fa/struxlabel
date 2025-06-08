@@ -18,7 +18,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: url('https://www.shutterstock.com/image-illustration/clothes-on-grunge-background-shelf-600nw-1891025299.jpg') no-repeat center center/cover;
+            background: url('../background.png') no-repeat center center/cover;
         }
 
         .container {
@@ -64,14 +64,20 @@
             transition: 0.3s;
         }
 
-        .google-signup img {
-            width: 20px;
-            margin-right: 10px;
-        }
-        .google-signup a {
-            text-decoration: none;
-            color: white;
-        }
+       .google-signup a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 16px;
+    color: #000;
+}
+
+.google-signup img {
+    height: 20px;
+    width: auto;
+    display: block;
+}
 
         .google-signup:hover {
             background: rgba(255, 255, 255, 0.5);

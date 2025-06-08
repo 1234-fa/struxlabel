@@ -1,15 +1,23 @@
 <%- include("../../views/partials/user/headerp") %>
+<style>
+    .wallet-form-wrapper {
+    margin-left: 250px; /* Adjust if you have a sidebar */
+    padding: 30px;
+  }
 
+  @media (max-width: 768px) {
+    .wallet-form-wrapper {
+      margin-left: 0;
+      padding: 15px;
+    }
+  }
+</style>
 <!-- Main content container with proper spacing -->
-<div class="container-fluid">
+<div class="wallet-form-wrapper">
   <div class="row">
-    <!-- Sidebar placeholder -->
-    <div class="col-md-3 d-none d-md-block">
-      <!-- Sidebar is included in the header partial -->
-    </div>
     
     <!-- Main content column -->
-    <div class="col-md-9 px-3 py-2">
+    <div class="col-md-12 px-3 py-2">
       <!-- Wallet Balance Card -->
       <div class="row mb-3">
         <div class="col-12">
@@ -39,7 +47,7 @@
                   <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                       <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 35px; height: 35px;">
-                        <i class="bi bi-wallet2 text-secondary fs-5"></i>
+                        <i class="bi bi-wallet2 text-secondary fs-5">SL</i>
                       </div>
                       <div>
                         <div class="fw-semibold text-capitalize"><%= item.type.replace(/_/g, " ") %></div>

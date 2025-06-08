@@ -1,10 +1,10 @@
 <%- include("../../views/partials/user/headerp") %>
 
-<div class="container-fluid mt-4">
-  <div class="row">
-    <div class="col-md-3"><!-- Sidebar --></div>
+<div class="order-form-wrapper">
+  <div class="card">
+    
 
-    <div class="col-md-9">
+    <div class="col-md-12">
       <h4 class="text-center mb-4">My Orders</h4>
 
       <% if (orders.length === 0) { %>
@@ -170,6 +170,17 @@
 
   .step:not(:last-child) .line {
     right: -50%;
+  }
+  .order-form-wrapper {
+    margin-left: 250px; /* Adjust if you have a sidebar */
+    padding: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .order-form-wrapper {
+      margin-left: 0;
+      padding: 15px;
+    }
   }
 </style>
 

@@ -4,7 +4,6 @@ const path = require('path');
 async function generateInvoice(order, res) {
     const doc = new PDFDocument({ size: 'A4', margin: 40 });
     
-    // Header with logo and company info
     try {
         doc.image(path.join(__dirname, '../img/logo.png'), 40, 35, { width: 40 });
     } catch (e) {}
@@ -12,17 +11,16 @@ async function generateInvoice(order, res) {
     doc
         .font('Helvetica-Bold')
         .fontSize(16)
-        .text('Lost And Found', 90, 45)
+        .text('STRUX LABEL', 90, 45)
         .fontSize(8)
         .font('Helvetica')
         .fillColor('gray')
-        .text('www.lostandfound.com', 200, 52, { align: 'right' })
+        .text('www.struxlabel.com', 200, 52, { align: 'right' })
         .fillColor('black');
     
     // Divider
     doc.moveTo(40, 75).lineTo(555, 75).stroke();
     
-    // Invoice Meta - Proper spacing
     const metaTop = 90;
     doc
         .font('Helvetica-Bold')
@@ -40,21 +38,18 @@ async function generateInvoice(order, res) {
         .text(order.status.toUpperCase(), 380, metaTop)
         .text(order.paymentMethod, 380, metaTop + 15);
     
-    // Bill To section with proper spacing
     const billTop = metaTop + 50;
     doc
         .font('Helvetica-Bold')
         .fontSize(10)
         .text('Bill To:', 40, billTop);
         
-    // Handle complete address block properly
     let addressY = billTop + 18;
     doc
         .font('Helvetica')
         .fontSize(9)
         .text(order.customerName, 40, addressY);
     
-    // Split address into lines and render each
     const fullAddress = order.address || '';
     const addressLines = fullAddress.split('\n').filter(line => line.trim());
     
@@ -64,7 +59,6 @@ async function generateInvoice(order, res) {
         addressY += 12;
     });
     
-    // Calculate proper Y position for next section with adequate spacing
     let currentY = addressY + 40;
     
     // Payment verification box for Razorpay - Proper positioning
@@ -290,7 +284,7 @@ async function generateInvoice(order, res) {
             align: 'center',
             width: 515
         })
-        .text('For any queries, contact us at support@lostandfound.com', 40, footerY + 37, {
+        .text('For any queries, contact us at support@struxlabel.com', 40, footerY + 37, {
             align: 'center',
             width: 515
         });

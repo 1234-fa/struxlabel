@@ -13,7 +13,6 @@ const {userAuth,adminAuth}=require('../middlewares/auth');
 const multer=require('multer');
 const uploads=require('../helpers/multer');
 const productSchema = require('../models/productSchema');
-// const uploads= multer({storage:storage});
 
 
 
@@ -77,8 +76,6 @@ router.post('/edit-coupon/:id',adminAuth ,couponController.editCoupon);
 router.post('/delete-coupon/:id',adminAuth,couponController.deteleCoupon);
 
 
-
-// router.get('/dashboard',adminAuth,salesreportController.getDashboard);
 router.get('/', adminAuth, salesreportController.loaddashboard);
 router.get('/ledger',adminAuth, salesreportController.getLedger);
 router.get('/salesReport',adminAuth,salesreportController.loadsalesreport)

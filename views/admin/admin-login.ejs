@@ -1,180 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Login Page</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: url('https://www.shutterstock.com/image-illustration/clothes-on-grunge-background-shelf-600nw-1891025299.jpg') no-repeat center center/cover;
-            background-size: cover;
-        }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: url("../background.png") no-repeat center center/cover;
+        background-size: cover;
+      }
 
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+      }
+
+      .login-box {
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 10px;
+        padding: 25px;
+        width: 300px; /* Reduced width */
+        box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+      }
+
+      .login-box:hover {
+        box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.7);
+        transform: scale(1.05);
+      }
+
+      .login-box h2 {
+        font-size: 24px; /* Slightly smaller title */
+        color: white;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .input-box {
+        margin-bottom: 15px; /* Reduced margin */
+        display: flex;
+        flex-direction: column;
+      }
+
+      .input-box input {
+        padding: 10px; /* Reduced padding */
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        color: white;
+        font-size: 14px; /* Smaller font size */
+        border-radius: 5px;
+        outline: none;
+        transition: 0.3s;
+      }
+
+      .input-box input:focus {
+        border-color: #007bff;
+      }
+
+      .input-box input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .error-message {
+        color: red;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+
+      .login-btn {
+        background: #007bff;
+        color: white;
+        padding: 12px; /* Reduced padding */
+        border: none;
+        border-radius: 5px;
+        width: 100%;
+        font-size: 16px; /* Slightly smaller font size */
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      .login-btn:hover {
+        background: #0056b3;
+        transform: scale(1.05);
+      }
+
+      .alert-danger {
+        color: red;
+        font-size: 14px;
+        text-align: center;
+        margin-bottom: 15px;
+      }
+
+      @media (max-width: 768px) {
         .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            width: 100%;
+          flex-direction: column;
         }
 
         .login-box {
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 10px;
-            padding: 25px;
-            width: 300px; /* Reduced width */
-            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
+          width: 90%;
+          padding: 20px; /* Further reduced padding on smaller screens */
         }
-
-        .login-box:hover {
-            box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.7);
-            transform: scale(1.05);
-        }
-
-        .login-box h2 {
-            font-size: 24px; /* Slightly smaller title */
-            color: white;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .input-box {
-            margin-bottom: 15px; /* Reduced margin */
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-box input {
-            padding: 10px; /* Reduced padding */
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            color: white;
-            font-size: 14px; /* Smaller font size */
-            border-radius: 5px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .input-box input:focus {
-            border-color: #007bff;
-        }
-
-        .input-box input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .error-message {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .login-btn {
-            background: #007bff;
-            color: white;
-            padding: 12px; /* Reduced padding */
-            border: none;
-            border-radius: 5px;
-            width: 100%;
-            font-size: 16px; /* Slightly smaller font size */
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .login-btn:hover {
-            background: #0056b3;
-            transform: scale(1.05);
-        }
-
-        .alert-danger {
-            color: red;
-            font-size: 14px;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .login-box {
-                width: 90%;
-                padding: 20px; /* Further reduced padding on smaller screens */
-            }
-        }
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div class="container">
-        <div class="login-box">
-            <h2>Admin Login</h2>
-    
-            <!-- Login Form -->
-            <form action="/admin/login" method="POST" onsubmit="return validateForm()">
-                <div class="input-box">
-                    <input type="email" id="email" placeholder="Enter your email" name="email">
-                    <small class="error-message" id="emailError"></small>
-                </div>
-                <div class="input-box">
-                    <input type="password" id="password" placeholder="Enter your password" name="password">
-                    <small class="error-message" id="passwordError"></small>
-                </div>
-                
-                <% if (locals.message && message.length > 0) { %>
-                    <div class="alert-danger">
-                        <%= message %>
-                    </div>
-                <% } %>
+      <div class="login-box">
+        <h2>Admin Login</h2>
 
-                <button type="submit" class="login-btn">Login</button>
-            </form>
-        </div>
+        <!-- Login Form -->
+        <form
+          action="/admin/login"
+          method="POST"
+          onsubmit="return validateForm()"
+        >
+          <div class="input-box">
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter your email"
+              name="email"
+            />
+            <small class="error-message" id="emailError"></small>
+          </div>
+          <div class="input-box">
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+              name="password"
+            />
+            <small class="error-message" id="passwordError"></small>
+          </div>
+
+          <% if (locals.message && message.length > 0) { %>
+          <div class="alert-danger"><%= message %></div>
+          <% } %>
+
+          <button type="submit" class="login-btn">Login</button>
+        </form>
+      </div>
     </div>
 
     <script>
-        function validateForm() {
-            let isValid = true;
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value.trim();
-            const emailError = document.getElementById("emailError");
-            const passwordError = document.getElementById("passwordError");
+      function validateForm() {
+        let isValid = true;
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const emailError = document.getElementById("emailError");
+        const passwordError = document.getElementById("passwordError");
 
-            // Reset error messages
-            emailError.innerText = "";
-            passwordError.innerText = "";
+        // Reset error messages
+        emailError.innerText = "";
+        passwordError.innerText = "";
 
-            // Email validation
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (email === "") {
-                emailError.innerText = "Email is required";
-                isValid = false;
-            } else if (!emailPattern.test(email)) {
-                emailError.innerText = "Enter a valid email address";
-                isValid = false;
-            }
-
-            // Password validation
-            if (password === "") {
-                passwordError.innerText = "Password is required";
-                isValid = false;
-            }
-
-            return isValid;
+        // Email validation
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email === "") {
+          emailError.innerText = "Email is required";
+          isValid = false;
+        } else if (!emailPattern.test(email)) {
+          emailError.innerText = "Enter a valid email address";
+          isValid = false;
         }
+
+        // Password validation
+        if (password === "") {
+          passwordError.innerText = "Password is required";
+          isValid = false;
+        }
+
+        return isValid;
+      }
     </script>
-</body>
+  </body>
 </html>

@@ -46,7 +46,7 @@ const searchfromhome = async (req, res) => {
   try {
     const query = req.query.q || '';
     const page = parseInt(req.query.page) || 1;
-    const limit = 8; 
+    const limit = 6; 
     const skip = (page - 1) * limit;
 
     const filter = {

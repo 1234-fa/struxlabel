@@ -11,7 +11,6 @@ const getMyWallet = async (req, res) => {
     const limit = 5;
     const skip = (page - 1) * limit;
 
-    // Fetch paginated wallet transactions
     const wallets = await Wallet.find({ userId })
       .populate({
         path: 'orderId',
@@ -21,11 +20,9 @@ const getMyWallet = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    // Count total number of transactions
     const totalTransactions = await Wallet.countDocuments({ userId });
     const totalPages = Math.ceil(totalTransactions / limit);
 
-    // Aggregate total amount for the user
     const totalAmountResult = await Wallet.aggregate([
       { 
         $match: { 

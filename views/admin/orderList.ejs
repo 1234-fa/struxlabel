@@ -19,75 +19,128 @@
   });
 %>
 
-<div class="container mt-5">
+<div class="container-fluid px-3 px-md-4 mt-3 mt-md-5">
   <!-- Header + Return Requests Button -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="text-primary">All Orders</h2>
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
+    <h2 class="text-primary mb-2 mb-sm-0">All Orders</h2>
     <a href="/admin/returnRequests" class="btn btn-warning">
-      Return Requests (<%= returnProductCount %>)
+      <span class="d-none d-sm-inline">Return Requests</span>
+      <span class="d-sm-none">Returns</span>
+      (<%= returnProductCount %>)
     </a>
   </div>
 
   <!-- Search Form -->
   <form method="GET" action="/admin/orderList" class="mb-4">
-    <div class="input-group">
-      <input 
-        type="text" 
-        class="form-control" 
-        name="search" 
-        placeholder="Search by Order ID"
-        value="<%= searchTerm || '' %>">
-      <button class="btn btn-outline-primary" type="submit">Search</button>
+    <div class="row g-2">
+      <div class="col-12 col-md-8 col-lg-6">
+        <input 
+          type="text" 
+          class="form-control" 
+          name="search" 
+          placeholder="Search by Order ID"
+          value="<%= searchTerm || '' %>">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-primary" type="submit">
+          <span class="d-none d-sm-inline">Search</span>
+          <i class="fas fa-search d-sm-none"></i>
+        </button>
+      </div>
       <% if (searchTerm) { %>
-        <a href="/admin/orderList" class="btn btn-outline-danger">Clear</a>
+        <div class="col-auto">
+          <a href="/admin/orderList" class="btn btn-outline-danger">
+            <span class="d-none d-sm-inline">Clear</span>
+            <i class="fas fa-times d-sm-none"></i>
+          </a>
+        </div>
       <% } %>
     </div>
   </form>
 
-  <!-- Orders Table -->
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped align-middle text-center">
-      <thead class="table-dark">
-        <tr>
-          <th>Order ID</th>
-          <th>User</th>
-          <th>Products</th>
-          <th>Total (₹)</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <% orders.forEach(order => { %>
+  <!-- Orders Table - Desktop View -->
+  <div class="d-none d-lg-block">
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle text-center">
+        <thead class="table-dark">
           <tr>
-            <td><%= order.orderId %></td>
-            <td><%= order.user?.name || 'Unknown' %></td>
-            <td class="text-start">
-              <ul class="list-unstyled mb-0">
-                <% order.orderedItems.forEach(item => { %>
-                  <li class="mb-2 d-flex align-items-center">
-                    <% if (item.product && item.product.productImages && item.product.productImages.length > 0) { %>
-                      <img src="<%= item.product.productImages[0] %>" 
-                           alt="Product Image"
-                           style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
-                    <% } else { %>
-                      <img src="/images/placeholder.png" 
-                           alt="No Image"
-                           style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
-                    <% } %>
-                    <div>
-                      <strong><%= item.product?.productName || 'Product Not Found' %></strong><br>
-                      Quantity : <%= item.quantity %><br>
-                      ₹<%= item.price.toFixed(2) %> <br>
-                      Size : <%= item.variant.size%>
-                    </div>
-                  </li>
-                <% }) %>
-              </ul>
-            </td>
-            <td>₹<%= order.finalAmount.toFixed(2) %></td>
-            <td>
+            <th>Order ID</th>
+            <th>User</th>
+            <th>Products</th>
+            <th>Total (₹)</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% orders.forEach(order => { %>
+            <tr>
+              <td><%= order.orderId %></td>
+              <td><%= order.user?.name || 'Unknown' %></td>
+              <td class="text-start">
+                <ul class="list-unstyled mb-0">
+                  <% order.orderedItems.forEach(item => { %>
+                    <li class="mb-2 d-flex align-items-center">
+                      <% if (item.product && item.product.productImages && item.product.productImages.length > 0) { %>
+                        <img src="<%= item.product.productImages[0] %>" 
+                             alt="Product Image"
+                             style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                      <% } else { %>
+                        <img src="/images/placeholder.png" 
+                             alt="No Image"
+                             style="height: 50px; width: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                      <% } %>
+                      <div>
+                        <strong><%= item.product?.productName || 'Product Not Found' %></strong><br>
+                        Quantity : <%= item.quantity %><br>
+                        ₹<%= item.price.toFixed(2) %> <br>
+                        Size : <%= item.variant.size%>
+                      </div>
+                    </li>
+                  <% }) %>
+                </ul>
+              </td>
+              <td>₹<%= order.finalAmount.toFixed(2) %></td>
+              <td>
+                <% 
+                  const status = order.status.toLowerCase();
+                  let badgeClass = 'bg-secondary text-white';
+              
+                  if (['processing', 'shipped', 'out for delivery'].includes(status)) {
+                    badgeClass = 'bg-primary text-white';
+                  } else if (['cancelled', 'canceled', 'returned', 'return requested', 'return request'].includes(status)) {
+                    badgeClass = 'bg-danger text-white';
+                  } else if (status === 'delivered') {
+                    badgeClass = 'bg-success text-white';
+                  }
+                %>
+                <span class="badge <%= badgeClass %> text-uppercase"><%= order.status %></span>
+              </td>
+              <td>
+                <a href="/admin/singleOrderDetails/<%= order._id %>" class="btn btn-sm btn-primary">
+                  View Details
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Orders Cards - Mobile/Tablet View -->
+  <div class="d-lg-none">
+    <% orders.forEach(order => { %>
+      <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+          <!-- Order Header -->
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h6 class="text-primary mb-1">Order ID: <%= order.orderId %></h6>
+              <small class="text-muted">User: <%= order.user?.name || 'Unknown' %></small>
+            </div>
+            <div class="text-end">
               <% 
                 const status = order.status.toLowerCase();
                 let badgeClass = 'bg-secondary text-white';
@@ -100,32 +153,96 @@
                   badgeClass = 'bg-success text-white';
                 }
               %>
-              <span class="badge <%= badgeClass %> text-uppercase"><%= order.status %></span>
-            </td>
-            <td>
-              <a href="/admin/singleOrderDetails/<%= order._id %>" class="btn btn-sm btn-primary">
-                View Details
-              </a>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
+              <span class="badge <%= badgeClass %> text-uppercase mb-2"><%= order.status %></span>
+              <div class="fw-bold text-success">₹<%= order.finalAmount.toFixed(2) %></div>
+            </div>
+          </div>
+
+          <!-- Products -->
+          <div class="mb-3">
+            <h6 class="mb-2">Products:</h6>
+            <% order.orderedItems.forEach(item => { %>
+              <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                <% if (item.product && item.product.productImages && item.product.productImages.length > 0) { %>
+                  <img src="<%= item.product.productImages[0] %>" 
+                       alt="Product Image"
+                       class="me-3"
+                       style="height: 40px; width: 40px; object-fit: cover; border-radius: 6px;">
+                <% } else { %>
+                  <img src="/images/placeholder.png" 
+                       alt="No Image"
+                       class="me-3"
+                       style="height: 40px; width: 40px; object-fit: cover; border-radius: 6px;">
+                <% } %>
+                <div class="flex-grow-1">
+                  <div class="fw-bold"><%= item.product?.productName || 'Product Not Found' %></div>
+                  <small class="text-muted">
+                    Qty: <%= item.quantity %> | Size: <%= item.variant.size%> | ₹<%= item.price.toFixed(2) %>
+                  </small>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <!-- Action Button -->
+          <div class="text-center">
+            <a href="/admin/singleOrderDetails/<%= order._id %>" class="btn btn-primary btn-sm w-100">
+              View Details
+            </a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
   </div>
 
   <!-- Pagination -->
-  <nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center mt-4">
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center flex-wrap">
       <% if (currentPage > 1) { %>
         <li class="page-item">
           <a class="page-link" href="?page=<%= currentPage - 1 %>">&laquo;</a>
         </li>
       <% } %>
-      <% for (let i = 1; i <= totalPages; i++) { %>
+      
+      <!-- Show fewer page numbers on mobile -->
+      <% 
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (totalPages <= 5) {
+          startPage = 1;
+          endPage = totalPages;
+        }
+      %>
+      
+      <% if (startPage > 1) { %>
+        <li class="page-item">
+          <a class="page-link" href="?page=1">1</a>
+        </li>
+        <% if (startPage > 2) { %>
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+        <% } %>
+      <% } %>
+      
+      <% for (let i = startPage; i <= endPage; i++) { %>
         <li class="page-item <%= i === currentPage ? 'active' : '' %>">
           <a class="page-link" href="?page=<%= i %>"><%= i %></a>
         </li>
       <% } %>
+      
+      <% if (endPage < totalPages) { %>
+        <% if (endPage < totalPages - 1) { %>
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+        <% } %>
+        <li class="page-item">
+          <a class="page-link" href="?page=<%= totalPages %>"><%= totalPages %></a>
+        </li>
+      <% } %>
+      
       <% if (currentPage < totalPages) { %>
         <li class="page-item">
           <a class="page-link" href="?page=<%= currentPage + 1 %>">&raquo;</a>

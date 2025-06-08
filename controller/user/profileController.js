@@ -301,7 +301,7 @@ const changePasswordvalid = async (req, res) => {
         req.session.userData = req.body;
         req.session.email = email;
         console.log(`OTP: ${otp}`);
-        return res.render('change-password-otp'); // ✅ return added
+        return res.render('change-password-otp'); 
       } else {
         return res.json({ success: false, message: "Failed to send OTP, please try again" });
       }
@@ -399,8 +399,8 @@ const postAddAddress = async (req, res) => {
 
 const addAddressOrder = async (req, res) => {
     try {
-        console.log("Request body:", req.body); // Add this line to debug
-        console.log("Content-Type:", req.headers['content-type']); // Add this too
+        console.log("Request body:", req.body); 
+        console.log("Content-Type:", req.headers['content-type']); 
         
         const userId = req.session.user;
         console.log("Session user:", userId);
@@ -458,7 +458,7 @@ const { ObjectId } = require('mongoose').Types;
 
 const getEditAddress = async (req, res) => {
   try {
-    const addressId = req.params.id; // Get ID from URL param
+    const addressId = req.params.id; 
     const user = req.session.user;
 
     // Check if the addressId is a valid ObjectId

@@ -6,7 +6,6 @@ const Order = require('../../models/orderSchema');
 const razorpay = require('../../config/payments');
 const Coupon = require('../../models/coupenSchema');
 const UserCoupon = require('../../models/userCouponSchema');
-const PaymentBackup = require('../../models/paymentBackup');
 const {StatusCode} = require('../../config/statuscode');
 
 const crypto = require('crypto');
@@ -90,7 +89,7 @@ const createRazorpayOrder = async (req, res) => {
       res.json({
         order_id: order.id,
         amount: order.amount,
-        razorpayKey: process.env.RAZORPAY_KEY_ID // Inject this securely from env
+        razorpayKey: process.env.RAZORPAY_KEY_ID 
       });
     } catch (error) {
       console.error('Error creating Razorpay order:', error);
@@ -137,7 +136,6 @@ const createRazorpayOrder = async (req, res) => {
   
       const orderQty = Number(quantity);
         
-        // ✅ Fix: Check variant-specific stock
         const availableStock = product.variants.get(variant) || 0;
         console.log(`Stock check - Size: ${variant}, Available: ${availableStock}, Requested: ${orderQty}`);
         
@@ -163,7 +161,7 @@ const createRazorpayOrder = async (req, res) => {
         quantity: orderQty,
         price: product.salePrice,
         variant: { 
-                size: variant || null // Add fallback but investigate why variant is undefined
+                size: variant || null 
             },
             status: 'processing'
       };
@@ -213,7 +211,6 @@ const createRazorpayOrder = async (req, res) => {
   
       console.log('Saved order variant:', newOrder.orderedItems[0].variant);
               
-              // ✅ Fix: Update variant-specific stock
               const updatedProduct = await Product.findByIdAndUpdate(
                   productId,
                   { $inc: { [`variants.${variant}`]: -orderQty } },
@@ -266,7 +263,6 @@ const createRazorpayOrder = async (req, res) => {
         }
       }
   
-      // Clear appliedCoupon from session
       if (req.session.appliedCoupon) {
         delete req.session.appliedCoupon;
       }
@@ -297,7 +293,6 @@ const createRazorpayOrder = async (req, res) => {
       } = req.body;
       console.log('total discount:',totalDiscount);
   
-      // Verify Razorpay signature
       const generated_signature = crypto
         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
         .update(razorpay_order_id + "|" + razorpay_payment_id)

@@ -15,13 +15,11 @@ const getWishlist = async (req, res) => {
     const skip = (page - 1) * limit;
     const user = await User.findById(userId);
 
-    // Fetch wishlist
     const wishlistDoc = await Wishlist.findOne({ userId }).populate({
       path: 'products.productId',
       populate: { path: 'category' }
     });
 
-    // Fetch cart to check which products are in cart
     const cartDoc = await Cart.findOne({ userId });
     const cartProductIds = (cartDoc && cartDoc.items)  // ← Changed from 'products' to 'items'
       ? cartDoc.items.map(p => p.productId.toString())  // ← Changed from 'products' to 'items'
@@ -40,7 +38,6 @@ const getWishlist = async (req, res) => {
     const totalCount = validProducts.length;
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Add isInCart property to each wishlist product
     const wishlistProducts = validProducts
       .slice(skip, skip + limit)
       .map(p => ({

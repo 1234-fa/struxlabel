@@ -6,7 +6,7 @@ const downloadInvoice = async (req, res) => {
     try {
         const { orderId } = req.params;
         
-        // 1) Fetch order with all necessary populated fields
+        //  Fetch order with all necessary populated fields
         const order = await Order.findById(orderId)
             .populate('user', 'name')
             .populate('orderedItems.product', 'productName')
@@ -16,7 +16,7 @@ const downloadInvoice = async (req, res) => {
             return res.status(StatusCode.NOT_FOUND).send('Order not found');
         }
         
-        // 2) Check if payment method allows invoice generation
+        //  Check if payment method allows invoice generation
         const allowedPaymentMethods = ['razorpay', 'cash_on_delivery'];
         if (!allowedPaymentMethods.includes(order.paymentMethod.toLowerCase())) {
             return res
@@ -24,14 +24,14 @@ const downloadInvoice = async (req, res) => {
                 .send('Invoice is only available for Razorpay and Cash on Delivery payments.');
         }
         
-        // 3) Check payment status - this is the main requirement
+        //  Check payment status - this is the main requirement
         if (!order.paymentStatus || order.paymentStatus.toLowerCase() !== 'paid') {
             return res
                 .status(StatusCode.FORBIDDEN)
                 .send('Invoice is only available for orders with successful payments.');
         }
         
-        // 4) Check if order has valid statuses for invoice generation
+        //  Check if order has valid statuses for invoice generation
         const validOrderStatuses = [
             'confirmed',
             'processing', 
@@ -70,13 +70,13 @@ const downloadInvoice = async (req, res) => {
                 .send('Invoice is not available for orders in pending status.');
         }
         
-        // 5) Use embedded address fields directly
+        //  Use embedded address fields directly
         const addrDetail = order.address;
         if (!addrDetail || !addrDetail.name) {
             return res.status(StatusCode.BAD_REQUEST).send('No address information found in this order.');
         }
         
-        // 6) Format address
+        //  Format address
         const formattedAddress = [
             addrDetail.name,
             addrDetail.city,
@@ -87,7 +87,7 @@ const downloadInvoice = async (req, res) => {
             addrDetail.altphone ? `Alt Phone: ${addrDetail.altphone}` : ''
         ].filter(Boolean).join('\n');
         
-        // 7) Format payment method for display
+        //  Format payment method for display
         const formatPaymentMethod = (method) => {
             const methodMap = {
                 'credit_card': 'Credit Card',
@@ -98,21 +98,21 @@ const downloadInvoice = async (req, res) => {
             return methodMap[method] || method;
         };
         
-        // 8) Prepare coupon information with price threshold
+        //  Prepare coupon information with price threshold
         const couponInfo = order.coupon ? {
             code: order.coupon.code,
             discount: order.coupon.discountPercentage || order.coupon.discountAmount,
             price: order.coupon.minimumPurchaseAmount || order.coupon.price || 0
         } : null;
         
-        // 9) Format order status
+        //  Format order status
         const formatOrderStatus = (status) => {
             return status.split(' ').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' ');
         };
         
-        // 10) Prepare formatted order data - include invoiceable items
+        //  Prepare formatted order data - include invoiceable items
         const formattedOrder = {
             _id: order.orderId,
             customerName: order.user.name,
@@ -144,7 +144,7 @@ const downloadInvoice = async (req, res) => {
             refundAmount: order.refundAmount || 0
         };
         
-        // 11) Generate invoice PDF
+        //  Generate invoice PDF
         await generateInvoice(formattedOrder, res);
         
     } catch (err) {

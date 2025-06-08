@@ -259,6 +259,48 @@ rel="stylesheet">
   cursor: pointer;
   color: #555;
 }
+.dropdown-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.mobile-dropdown {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 100;
+  padding: 10px;
+}
+
+.mobile-dropdown.show {
+  display: flex;
+}
+
+/* Header Container Fix */
+.header .container {
+    position: relative;
+}
+
+/* Position hamburger menu on the right aligned with header content */
+.canvas__open {
+    position: absolute;
+    right: 15px;
+    top: 20px;
+    z-index: 10;
+}
 
 /* Responsive Styles */
 @media (max-width: 991px) {
@@ -294,8 +336,13 @@ rel="stylesheet">
         justify-content: space-between;
         align-items: center;
     }
+    
+    /* Ensure hamburger menu stays aligned with header content */
+    .canvas__open {
+        right: 15px;
+        top: 15px;
+    }
 }
-
 
 @media (max-width: 480px) {
     .mobile-nav {
@@ -305,6 +352,12 @@ rel="stylesheet">
     
     .header__logo span {
         font-size: 12px;
+    }
+    
+    /* Keep hamburger menu positioned correctly on very small screens */
+    .canvas__open {
+        right: 10px;
+        top: 15px;
     }
 }
 </style>
@@ -332,12 +385,15 @@ rel="stylesheet">
     <div class="mobile-nav-content">
         <ul>
             <li>
-                <a href="/shop" class="dropdown-toggle" data-target="shop-dropdown">Shop</a>
-                <div class="mobile-dropdown" id="shop-dropdown">
-                    <a href="/aboutUs">About Us</a>
-                    <a href="/privacyPolicy">Privacy Policy</a>
-                    <a href="/shippingPolicy">Shipping Policy</a>
-                    <a href="/termsAndConditions">Terms And Conditions</a>
+                <div class="dropdown-wrapper">
+                    <a href="/shop" class="main-link">Shop</a>
+                    <button class="dropdown-toggle" data-target="shop-dropdown"></button>
+                    <div class="mobile-dropdown" id="shop-dropdown">
+                        <a href="/aboutUs">About Us</a>
+                        <a href="/privacyPolicy">Privacy Policy</a>
+                        <a href="/shippingPolicy">Shipping Policy</a>
+                        <a href="/termsAndConditions">Terms And Conditions</a>
+                    </div>
                 </div>
             </li>
             <li><a href="/newArrivals">New Arrivals</a></li>
@@ -369,7 +425,7 @@ rel="stylesheet">
                 <% } else { %>
                     <a href="/login" class="sign-in-link"><img src="img/icon/login.png" alt=""></a>
                     <% } %>
-        1</div>
+        </div>
     </div>
 </div>
 

@@ -81,7 +81,6 @@ const getSingleOrderPage = async (req, res) => {
         const userId = req.session.user;
         const { productId, variant, variantStock, quantity = 1 } = req.body;
         
-        console.log("Request body:", req.body); // Debug log
         
         if (!userId) return res.redirect('/login');
         if (!productId || !variant || !variantStock) {
@@ -95,7 +94,6 @@ const getSingleOrderPage = async (req, res) => {
         const product = await Product.findById(productId);
         if (!product) return res.redirect('/shop');
         
-        // Check if selected variant has enough stock
         const availableStock = product.variants?.get(variant) || 0;
         if (availableStock < quantity) {
             return res.redirect('/shop?error=insufficient_stock');
@@ -104,7 +102,6 @@ const getSingleOrderPage = async (req, res) => {
         const coupons = await Coupon.find();
         console.log("coupons are ", coupons);
         
-        // Fix: Use quantity for price calculation, not stock
         const totalPrice = product.salePrice * parseInt(quantity);
         
         const item = {
@@ -165,7 +162,6 @@ const getSingleOrderPage = async (req, res) => {
       
       const orderQty = Number(quantity);
         
-        // ✅ Fix: Check variant-specific stock
         const availableStock = product.variants.get(variant) || 0;
         console.log(`Stock check - Size: ${variant}, Available: ${availableStock}, Requested: ${orderQty}`);
         
@@ -175,8 +171,7 @@ const getSingleOrderPage = async (req, res) => {
             });
         }
       
-      // Ensure selected data is being passed correctly
-      console.log('Selected Address:', selected);
+      // console.log('Selected Address:', selected);
       
       // Create an address object with only the required fields
       const address = {
@@ -195,12 +190,11 @@ const getSingleOrderPage = async (req, res) => {
         quantity: orderQty,
         price: product.salePrice,
         variant: { 
-                size: variant || null // Add fallback but investigate why variant is undefined
+                size: variant || null 
             },
             status: 'processing'
       };
       
-      // Calculate pricing details
       const originalPrice = product.regularPrice * orderQty;
       const salePrice = product.salePrice * orderQty;
       const productDiscount = originalPrice - salePrice;
@@ -245,7 +239,6 @@ const getSingleOrderPage = async (req, res) => {
       await newOrder.save();
       console.log('Saved order variant:', newOrder.orderedItems[0].variant);
         
-        // ✅ Fix: Update variant-specific stock
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
             { $inc: { [`variants.${variant}`]: -orderQty } },
@@ -437,8 +430,8 @@ const getSingleOrderPage = async (req, res) => {
       if (!userId) return res.redirect('/login');
   
       const searchTerm = req.query.search || '';
-      const page = parseInt(req.query.page) || 1;   // default to page 1
-      const limit = 5; // items per page
+      const page = parseInt(req.query.page) || 1;   
+      const limit = 5; 
       const skip = (page - 1) * limit;
       const regex = new RegExp(searchTerm, 'i');
   
@@ -591,7 +584,6 @@ const getSingleOrderPage = async (req, res) => {
       order.cancelReason = typeof reason === 'string' ? reason : 'No reason provided';
       await order.save();
   
-      // Debug log
       console.log('Cancel refund details:', {
         orderId: order.orderId,
         totalRefundAmount,
@@ -873,9 +865,6 @@ const getSingleOrderPage = async (req, res) => {
         });
       }
 
-//       console.log("Cart items length: ", cart.items.length);
-// console.log("Cart items: ", cart.items);
-  
       // Fetch selected address
       console.log("Selected Address:", selectedAddress);
       const addressDoc = await Address.findOne({ 'address._id': selectedAddress });
@@ -922,8 +911,6 @@ const getSingleOrderPage = async (req, res) => {
 
       // console.log('cartItems :',cartItems)
 
-      // const productQuantity =cartItems.reduce((acc, item) => acc += item.quantity, 0);
-      // console.log("items total quantity ",productQuantity)
 
       res.render('paymentcart', {
         user,

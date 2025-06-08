@@ -35,7 +35,7 @@ async (accessToken, refreshToken, profile, done) => {
 
 passport.serializeUser((user, done) => {
   console.log('🔄 SERIALIZING USER:', user._id);
-  done(null, user._id); // Note: use user._id instead of user.id
+  done(null, user._id); 
 });
 
 passport.deserializeUser(async (id, done) => {

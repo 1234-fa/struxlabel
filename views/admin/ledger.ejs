@@ -1,12 +1,17 @@
 <%- include("../../views/partials/admin/header") %>
 
-<div class="container-fluid ">
-  <div class="row">  
-    <main >
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom">
+<div class="container-fluid">
+  <div class="row">
+    <main>
+      <div
+        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"
+      >
         <h1 class="h2">Ledger Book</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
-          <button id="printLedger" class="btn btn-sm btn-outline-secondary me-2">
+          <button
+            id="printLedger"
+            class="btn btn-sm btn-outline-secondary me-2"
+          >
             <i class="bi bi-printer"></i> Print
           </button>
           <button id="exportCSV" class="btn btn-sm btn-outline-secondary">
@@ -14,37 +19,53 @@
           </button>
         </div>
       </div>
-      
+
       <!-- Date Filter -->
       <div class="card mb-4">
         <div class="card-body">
           <form action="/admin/ledger" method="GET" class="row g-3">
             <div class="col-md-4">
               <label for="startDate" class="form-label">Start Date</label>
-              <input type="date" class="form-control" id="startDate" name="startDate" value="<%= startDate %>">
+              <input
+                type="date"
+                class="form-control"
+                id="startDate"
+                name="startDate"
+                value="<%= startDate %>"
+              />
             </div>
             <div class="col-md-4">
               <label for="endDate" class="form-label">End Date</label>
-              <input type="date" class="form-control" id="endDate" name="endDate" value="<%= endDate %>">
+              <input
+                type="date"
+                class="form-control"
+                id="endDate"
+                name="endDate"
+                value="<%= endDate %>"
+              />
             </div>
             <div class="col-md-4 d-flex align-items-end">
-              <button type="submit" class="btn btn-primary">Apply Filter</button>
+              <button type="submit" class="btn btn-primary">
+                Apply Filter
+              </button>
             </div>
           </form>
         </div>
       </div>
-      
+
       <!-- Summary Section -->
       <div class="row mb-4">
         <div class="col-md-3 mb-3">
           <div class="card text-white bg-primary">
             <div class="card-body">
               <h5 class="card-title">Total Sales</h5>
-              <p class="card-text fs-2">₹<%= summary.totalSales.toFixed(2) %></p>
+              <p class="card-text fs-2">
+                ₹<%= summary.totalSales.toFixed(2) %>
+              </p>
             </div>
           </div>
         </div>
-        
+
         <div class="col-md-3 mb-3">
           <div class="card text-white bg-success">
             <div class="card-body">
@@ -53,26 +74,30 @@
             </div>
           </div>
         </div>
-        
+
         <div class="col-md-3 mb-3">
           <div class="card text-white bg-warning">
             <div class="card-body">
               <h5 class="card-title">Total Refunds</h5>
-              <p class="card-text fs-2">₹<%= summary.totalRefunds.toFixed(2) %></p>
+              <p class="card-text fs-2">
+                ₹<%= summary.totalRefunds.toFixed(2) %>
+              </p>
             </div>
           </div>
         </div>
-        
+
         <div class="col-md-3 mb-3">
           <div class="card text-white bg-info">
             <div class="card-body">
               <h5 class="card-title">Net Revenue</h5>
-              <p class="card-text fs-2">₹<%= summary.netRevenue.toFixed(2) %></p>
+              <p class="card-text fs-2">
+                ₹<%= summary.netRevenue.toFixed(2) %>
+              </p>
             </div>
           </div>
         </div>
       </div>
-      
+
       <!-- Ledger Table -->
       <div class="card">
         <div class="card-header">
@@ -96,50 +121,69 @@
               </thead>
               <tbody>
                 <% ledgerEntries.forEach(entry => { %>
-                  <tr>
-                    <td><%= new Date(entry.createdOn).toLocaleDateString() %></td>
-                    <td><a href="/admin/orders/<%= entry._id %>"><%= entry.orderId %></a></td>
-                    <td><%= entry.user ? entry.user.name : 'N/A' %></td>
-                    <td>
-                      <% if(entry.status === 'delivered') { %>
-                        <span class="badge bg-success"><%= entry.status %></span>
-                      <% } else if(entry.status === 'cancelled' || entry.status === 'returned') { %>
-                        <span class="badge bg-danger"><%= entry.status %></span>
-                      <% } else if(entry.status === 'shipped') { %>
-                        <span class="badge bg-primary"><%= entry.status %></span>
-                      <% } else { %>
-                        <span class="badge bg-secondary"><%= entry.status %></span>
-                      <% } %>
-                    </td>
-                    <td><%= entry.paymentMethod.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) %></td>
-                    <td>
-                      <% if(entry.paymentStatus === 'Paid') { %>
-                        <span class="badge bg-success"><%= entry.paymentStatus %></span>
-                      <% } else if(entry.paymentStatus === 'Failed') { %>
-                        <span class="badge bg-danger"><%= entry.paymentStatus %></span>
-                      <% } else if(entry.paymentStatus === 'Refunded') { %>
-                        <span class="badge bg-warning text-dark"><%= entry.paymentStatus %></span>
-                      <% } else { %>
-                        <span class="badge bg-secondary"><%= entry.paymentStatus %></span>
-                      <% } %>
-                    </td>
-                    <td class="text-end">₹<%= entry.finalAmount ? entry.finalAmount.toFixed(2) : '0.00' %></td>
-                    <td class="text-end text-danger">
-                      <% if(entry.refundAmount && entry.refundAmount > 0) { %>
-                        -₹<%= entry.refundAmount.toFixed(2) %>
-                      <% } else { %>
-                        ₹0.00
-                      <% } %>
-                    </td>
-                    <td class="text-end">
-                      ₹<%= ((entry.finalAmount || 0) - (entry.refundAmount || 0)).toFixed(2) %>
-                    </td>
-                  </tr>
-                <% }) %>
-                <% if (ledgerEntries.length === 0) { %>
-                  <tr>
-                    <td colspan="9" class="text-center">No records found for the selected date range</td>
-                  </tr>
+                <tr>
+                  <td><%= new Date(entry.createdOn).toLocaleDateString() %></td>
+                  <td>
+                    <a href="/admin/orders/<%= entry._id %>"
+                      ><%= entry.orderId %></a
+                    >
+                  </td>
+                  <td><%= entry.user ? entry.user.name : 'N/A' %></td>
+                  <td>
+                    <% if(entry.status === 'delivered') { %>
+                    <span class="badge bg-success"><%= entry.status %></span>
+                    <% } else if(entry.status === 'cancelled' || entry.status
+                    === 'returned') { %>
+                    <span class="badge bg-danger"><%= entry.status %></span>
+                    <% } else if(entry.status === 'shipped') { %>
+                    <span class="badge bg-primary"><%= entry.status %></span>
+                    <% } else { %>
+                    <span class="badge bg-secondary"><%= entry.status %></span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <%= entry.paymentMethod.replace(/_/g, ' ').replace(/\b\w/g,
+                    c => c.toUpperCase()) %>
+                  </td>
+                  <td>
+                    <% if(entry.paymentStatus === 'Paid') { %>
+                    <span class="badge bg-success"
+                      ><%= entry.paymentStatus %></span
+                    >
+                    <% } else if(entry.paymentStatus === 'Failed') { %>
+                    <span class="badge bg-danger"
+                      ><%= entry.paymentStatus %></span
+                    >
+                    <% } else if(entry.paymentStatus === 'Refunded') { %>
+                    <span class="badge bg-warning text-dark"
+                      ><%= entry.paymentStatus %></span
+                    >
+                    <% } else { %>
+                    <span class="badge bg-secondary"
+                      ><%= entry.paymentStatus %></span
+                    >
+                    <% } %>
+                  </td>
+                  <td class="text-end">
+                    ₹<%= entry.finalAmount ? entry.finalAmount.toFixed(2) :
+                    '0.00' %>
+                  </td>
+                  <td class="text-end text-danger">
+                    <% if(entry.refundAmount && entry.refundAmount > 0) { %>
+                    -₹<%= entry.refundAmount.toFixed(2) %> <% } else { %> ₹0.00
+                    <% } %>
+                  </td>
+                  <td class="text-end">
+                    ₹<%= ((entry.finalAmount || 0) - (entry.refundAmount ||
+                    0)).toFixed(2) %>
+                  </td>
+                </tr>
+                <% }) %> <% if (ledgerEntries.length === 0) { %>
+                <tr>
+                  <td colspan="9" class="text-center">
+                    No records found for the selected date range
+                  </td>
+                </tr>
                 <% } %>
               </tbody>
             </table>
@@ -152,57 +196,63 @@
 
 <script>
   // Print Ledger
-  document.getElementById('printLedger').addEventListener('click', function() {
-    const printContents = document.getElementById('ledgerTable').innerHTML;
+  document.getElementById("printLedger").addEventListener("click", function () {
+    const printContents = document.getElementById("ledgerTable").innerHTML;
     const originalContents = document.body.innerHTML;
-    
+
     // Create a print-friendly view
     document.body.innerHTML = `
       <div style="padding: 20px;">
         <h2 style="text-align: center;">Ledger Book</h2>
-        <p style="text-align: center;">Period: ${document.getElementById('startDate').value} to ${document.getElementById('endDate').value}</p>
+        <p style="text-align: center;">Period: ${
+          document.getElementById("startDate").value
+        } to ${document.getElementById("endDate").value}</p>
         ${printContents}
       </div>
     `;
-    
+
     window.print();
-    
+
     // Restore original content
     document.body.innerHTML = originalContents;
   });
-  
+
   // Export to CSV
-  document.getElementById('exportCSV').addEventListener('click', function() {
-    const table = document.querySelector('table');
+  document.getElementById("exportCSV").addEventListener("click", function () {
+    const table = document.querySelector("table");
     let csv = [];
-    const rows = table.querySelectorAll('tr');
-    
+    const rows = table.querySelectorAll("tr");
+
     for (let i = 0; i < rows.length; i++) {
-      const row = [], cols = rows[i].querySelectorAll('td, th');
-      
+      const row = [],
+        cols = rows[i].querySelectorAll("td, th");
+
       for (let j = 0; j < cols.length; j++) {
         // Get text content and clean it up for CSV
-        let data = cols[j].textContent.trim().replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
+        let data = cols[j].textContent
+          .trim()
+          .replace(/(\r\n|\n|\r)/gm, " ")
+          .replace(/"/g, '""');
         row.push(`"${data}"`);
       }
-      
-      csv.push(row.join(','));
+
+      csv.push(row.join(","));
     }
-    
+
     // Create CSV file
-    const csvContent = csv.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvContent = csv.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    
+
     // Create download link
-    const link = document.createElement('a');
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    
+    const link = document.createElement("a");
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
     link.href = url;
-    link.setAttribute('download', `ledger_${startDate}_to_${endDate}.csv`);
-    link.style.visibility = 'hidden';
-    
+    link.setAttribute("download", `ledger_${startDate}_to_${endDate}.csv`);
+    link.style.visibility = "hidden";
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

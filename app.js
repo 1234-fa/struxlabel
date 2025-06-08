@@ -10,7 +10,7 @@ const adminRouter=require('./routes/adminRouter')
 const db=require("./config/db");
 db()
 
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
 

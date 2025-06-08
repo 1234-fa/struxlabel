@@ -32,51 +32,37 @@ const loadShoppingPage = async (req, res) => {
     const categoryIds = categories.map((category) => category._id.toString());
     // console.log('Category IDs:', categoryIds);
     
-    // Pagination
     const page = parseInt(req.query.page) || 1;
     const limit = 9;
     const skip = (page - 1) * limit;
     
-    // Get products with better error handling
     const productQuery = {
       isBlocked: false,
       category: { $in: categoryIds }   
     };
     
-    // console.log('Product query:', productQuery);
     
     const products = await Product.find(productQuery)
-      .sort({ createdOn: 1 }) // Changed to -1 for newest first
+      .sort({ createdOn: 1 })
       .skip(skip)
       .limit(limit)
-      .lean(); // Use lean() for better performance
-    
-    // console.log('Found products:', products.length);
+      .lean(); 
     
     // Count total products
     const totalProducts = await Product.countDocuments(productQuery);
     const totalPages = Math.ceil(totalProducts / limit);
     
-    // Get brands
+    
     const brands = await Brand.find({ isBlocked: false });
     // console.log('Found brands:', brands.length);
     
-    // Format categories
+    
     const categoriesWithIds = categories.map(category => ({
       _id: category._id,
       name: category.name
     }));
     
-    // Debug logging
-    // console.log('Rendering shop page with:', {
-    //   productsCount: products.length,
-    //   categoriesCount: categoriesWithIds.length,
-    //   brandsCount: brands.length,
-    //   totalProducts,
-    //   currentPage: page,
-    //   totalPages
-    // });
-    
+
     // Ensure products have required fields
     const safeProducts = products.map(product => ({
       ...product,
@@ -131,7 +117,7 @@ const loadNewArrivalPage = async (req, res) => {
       category: { $in: categoryIds }
     }).populate('category');
 
-    // Shuffle and paginate
+    
     const products = [...allProducts]
       .sort(() => 0.5 - Math.random())
       .slice(skip, skip + limit);
@@ -167,11 +153,10 @@ const getfilter = async (req, res) => {
     console.log("Search Value:", query);
     console.log("Sort By:", sort);
 
-    // Initialize the filter object
     let filter = {};
     let searchConditions = [];
 
-    // Add category filter if provided
+    
     if (category && category.length > 0) {
       filter.category = {
         $in: category.map(id => new mongoose.Types.ObjectId(id))
@@ -179,39 +164,29 @@ const getfilter = async (req, res) => {
       console.log("Added category filter:", JSON.stringify(filter.category));
     }
 
-    // Add brand filter if provided
     if (brand && brand.length > 0) {
-      // First, get brand names from brand IDs
       const brandDocs = await Brand.find({
         _id: { $in: brand.map(id => new mongoose.Types.ObjectId(id)) }
       });
       console.log("Found brand documents:", brandDocs);
       
       if (brandDocs.length > 0) {
-        // Extract brand names from the brand documents
         const brandNames = brandDocs.map(b => b.brandName);
         console.log("Brand names to filter by:", brandNames);
-        // Add brand names to filter
         filter.brand = { $in: brandNames };
       }
     }
 
-    // Add price filter if provided
     if (price && price.length > 0) {
-      // For price filters using $or for multiple ranges
       const priceConditions = price.map(range => {
         const [min, max] = range.split('-').map(Number);
         return { salePrice: { $gte: min, $lte: max } };
       });
       
       if (priceConditions.length === 1) {
-        // If only one price range, no need for $or
         filter.salePrice = priceConditions[0].salePrice;
       } else if (priceConditions.length > 1) {
-        // Multiple price ranges need $or
-        // We need to handle this carefully if we also have search conditions
         if (filter.$or) {
-          // If $or already exists, we need to combine conditions differently
           filter.$and = [
             { $or: priceConditions },
             { $or: filter.$or }
@@ -224,28 +199,23 @@ const getfilter = async (req, res) => {
       console.log("Added price filter:", JSON.stringify(priceConditions));
     }
 
-    // Add search query filter if provided
     if (query && query.trim() !== '') {
-      const searchRegex = new RegExp(query.trim(), 'i'); // Case-insensitive search
+      const searchRegex = new RegExp(query.trim(), 'i'); 
       
       // Search in multiple fields
       searchConditions = [
         { productName: { $regex: searchRegex } },
         { description: { $regex: searchRegex } },
         { brand: { $regex: searchRegex } },
-        // Add more fields as needed
       ];
 
-      // Handle combining search with existing $or conditions (like price ranges)
       if (filter.$or) {
-        // If we already have $or conditions (like price ranges), combine them with $and
         filter.$and = [
-          { $or: filter.$or }, // Existing $or conditions (price ranges)
-          { $or: searchConditions } // Search conditions
+          { $or: filter.$or }, 
+          { $or: searchConditions } 
         ];
         delete filter.$or;
       } else {
-        // No existing $or conditions, so we can use $or directly for search
         filter.$or = searchConditions;
       }
       
@@ -257,7 +227,6 @@ const getfilter = async (req, res) => {
     // Build the query
     let productQuery = Product.find(filter);
 
-    // Add sorting if provided
     if (sort && sort.trim() !== '') {
       let sortObject = {};
       
@@ -293,7 +262,6 @@ const getfilter = async (req, res) => {
           console.log("Sorting by oldest first");
           break;
         default:
-          // Default sorting by price ascending if sort value is not recognized
           sortObject = { salePrice: 1 };
           console.log("Using default sorting (price ascending)");
           break;
@@ -302,7 +270,6 @@ const getfilter = async (req, res) => {
       productQuery = productQuery.sort(sortObject);
     }
 
-    // Execute the query with all filters and sorting
     const products = await productQuery.exec();
     
     console.log('products', products);
@@ -322,7 +289,6 @@ const getfilter = async (req, res) => {
       console.log("No products found with these filters");
     }
 
-    // Return the filtered and sorted products
     res.json({
       status: "success",
       count: products.length,
