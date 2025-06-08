@@ -156,7 +156,9 @@ const getfilter = async (req, res) => {
     let filter = {};
     let searchConditions = [];
 
-    
+    filter.isBlocked = false;
+    console.log("Added isBlocked filter - only showing unblocked products");
+
     if (category && category.length > 0) {
       filter.category = {
         $in: category.map(id => new mongoose.Types.ObjectId(id))
@@ -282,7 +284,8 @@ const getfilter = async (req, res) => {
           name: p.productName,
           brand: p.brand,
           category: p.category,
-          price: p.salePrice
+          price: p.salePrice,
+          isBlocked: p.isBlocked
         }))
       );
     } else {
