@@ -341,11 +341,11 @@ async function calculateRefundsAndTotals(order) {
     }
     
     // Calculate final amount for valid items (delivered + in progress)
-    let finalAmount = validSubtotal;
+    let finalAmount = order.finalAmount;
     
     if (validSubtotal > 0) {
         // Add delivery charge
-        finalAmount += order.deliveryCharge || 0;
+        // finalAmount += order.deliveryCharge || 0;
         
         // Apply coupon discount only if still valid
         if (couponStillValid) {

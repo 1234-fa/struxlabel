@@ -140,7 +140,7 @@ const downloadInvoice = async (req, res) => {
             discount: order.discount || 0,
             deliveryCharge: order.deliveryCharge || 0,
             totalPrice: order.totalPrice,
-            finalAmount: order.finalAmount,
+            finalAmount: order.finalAmount-order.refundAmount,
             refundAmount: order.refundAmount || 0
         };
         

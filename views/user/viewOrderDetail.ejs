@@ -301,12 +301,22 @@ const totalRefundAmount = cancelledAmount + returnedAmount;
         </div>
       <% } %>
 
+      <!-- Coupon Information -->
+      <% if (order.deliveryCharge) { %>
+        <div class="border-top pt-2 mt-2">
+          <div class="d-flex justify-content-between">
+            <span><strong>Delivery Charge:</strong></span>
+            <span class="text-success">₹<%= order.deliveryCharge.toFixed(2) %></span>
+          </div>
+        </div>
+      <% } %>
+
       <!-- Final Amounts -->
       <div class="border-top pt-2 mt-3">
         <% if (activeItems.length > 0) { %>
           <div class="d-flex justify-content-between">
-            <span><strong>Current Order Amount:</strong></span>
-            <span class="text-success"><strong>₹<%= finalActiveAmount.toFixed(2) %></strong></span>
+            <span><strong> Order Amount:</strong></span>
+            <span class="text-success"><strong>₹<%= order.finalAmount.toFixed(2) %></strong></span>
           </div>
         <% } %>
         
