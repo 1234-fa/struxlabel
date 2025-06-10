@@ -33,27 +33,21 @@ router.get('/', userController.loadHomepage);
 router.post('/search',userAuth,userController.searchProducts);
 
 
-router.get('/auth/google', passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  prompt: 'select_account'
-}));
+router.get('/auth/google',passport.authenticate('google',{scope:['profile','email'],prompt: 'select_account'}));
 router.get('/auth/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: '/login',
-    failureFlash: true
-  }),
+  passport.authenticate('google', { failureRedirect: '/signup' }),
   (req, res) => {
-    req.session.user = req.user._id;
-    req.session.save(err => {
-      if (err) {
-        console.error('Session save error:', err);
-        return res.redirect('/login?error=session');
-      }
+    
+    if (req.user && req.isAuthenticated()) {
+        req.session.user = req.user;
+      console.log('✅ User authenticated, redirecting to home');
       res.redirect('/');
-    });
+    } else {
+      console.log('❌ Authentication failed - no user in session');
+      res.redirect('/signup');
+    }
   }
 );
-
 
 
 router.get('/forgot-password',profileController.getForgotPassPage)
