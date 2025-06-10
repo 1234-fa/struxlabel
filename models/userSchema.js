@@ -9,22 +9,22 @@ const userSchema = new Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
+    // unique: true,
   },
   phone: {
-    type: String,
-    required: false,
-    // unique: true,
-    sparse: true,
-    default: null,
-  },
+  type: String,
+  required: false,
+  // unique: true,
+  // sparse: true,
+  // default: null,
+},
   profileImage: {
     type: String,
     default: "img/profile_Picture.png",
   },
   googleId: {
     type: String,
-    unique: true,
+    // unique: true,
     sparse: true,
   },
   password: {
