@@ -37,7 +37,7 @@ router.get('/google', passport.authenticate('google', {
   scope: ['profile', 'email'],
   prompt: 'select_account'
 }));
-router.get('/google/callback',
+router.get('/auth/google/callback',
   passport.authenticate('google', {
     failureRedirect: '/login',
     failureFlash: true
