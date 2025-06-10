@@ -33,7 +33,7 @@ router.get('/', userController.loadHomepage);
 router.post('/search',userAuth,userController.searchProducts);
 
 
-router.get('/google', passport.authenticate('google', {
+router.get('/auth/google', passport.authenticate('google', {
   scope: ['profile', 'email'],
   prompt: 'select_account'
 }));
