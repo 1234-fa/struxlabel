@@ -33,20 +33,36 @@ router.get('/', userController.loadHomepage);
 router.post('/search',userAuth,userController.searchProducts);
 
 
-router.get('/auth/google',passport.authenticate('google',{scope:['profile','email'],prompt: 'select_account'}));
-router.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/signup' }),
-  (req, res) => {
+router.get('/auth/google', (req, res, next) => {
+
+    const originalRedirect = res.redirect;
+    res.redirect = function(url) {
+        console.log('🔄 Redirecting to:', url);
+        originalRedirect.call(this, url);
+    };
     
-    if (req.user && req.isAuthenticated()) {
-        req.session.user = req.user;
-      console.log('✅ User authenticated, redirecting to home');
-      res.redirect('/');
-    } else {
-      console.log('❌ Authentication failed - no user in session');
-      res.redirect('/signup');
+    next();
+}, passport.authenticate('google', {scope: ['profile', 'email'], prompt: 'select_account'}));
+
+
+
+router.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/signup' }),
+    (req, res) => {
+        try {
+            if (req.user && req.isAuthenticated()) {
+                req.session.user = req.user;
+                console.log('✅ User authenticated, redirecting to home');
+                res.redirect('/');
+            } else {
+                console.log('❌ Authentication failed - no user in session');
+                res.redirect('/signup');
+            }
+        } catch (error) {
+            console.error('Callback route error:', error);
+            res.redirect('/pagenotfound'); // Make sure this matches your route
+        }
     }
-  }
 );
 
 
