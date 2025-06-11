@@ -6,11 +6,11 @@ const downloadInvoice = async (req, res) => {
     try {
         const { orderId } = req.params;
         
-        //  Fetch order with all necessary populated fields
+        //  Fetch order with all necessary populated fields - Added realPrice and salePrice
         const order = await Order.findById(orderId)
             .populate('user', 'name')
-            .populate('orderedItems.product', 'productName')
-            .populate('coupon', 'code discountPercentage discountAmount');
+            .populate('orderedItems.product', 'productName regularPrice salePrice offerPercentage')
+            .populate('coupon', 'code discount price');
         
         if (!order) {
             return res.status(StatusCode.NOT_FOUND).send('Order not found');
@@ -101,8 +101,8 @@ const downloadInvoice = async (req, res) => {
         //  Prepare coupon information with price threshold
         const couponInfo = order.coupon ? {
             code: order.coupon.code,
-            discount: order.coupon.discountPercentage || order.coupon.discountAmount,
-            price: order.coupon.minimumPurchaseAmount || order.coupon.price || 0
+            discount: order.coupon.discount,
+            price: order.coupon.price || 0
         } : null;
         
         //  Format order status
@@ -112,7 +112,7 @@ const downloadInvoice = async (req, res) => {
             ).join(' ');
         };
         
-        //  Prepare formatted order data - include invoiceable items
+        //  Prepare formatted order data - include invoiceable items with pricing details
         const formattedOrder = {
             _id: order.orderId,
             customerName: order.user.name,
@@ -128,12 +128,15 @@ const downloadInvoice = async (req, res) => {
             razorpayPaymentId: order.razorpayPaymentId,
             status: formatOrderStatus(order.status),
             coupon: couponInfo,
-            // Include all invoiceable items (paid items)
+            // Include all invoiceable items with pricing details
             items: order.orderedItems.map(i => ({
                 _id: i._id,
                 name: i.product.productName,
                 quantity: i.quantity,
                 price: i.price,
+                realPrice: i.product.regularPrice || i.price,
+                salePrice: i.product.salePrice || i.price,
+                offerPercentage: i.product.offerPercentage || 0,
                 status: i.status,
                 variant: i.variant ? i.variant.size : null
             })),

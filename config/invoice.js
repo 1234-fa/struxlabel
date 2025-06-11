@@ -106,17 +106,18 @@ async function generateInvoice(order, res) {
     // Table positioning with proper spacing
     const tableTop = currentY + 10;
     
-    // Table Header with better alignment
+    // Table Header with better alignment - Updated to include pricing columns
     doc
         .font('Helvetica-Bold')
-        .fontSize(9)
+        .fontSize(8)
         .fillColor('#444444')
         .text('Product Name', 40, tableTop)
-        .text('Qty', 280, tableTop, { width: 30, align: 'center' })
-        .text('Price', 320, tableTop, { width: 50, align: 'right' })
-        .text('Total', 380, tableTop, { width: 50, align: 'right' })
-        .text('Status', 440, tableTop, { width: 60, align: 'center' })
-        .text('Refund', 510, tableTop, { width: 50, align: 'right' })
+        .text('Real Price', 160, tableTop, { width: 45, align: 'right' })
+        .text('Sale Price', 210, tableTop, { width: 45, align: 'right' })
+        .text('Qty', 260, tableTop, { width: 20, align: 'center' })
+        .text('Total', 285, tableTop, { width: 40, align: 'right' })
+        .text('Status', 330, tableTop, { width: 50, align: 'center' })
+        .text('Refund', 385, tableTop, { width: 40, align: 'right' })
         .fillColor('black');
     
     // Divider under table header
@@ -125,7 +126,7 @@ async function generateInvoice(order, res) {
     // Calculate refunds and totals
     const calculations = await calculateRefundsAndTotals(order);
     
-    // Table Rows with proper spacing - Show all invoiceable items
+    // Table Rows with proper spacing - Show all invoiceable items with pricing details
     let y = tableTop + 25;
     const invoiceableStatuses = [
         'confirmed', 'processing', 'shipped', 'shipping', 'in transit', 
@@ -140,70 +141,89 @@ async function generateInvoice(order, res) {
             
             doc
                 .font('Helvetica')
-                .fontSize(8)
+                .fontSize(7)
                 .fillColor('black')
-                .text(item.name, 40, y, { width: 230 })
-                .text(item.quantity.toString(), 280, y, { width: 30, align: 'center' })
-                .text(`₹${item.price}`, 320, y, { width: 50, align: 'right' })
-                .text(`₹${lineTotal.toFixed(2)}`, 380, y, { width: 50, align: 'right' })
+                .text(item.name, 40, y, { width: 115 })
+                .text(`₹${item.realPrice}`, 160, y, { width: 45, align: 'right' })
+                .text(`₹${item.salePrice}`, 210, y, { width: 45, align: 'right' })
+                .text(item.quantity.toString(), 260, y, { width: 20, align: 'center' })
+                .text(`₹${lineTotal.toFixed(2)}`, 285, y, { width: 40, align: 'right' })
                 .fillColor(statusColor)
-                .text(item.status.toUpperCase(), 440, y, { width: 60, align: 'center' })
+                .text(item.status.toUpperCase(), 330, y, { width: 50, align: 'center' })
                 .fillColor(refundAmount > 0 ? '#d32f2f' : 'black')
-                .text(refundAmount > 0 ? `₹${refundAmount.toFixed(2)}` : '-', 510, y, { width: 50, align: 'right' });
+                .text(refundAmount > 0 ? `₹${refundAmount.toFixed(2)}` : '-', 385, y, { width: 40, align: 'right' });
             y += 18;
         }
     });
     
     // Summary section with proper alignment
     y += 15;
-    doc.moveTo(350, y).lineTo(555, y).stroke();
+    doc.moveTo(300, y).lineTo(555, y).stroke();
     y += 15;
     
-    // Subtotal
+    // Subtotal (at real prices)
     doc
         .font('Helvetica')
         .fontSize(9)
         .fillColor('black')
-        .text('Subtotal:', 350, y)
-        .text(`₹${calculations.subtotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+        .text('Subtotal (Real Price):', 300, y)
+        .text(`₹${calculations.realPriceSubtotal.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
     y += 15;
     
-    // Delivery Charge
-    if (order.deliveryCharge > 0) {
+    // Offer Discount (if any)
+    if (calculations.totalOfferDiscount > 0) {
         doc
-            .text('Delivery Charge:', 350, y)
-            .text(`₹${order.deliveryCharge.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+            .fillColor('#ff5722')
+            .text('Offer Discount:', 300, y)
+            .text(`-₹${calculations.totalOfferDiscount.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
         y += 15;
     }
     
-    // Coupon Discount
+    // Subtotal (after offer discount)
+    doc
+        .font('Helvetica')
+        .fontSize(9)
+        .fillColor('black')
+        .text('Subtotal (After Offer):', 300, y)
+        .text(`₹${calculations.subtotal.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
+    y += 15;
+    
+    // Delivery Charge (only if > 0)
+    if (order.deliveryCharge > 0) {
+        doc
+            .text('Delivery Charge:', 300, y)
+            .text(`₹${order.deliveryCharge.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
+        y += 15;
+    }
+    
+    // Coupon Discount (only if > 0)
     if (calculations.applicableCouponDiscount > 0) {
         doc
             .fillColor('#4caf50')
-            .text('Coupon Discount:', 350, y)
-            .text(`-₹${calculations.applicableCouponDiscount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+            .text('Coupon Discount:', 300, y)
+            .text(`-₹${calculations.applicableCouponDiscount.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
         y += 15;
     }
     
-    // Total Refund
+    // Total Refund (only if > 0)
     if (calculations.totalRefund > 0) {
         doc
             .fillColor('#d32f2f')
-            .text('Total Refund:', 350, y)
-            .text(`-₹${calculations.totalRefund.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+            .text('Total Refund:', 300, y)
+            .text(`-₹${calculations.totalRefund.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
         y += 15;
     }
     
     // Final Amount with proper emphasis
-    doc.moveTo(350, y).lineTo(555, y).stroke();
+    doc.moveTo(300, y).lineTo(555, y).stroke();
     y += 15;
     
     doc
         .font('Helvetica-Bold')
         .fontSize(11)
         .fillColor('#000000')
-        .text('Final Amount:', 350, y)
-        .text(`₹${calculations.finalAmount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+        .text('Final Amount:', 300, y)
+        .text(`₹${calculations.finalAmount.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
     
     // Order status information for shipping/processing orders
     y += 30;
@@ -299,7 +319,7 @@ async function generateInvoice(order, res) {
     doc.end();
 }
 
-// Updated calculation function to handle shipping/processing items
+//  calculation function to handle pricing details and discounts
 async function calculateRefundsAndTotals(order) {
     // Items that are delivered or in progress (confirmed, processing, shipped, etc.)
     const deliveredItems = order.items.filter(item => item.status.toLowerCase() === 'delivered');
@@ -316,58 +336,83 @@ async function calculateRefundsAndTotals(order) {
         item.status.toLowerCase() === 'return approved'
     );
     
-    // Calculate valid items subtotal (delivered + in progress)
-    const validSubtotal = validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Calculate subtotals with pricing details
+    const displayItems = order.items.filter(item => [
+        'confirmed', 'processing', 'shipped', 'shipping', 'in transit', 
+        'out for delivery', 'delivered', 'return approved', 'cancelled', 'returned'
+    ].includes(item.status.toLowerCase()));
     
-    // Check if remaining valid items still qualify for coupon
+    // 1. Use sale prices for subtotal (offer discount is already applied to sale price)
+    const subtotal = displayItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
+    
+    // 2. For display purposes only - show what the original price would have been
+    const realPriceSubtotal = displayItems.reduce((sum, item) => sum + (item.realPrice * item.quantity), 0);
+    
+    // 3. Calculate offer discount for display (difference between real and sale price)
+    const totalOfferDiscount = displayItems.reduce((sum, item) => {
+        const offerDiscount = (item.realPrice - item.salePrice) * item.quantity;
+        return sum + Math.max(0, offerDiscount);
+    }, 0);
+    
+    // 4. Calculate valid items subtotal using SALE PRICES (for coupon eligibility)
+    const validSubtotal = validItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
+    
+    // 5. Check if remaining valid items still qualify for coupon (based on sale price total)
     let couponStillValid = false;
     if (order.coupon && order.coupon.price && validSubtotal > 0) {
         couponStillValid = validSubtotal >= order.coupon.price;
     }
     
-    // Calculate refunds for each cancelled/returned/return approved item
+    // 6. Calculate refunds for each cancelled/returned/return approved item
     const itemRefunds = {};
     let totalRefund = 0;
     
     const refundableItems = [...cancelledItems, ...returnApprovedItems];
     
     for (const item of refundableItems) {
-        const itemAmount = item.price * item.quantity;
-        // Always refund original item price only
+        // Use sale price for refund calculation (since that's what was actually charged)
+        const itemAmount = item.salePrice * item.quantity;
         const refundAmount = itemAmount;
         
         itemRefunds[item._id] = Math.round(refundAmount * 100) / 100;
         totalRefund += refundAmount;
     }
     
-    // Calculate final amount for valid items (delivered + in progress)
-    let finalAmount = order.finalAmount;
-    
-    if (validSubtotal > 0) {
-        // Add delivery charge
-        // finalAmount += order.deliveryCharge || 0;
-        
-        // Apply coupon discount only if still valid
-        if (couponStillValid) {
-            finalAmount -= order.discount || 0;
+    // 7. Calculate coupon discount that should be applied
+    let applicableCouponDiscount = 0;
+    if (couponStillValid && order.coupon) {
+        // Apply coupon based on valid items subtotal (sale prices)
+        if (order.coupon.discount) {
+            // Percentage discount
+            applicableCouponDiscount = (validSubtotal * order.coupon.discount) / 100;
+        } else if (order.discount) {
+            // Fixed discount from order
+            applicableCouponDiscount = order.discount;
         }
     }
     
-    // For display purposes - show all invoiceable items in subtotal
-    const displaySubtotal = order.items
-        .filter(item => [
-            'confirmed', 'processing', 'shipped', 'shipping', 'in transit', 
-            'out for delivery', 'delivered', 'return approved', 'cancelled', 'returned'
-        ].includes(item.status.toLowerCase()))
-        .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // 8. Calculate final amount
+    let finalAmount = validSubtotal; // Start with valid items at sale prices
+    
+    
+    // Apply coupon discount
+    if (applicableCouponDiscount > 0) {
+        finalAmount -= applicableCouponDiscount;
+    }
+    
+    // Ensure final amount is not negative
+    finalAmount = Math.max(0, finalAmount);
     
     return {
-        subtotal: displaySubtotal,
+        subtotal: subtotal, // This is at sale prices (offer already applied)
+        realPriceSubtotal,
+        totalOfferDiscount,
         totalRefund: Math.round(totalRefund * 100) / 100,
-        finalAmount: Math.max(0, Math.round(finalAmount * 100) / 100),
+        finalAmount: Math.round(finalAmount * 100) / 100,
         itemRefunds,
         couponStillValid,
-        applicableCouponDiscount: couponStillValid ? (order.discount || 0) : 0
+        applicableCouponDiscount: Math.round(applicableCouponDiscount * 100) / 100,
+        validSubtotal: Math.round(validSubtotal * 100) / 100 // For debugging
     };
 }
 

@@ -153,7 +153,8 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       const quantity = document.querySelector('input[name="quantity"]').value;
       const variant = document.querySelector('input[name="variant"]').value;
       const totalPrice = document.querySelector('input[name="totalPrice"]').value;
-      const couponId = document.querySelector('input[name="couponId"]').value;
+      const couponIdInput = document.querySelector('input[name="couponId"]');
+      const couponId = couponIdInput?.value || null;
       const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
 
       const selected = {
@@ -178,6 +179,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
           totalPrice,
           deliveryCharge,
           selected,
+          couponId : couponId || null
         })
       });
       
@@ -205,7 +207,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
               variant,
               deliveryCharge,
               totalPrice,
-              couponId
+              couponId : couponId || null
             })
           });
           const data = await res2.json();

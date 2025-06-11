@@ -31,7 +31,7 @@ const getorderFailurePage =async (req,res)=>{
 // Create Razorpay order
 const createRazorpayOrder = async (req, res) => {
     try {
-      const { productId, quantity,variant, totalPrice ,deliveryCharge} = req.body;
+      const { productId, quantity,variant,couponId, totalPrice ,deliveryCharge} = req.body;
       const userId = req.session.user;
       
       if (!userId) {
@@ -49,7 +49,8 @@ const createRazorpayOrder = async (req, res) => {
         notes: {
           productId,
           quantity,
-          userId
+          userId,
+          couponId: couponId || ''
         }
       });
       

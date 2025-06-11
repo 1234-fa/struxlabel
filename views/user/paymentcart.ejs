@@ -192,7 +192,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       body: JSON.stringify({
         cartItems,
         totalPrice,
-        couponId,
+        couponId : couponId || null,
         deliveryCharge,
         selected
       })
@@ -219,7 +219,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
             razorpay_signature: response.razorpay_signature,
             cartItems,
             totalPrice,
-            couponId,
+            couponId: couponId || null,
             selected,
             deliveryCharge,
             totalDiscount
@@ -242,7 +242,7 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       },
       modal: {
     ondismiss: function () {
-      // 🔴 Redirect on modal close or cancellation
+      // Redirect on modal close or cancellation
       window.location.href = "/order-failure";
     }
   }

@@ -151,38 +151,44 @@
   }
 
   /* Pagination */
-  .product__pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 3rem;
-    gap: 8px;
-  }
+  /* Simplified Pagination Styles */
+.product__pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+  gap: 0.5rem;
+}
 
-  .product__pagination a {
-    padding: 0.6rem 1rem;
-    background-color: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 0.5rem;
-    text-decoration: none;
-    color: #495057;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
+.product__pagination a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  color: #495057;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
 
-  .product__pagination a:hover {
-    background-color: #0d6efd;
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
+.product__pagination a:hover {
+  background-color: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+}
 
-  .product__pagination a.active {
-    background-color: #0d6efd;
-    color: #fff;
-    border-color: #0d6efd;
-    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.25);
-  }
+.product__pagination a.active {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #000000;
+}
 
   /* Responsive adjustments */
   @media (max-width: 576px) {
@@ -210,7 +216,7 @@
        <div class="container">
            <div class="breadcrumb">
                <a href="/" rel="nofollow">Home</a>
-               <span></span> Shop
+               <span></span> <a href="/shop" rel="nofollow">Shop</a>
                <span></span> My Wishlist
            </div>
        </div>
