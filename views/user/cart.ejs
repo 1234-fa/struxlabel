@@ -1,389 +1,402 @@
 <%- include("../../views/partials/user/header") %>
 <style>
-/* Layout and grid */
-.cart-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
+/* Custom Bootstrap overrides and minimal styles */
+body {
+  background-color: #f8f9fa;
+  font-family: 'Roboto', Arial, sans-serif;
 }
 
 .cart-card {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
-  max-width: 400px;
-  width: 100%;
-  display: flex;
-  gap: 15px;
-  padding: 15px;
-  align-items: flex-start;
-  position: relative; /* Added for absolute positioning of remove button */
-}
-
-/* Image & button container */
-.cart-image-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.image-container {
-  width: 120px;
-}
-
-.image-container img {
-  width: 100%;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.image-container img:hover {
-  transform: scale(1.03);
-}
-
-/* Remove Button - Moved to top right of card */
-.remove-btn-form {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-}
-
-.remove-btn {
-  background-color: rgba(255, 0, 0, 0.85);
-  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.08);
   border: none;
-  border-radius: 50%;
-  width: 20px ;
-  height: 20px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
 }
 
-.remove-btn:hover {
-  background-color: rgba(255, 0, 0, 1);
+.item-image {
+  width: 100px;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
 }
 
-/* Product Information */
-.cart-info {
-  flex: 1;
+.item-image:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: scale(1.02);
 }
 
-.cart-info h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-  padding-right: 35px; /* Add padding to prevent overlap with remove button */
-}
-
-.cart-info p {
-  margin: 4px 0;
-  font-size: 14px;
-  color: #555;
-}
-
-/* Variant Selector */
-.variant-control {
-  margin-top: 10px;
+.item-image img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.variant-control label {
-  font-weight: 500;
-  font-size: 14px;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.variant-control select {
-  width: 100%;
-  padding: 6px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-/* Quantity Controller */
-.qty-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.qty-control input[type="number"] {
-  width: 60px;
-  padding: 6px;
-  text-align: center;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  appearance: textfield;
-}
-
-.qty-control input::-webkit-inner-spin-button,
-.qty-control input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.qty-controls {
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+  width: fit-content;
 }
 
 .qty-btn {
-  background-color: #f0f0f0;
+  width: 36px;
+  height: 36px;
   border: none;
-  padding: 6px 12px;
+  background: white;
+  color: #666;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: #2874f0;
+  color: white;
+}
+
+.qty-input {
+  width: 50px;
+  height: 36px;
+  text-align: center;
+  border: none;
+  border-left: 1px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+/* Fixed remove button positioning */
+.cart-item-wrapper {
+  position: relative;
+}
+
+.remove-btn {
+  background: none !important;
+  border: none !important;
+  color: #060606 !important;
   font-size: 18px;
-  border-radius: 5px;
-  cursor: pointer;
+  font-weight: bold;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+.stock-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stock-low { color: #f57c00; background: #fff3e0; border: 1px solid #ffcc02; }
+.stock-out { color: #d32f2f; background: #ffebee; border: 1px solid #ffcdd2; }
+
+.price-original { color: #878787; text-decoration: line-through; font-size: 0.9em; }
+.item-total-price { background: #f0f7ff; border: 1px solid #e3f2fd; }
+
+.checkout-btn {
+  background: #fb641b;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   transition: background-color 0.2s;
 }
 
-.qty-btn:hover {
-  background-color: #e0e0e0;
+.checkout-btn:hover { background: #e85d1c; }
+.continue-shopping { background: #2874f0; }
+.continue-shopping:hover { background: #1c5fb5; }
+
+/* Sticky Price Details */
+.price-details-sticky {
+  position: sticky;
+  top: 80px;
+  z-index: 100;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
 }
 
-/* Cart Total Section */
-.cart-total-wrapper {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 30px;
+/* Smooth scrolling for the sticky element */
+.price-details-sticky {
+  transition: all 0.3s ease;
 }
 
-.cart-total {
-  background-color: #f9f9f9;
-  padding: 20px 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  max-width: 300px;
-  text-align: right;
+/* Enhanced shadow when sticky */
+.price-details-sticky.is-sticky {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(0);
 }
 
-.cart-total h4 {
-  margin-bottom: 15px;
-  font-size: 20px;
-  color: #333;
-}
-
-.cart-total .btn {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-/* Button Group Inline */
-.btn-group-inline {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* Error Messages */
 .error-msg {
-  margin-top: 8px;
-  font-size: 13px;
-  color: red;
+  font-size: 11px;
+  color: #d32f2f;
+  background: #ffebee;
+  border-left: 3px solid #f44336;
 }
 
-/* Empty State */
-  .empty-cart {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: #fff;
-    border-radius: 1rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+
+/* Tablet responsive */
+@media (max-width: 768px) {
+  .price-details-sticky {
+    position: static;
+    top: auto;
+    max-height: none;
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .item-image { width: 80px; height: 100px; }
+  .qty-controls { transform: scale(0.9); }
+  .remove-btn {
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
   }
 
-  .empty-cart .empty-icon {
-    font-size: 4rem;
-    color: #dee2e6;
-    margin-bottom: 1rem;
-  }
-
-/* Responsive Layout */
-@media screen and (max-width: 768px) {
-  .cart-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .image-container {
-    width: 100%;
-    max-width: 250px;
-  }
-
-  .cart-info {
-    width: 100%;
-  }
-
-  .cart-info h3 {
-    padding-right: 35px; /* Maintain padding on mobile */
-  }
-
-  .cart-total-wrapper {
-    justify-content: center;
-  }
-
-  .cart-total {
-    width: 100%;
-    max-width: 100%;
-    text-align: center;
-  }
-
-  .cart-total .btn {
-    width: auto;
-  }
-
-  .btn-group-inline {
-    justify-content: center;
+  /* Ensure price details are not sticky on mobile */
+  .price-details-sticky {
+    position: static;
+    top: auto;
+    max-height: none;
+    margin-top: 1rem;
   }
 }
 </style>
-<main class="main">
-  <section class="cart-section">
-    <div class="container">
-      <h2 class="mb-5 text-center fw-bold">🛒 Your Shopping Cart</h2>
-      <% let hasInsufficientStock = false; %>
-      <% if (cartItems.length === 0) { %>
-        <div class="row justify-content-center mb-4">
-                <div class="col-md-6">
-                    <div class="empty-cart">
-                        <div class="empty-icon">
-                            <i class="fas fa-heart-broken"></i>
-                        </div>
-                        <h4 class="text-muted mb-3">Your cart is Empty</h4>
-                        <p class="text-muted">Looks like you haven't added any items to your cart yet.</p>
-                        <a href="/shop" class="btn btn-primary btn-lg mt-3">
-                            <i class="fas fa-shopping-bag me-2"></i>
-                            Continue Shopping
-                        </a>
-                    </div>
-                </div>
+
+<main class="py-4">
+  <div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="h4 fw-bold text-dark mb-0">My Cart</h1>
+      </div>
+    </div>
+
+    <% let hasInsufficientStock = false; %>
+
+    <% if (cartItems.length === 0) { %>
+      <!-- Empty Cart State -->
+      <div class="row justify-content-center">
+        <div class="col-lg-6">
+          <div class="card cart-card text-center py-5">
+            <div class="card-body">
+              <i class="fas fa-shopping-cart display-1 text-muted mb-4"></i>
+              <h2 class="h4 fw-semibold mb-3">Your cart is empty!</h2>
+              <p class="text-muted mb-4">Add items to it now.</p>
+              <a href="/shop" class="btn btn-primary continue-shopping px-4">Shop now</a>
             </div>
-      <% } else { %>
-        <div class="cart-grid">
-          <% cartItems.forEach(item => { %>
-            <div class="cart-card">
-              <!-- Remove Button - Now at top right of card -->
-              <form action="/remove-from-cart/<%= item._id %>" method="POST"
-                    onsubmit="return confirm('Are you sure you want to remove this item?')"
-                    class="remove-btn-form">
-                <button type="submit" class="remove-btn">×</button>
-              </form>
-
-              <div class="cart-image-btn">
-                <div class="image-container">
-                  <a href="/productDetails?id=<%= item.productId._id %>">
-                    <img src="<%= item.productId.productImages[0] %>" alt="Product Image">
-                  </a>
-                </div>
-
-                <!-- Size Variant Selection -->
-                <div class="variant-control mt-2">
-                  <label><strong>Size:</strong></label>
-                  <select id="size-<%= item._id %>" onchange="changeVariant('<%= item._id %>')">
-                    <% if (item.productId.variants) { %>
-                      <% for (const [size, stock] of item.productId.variants) { %>
-                        <option value="<%= size %>" 
-                                <%= item.variant.size  === size ? 'selected' : '' %>
-                                <%= stock === 0 ? 'disabled' : '' %>>
-                          <%= size %> <%= stock === 0 ? '(Out of Stock)' : `(${stock} available)` %>
-                        </option>
-                      <% } %>
-                    <% } %>
-                  </select>
-                </div>
-              </div>
-
-              <div class="cart-info">
-                <h3><%= item.productId.productName %></h3>
-                <p><strong>Brand:</strong> <%= item.productId.brand %></p>
-                <p><strong>Price:</strong> ₹<%= item.productId.salePrice %></p>
-                <p><strong>Quantity:</strong> <%= item.quantity %></p>
-                <p><strong>Selected Size:</strong> <%= item.variant.size %></p>
-                <p><strong>Total:</strong> ₹<%= item.totalPrice %></p>
-
-                <div class="qty-control" 
-     data-item-id="<%= item._id %>" 
-     data-stock="<%= item.productId.variants ? item.productId.variants.get(item.variant.size) || 0 : item.productId.quantity %>">
-                  <button class="qty-btn minus" id="minus-<%= item._id %>" onclick="changeQty('<%= item._id %>', -1)">−</button>
-                  <input
-                    type="number"
-                    id="qty-<%= item._id %>"
-                    value="<%= item.quantity %>"
-                    min="1"
-                    max="10"
-                    onchange="submitQty('<%= item._id %>')"
-                  />
-                  <button class="qty-btn plus" id="plus-<%= item._id %>" onclick="changeQty('<%= item._id %>', 1)">+</button>
-                </div>
-                <div id="error-msg-<%= item._id %>" class="error-msg" style="color: red;"></div>
-                
-                <% 
-  let selectedSize = item.variant.size;
-  let sizeExists = false;
-  let selectedStock = 0;
-
-  if (item.productId.variants) {
-    for (const [size, stock] of item.productId.variants) {
-      if (size === selectedSize) {
-        sizeExists = true;
-        selectedStock = stock;
-        break;
-      }
-    }
-  }
-%>
-
-<% if (!sizeExists) { %>
-  <%{ hasInsufficientStock = true; }%>
-  <div class="error-msg" style="color: red;">
-    Selected size "<%= selectedSize %>" is no longer available. Please choose another size.
-  </div>
-<% } else if (selectedStock === 0 || item.quantity > selectedStock) { %>
-  <%{ hasInsufficientStock = true; }%>
-  <div class="error-msg" style="color: red;">
-    <%= selectedStock === 0 ? 'Selected variant is out of stock.' : 'Insufficient stock available for the selected variant. Please reduce the quantity to proceed with your order.' %>
-  </div>
-<% } %>
-
-
-</div>
-            </div>
-          <% }) %>
-        </div>
-
-        <div class="cart-total-wrapper">
-          <div class="cart-total">
-            <%if(hasInsufficientStock){%>
-              <h4>Total: ₹<%= total %></h4>
-              <div class="error-msg" style="color: red;">Quantity exceeds stock.</div>
-            <%}else{%>
-            <h4>Total: ₹<%= total %></h4>
-            <a href="/orderOfCart" class="btn btn-success mt-3">Proceed to Checkout</a>
-            <%}%>
           </div>
         </div>
-      <% } %>
-    </div>
-  </section>
+      </div>
+    <% } else { %>
+      <!-- Cart Layout -->
+      <div class="row g-4">
+        <!-- Cart Items Section -->
+        <div class="col-lg-8">
+          <div class="card cart-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0 fw-semibold">Cart Items (<%= cartItems.length %>)</h5>
+            </div>
+            
+            <div class="card-body p-0">
+              <% cartItems.forEach(item => { %>
+                <div class="border-bottom p-3 p-md-4 cart-item-wrapper">
+                  <!-- Remove Button - Fixed positioning -->
+                  <form action="/remove-from-cart/<%= item._id %>" method="POST"
+                        onsubmit="return confirm('Are you sure you want to remove this item?')">
+                    <button type="submit" class="btn remove-btn" title="Remove item">X</button>
+                  </form>
+
+                  <div class="row g-3 align-items-start">
+                    <!-- Product Image -->
+                    <div class="col-auto">
+                      <div class="item-image">
+                        <a href="/productDetails?id=<%= item.productId._id %>">
+                          <img src="<%= item.productId.productImages[0] %>" alt="<%= item.productId.productName %>" class="img-fluid">
+                        </a>
+                      </div>
+                    </div>
+
+                    <!-- Product Details -->
+                    <div class="col">
+                      <div class="row">
+                        <div class="col-lg-8">
+                          <a href="/productDetails?id=<%= item.productId._id %>" class="text-decoration-none text-dark">
+                            <h6 class="fw-semibold mb-2 pe-5"><%= item.productId.productName %></h6>
+                          </a>
+                          <p class="text-muted mb-2 small">Brand:<%= item.productId.brand %></p>
+                          <p class="text-muted mb-2 small"><%= item.productId.longDescription %></p>
+                          <div class="mt-3">
+                            <span class="h6 fw-bold text-primary">₹<%= item.productId.salePrice %></span>
+                            <span class="price-original ms-2">₹<%= Math.round(item.productId.salePrice * 1.2) %></span>
+                          </div>
+
+                          <div class="mt-2 d-flex flex-wrap gap-2">
+                            <small class="badge bg-light text-dark">
+                              <strong>Size:</strong> <%= item.variant.size %>
+                            </small>
+                            <small class="badge bg-light text-dark">
+                              <strong>Qty:</strong> <%= item.quantity %>
+                            </small>
+                          </div>
+                        </div>
+
+                        <!-- Actions Column -->
+                        <div class="col-lg-4 mt-4">
+                          <div class="d-flex flex-column gap-3 align-items-lg-end">
+                            <%
+                              let selectedSize = item.variant.size;
+                              let sizeExists = false;
+                              let selectedStock = 0;
+
+                              if (item.productId.variants) {
+                                for (const [size, stock] of item.productId.variants) {
+                                  if (size === selectedSize) {
+                                    sizeExists = true;
+                                    selectedStock = stock;
+                                    break;
+                                  }
+                                }
+                              }
+                            %>
+
+                            <!-- Stock Status -->
+                            <% if (!sizeExists) { %>
+                              <span class="stock-status stock-out">Size unavailable</span>
+                            <% } else if (selectedStock === 0) { %>
+                              <span class="stock-status stock-out">Out of Stock</span>
+                            <% } else if (selectedStock <= 5) { %>
+                              <span class="stock-status stock-low">Only <%= selectedStock %> left</span>
+                            <% } %>
+
+                            <!-- Quantity Controls -->
+                            <div class="qty-controls d-flex"
+                                 data-item-id="<%= item._id %>"
+                                 data-stock="<%= item.productId.variants ? item.productId.variants.get(item.variant.size) || 0 : item.productId.quantity %>">
+                              <button class="qty-btn" id="minus-<%= item._id %>" onclick="changeQty('<%= item._id %>', -1)">−</button>
+                              <input type="number" class="qty-input" id="qty-<%= item._id %>" 
+                                     value="<%= item.quantity %>" min="1" max="10"
+                                     onchange="submitQty('<%= item._id %>')"/>
+                              <button class="qty-btn" id="plus-<%= item._id %>" onclick="changeQty('<%= item._id %>', 1)">+</button>
+                            </div>
+
+                            <!-- Size Selection -->
+                            <select class="form-select-sm" id="size-<%= item._id %>" 
+                                    onchange="changeVariant('<%= item._id %>')" style="max-width: 150px;">
+                              <% if (item.productId.variants) { %>
+                                <% for (const [size, stock] of item.productId.variants) { %>
+                                  <option value="<%= size %>" <%= item.variant.size === size ? 'selected' : '' %>
+                                          <%= stock === 0 ? 'disabled' : '' %>>
+                                    <%= size %> <%= stock === 0 ? '(Out of Stock)' : `(${stock} in stock)` %>
+                                  </option>
+                                <% } %>
+                              <% } %>
+                            </select>
+
+                            <!-- Total Price -->
+                            <div class="p-2 rounded text-center item-total-price fw-bold text-primary">
+                              Total: ₹<%= item.totalPrice %>
+                            </div>
+
+                            <!-- Error Messages -->
+                            <div id="error-msg-<%= item._id %>" class="error-msg p-2 rounded small d-none"></div>
+
+                            <% if (!sizeExists) { %>
+                              <% hasInsufficientStock = true; %>
+                              <div class="error-msg p-2 rounded small">
+                                Selected size "<%= selectedSize %>" is no longer available. Please choose another size.
+                              </div>
+                            <% } else if (selectedStock === 0 || item.quantity > selectedStock) { %>
+                              <% hasInsufficientStock = true; %>
+                              <div class="error-msg p-2 rounded small">
+                                <%= selectedStock === 0 ? 'Selected variant is out of stock.' : 'Insufficient stock available for the selected variant. Please reduce the quantity to proceed with your order.' %>
+                              </div>
+                            <% } %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+          <div class="card cart-card price-details-sticky">
+            <div class="card-header bg-light">
+              <h6 class="mb-0 text-muted text-uppercase">Price Details</h6>
+            </div>
+            
+            <div class="card-body">
+              <div class="d-flex justify-content-between mb-3">
+                <span>Price (<%= cartItems.length %> items)</span>
+                <span>₹<%= Math.round(total * 1.2) %></span>
+              </div>
+              
+              <div class="d-flex justify-content-between mb-3">
+                <span>Discount</span>
+                <span class="text-success">-₹<%= Math.round(total * 0.2) %></span>
+              </div>
+              
+              <div class="d-flex justify-content-between mb-3">
+                <span>Delivery Charges</span>
+                <% if(total <= 2000) { %>
+                  <span>₹54</span>
+                <% } else { %>
+                  <span class="text-success">FREE</span>
+                <% } %>
+              </div>
+              
+              <hr>
+              
+              <div class="d-flex justify-content-between fw-bold h6">
+                <span>Total Amount</span>
+                <%if(total<=2000){%>
+                  <span>₹<%= total + 54 %></span>
+                <%}else{%>
+                  <span>₹<%= total %></span>
+                <%}%>
+              </div>
+            </div>
+            
+            <div class="card-footer bg-white">
+              <% if (hasInsufficientStock) { %>
+                <div class="alert alert-danger py-2 mb-3">
+                  <small>Some items in your cart have insufficient stock. Please review and update quantities.</small>
+                </div>
+                <button class="btn checkout-btn w-100 py-3" disabled>Place Order</button>
+              <% } else { %>
+                <a href="/orderOfCart" class="btn checkout-btn w-100 py-3 text-white text-decoration-none">Place Order</a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
 </main>
 
 <script>
-  // Updated quantity control function that considers variant stock
+// Updated quantity control function that considers variant stock
 function changeQty(id, delta) {
   const input = document.getElementById('qty-' + id);
-  const control = document.querySelector(`.qty-control[data-item-id="${id}"]`);
+  const control = document.querySelector(`[data-item-id="${id}"]`);
   const plusBtn = document.getElementById('plus-' + id);
   const minusBtn = document.getElementById('minus-' + id);
   const errorMsg = document.getElementById('error-msg-' + id);
@@ -412,7 +425,7 @@ function changeQty(id, delta) {
 
   input.value = newQty;
   errorMsg.innerText = message;
-  errorMsg.style.display = message ? 'block' : 'none';
+  errorMsg.classList.toggle('d-none', !message);
 
   // Update button states based on variant stock
   plusBtn.disabled = newQty >= Math.min(stock, 10);
@@ -498,19 +511,18 @@ function updateQuantityControlsForVariant(itemId) {
     let message = '';
     let newQty = currentQty;
     
-    
     // Update button states
     plusBtn.disabled = newQty >= Math.min(variantStock, 10) || variantStock === 0;
     minusBtn.disabled = newQty <= 1;
     
     // Show/hide error message
     errorMsg.innerText = message;
-    errorMsg.style.display = message ? 'block' : 'none';
+    errorMsg.classList.toggle('d-none', !message);
     
     // If variant is out of stock, show appropriate message
     if (variantStock === 0) {
       errorMsg.innerText = 'This size is out of stock.';
-      errorMsg.style.display = 'block';
+      errorMsg.classList.remove('d-none');
       input.disabled = true;
     } else {
       input.disabled = false;
@@ -554,7 +566,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const itemId = control.dataset.itemId;
         updateQuantityControlsForVariant(itemId);
     });
+
+    // Initialize sticky price details behavior
+    initializeStickyPriceDetails();
 });
+
+// Enhanced sticky behavior for price details
+function initializeStickyPriceDetails() {
+    const priceDetails = document.querySelector('.price-details-sticky');
+    if (!priceDetails) return;
+
+    // Only apply on desktop
+    if (window.innerWidth > 768) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        priceDetails.classList.remove('is-sticky');
+                    } else {
+                        priceDetails.classList.add('is-sticky');
+                    }
+                });
+            },
+            { threshold: 0.1 }
+        );
+
+        // Observe the top of the cart items section
+        const cartItemsSection = document.querySelector('.cart-card');
+        if (cartItemsSection) {
+            observer.observe(cartItemsSection);
+        }
+    }
+}
 </script>
 
 <%- include('../../views/partials/user/footer') %>

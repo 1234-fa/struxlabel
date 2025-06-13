@@ -2470,11 +2470,6 @@ label {
           animation-delay: 1.50s;
 }
 
-/*page header*/
-.page-header .page-title {
-  font-weight: 900;
-  font-size: 4rem;
-}
 
 .page-header.breadcrumb-wrap {
   padding: 20px;
