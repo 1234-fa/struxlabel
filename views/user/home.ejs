@@ -221,28 +221,28 @@ body {
   }
 }
 
-@media screen and (max-width: 768px) {
-  /* Banner adjustments for mobile */
+@media screen and (max-width: 768px) and (min-width: 577px) {
+  /* Tablet size - larger cards for better tablet experience */
   .carousel-item {
-    height: 280px;
+    height: 320px;
   }
 
   .carousel-caption {
-    padding: 15px;
-    bottom: 10px;
+    padding: 20px;
+    bottom: 15px;
   }
 
   .carousel-caption p {
-    font-size: 14px;
-    margin-bottom: 10px;
+    font-size: 16px;
+    margin-bottom: 12px;
   }
 
   .carousel-caption .btn {
-    padding: 8px 16px;
-    font-size: 12px;
+    padding: 10px 20px;
+    font-size: 14px;
   }
 
-  /* Product grid - Force 2 columns on mobile with proper centering */
+  /* Product grid - 2 columns with larger cards for tablets */
   .row.product__filter {
     justify-content: center;
   }
@@ -256,67 +256,78 @@ body {
 
   .product-cart-wrap {
     width: 100%;
-    max-width: 280px;
+    max-width: 320px;
   }
 
   .product-img img {
-    height: 200px;
+    height: 240px;
   }
 
   .product-content-wrap {
-    padding: 12px;
+    padding: 16px;
+    min-height: 180px;
   }
 
   .product-content-wrap h6 {
-    font-size: 14px;
-    margin-bottom: 6px;
+    font-size: 16px;
+    margin-bottom: 8px;
+    height: 40px;
   }
 
-  /* Updated mobile price display */
+  .product-details {
+    min-height: 55px;
+  }
+
+  .product-content-wrap .small {
+    font-size: 13px;
+    height: 16px;
+  }
+
+  /* Updated tablet price display */
   .product-price-container {
-    gap: 4px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 12px;
   }
 
   .product-price-container h5 {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .product-price-container .text-muted {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .product-price-container .badge {
-    font-size: 10px;
-    padding: 3px 6px;
+    font-size: 11px;
+    padding: 4px 8px;
   }
 
   .product-content-wrap a {
-    padding: 8px 16px;
-    font-size: 11px;
+    padding: 10px 20px;
+    font-size: 12px;
   }
 
   .wishlist-btn {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
-    top: 8px;
-    right: 8px;
-    padding: 6px;
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+    top: 10px;
+    right: 10px;
+    padding: 8px;
   }
 
   .filter__controls li {
-    padding: 10px 18px;
-    margin: 0 4px 8px 0;
-    font-size: 13px;
+    padding: 12px 20px;
+    margin: 0 6px 10px 0;
+    font-size: 14px;
   }
 
   .carousel-container {
-    margin-bottom: 40px;
+    margin-bottom: 50px;
   }
 
   .mb-30 {
-    margin-bottom: 20px !important;
+    margin-bottom: 25px !important;
   }
 }
 
