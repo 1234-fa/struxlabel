@@ -92,18 +92,9 @@ body {
   transition: transform 0.3s ease;
 }
 
-.product-cart-wrap {
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  overflow: hidden;
+.product-cart-wraps {
   transition: 0.3s ease;
   background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.product-cart-wrap:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
 .product-content-wrap {
@@ -251,10 +242,21 @@ body {
     font-size: 12px;
   }
 
-  /* Product grid - Force 2 columns on mobile */
+  /* Product grid - Force 2 columns on mobile with proper centering */
+  .row.product__filter {
+    justify-content: center;
+  }
+
   .col-lg-3.col-md-4.col-12.col-sm-6 {
     flex: 0 0 50%;
     max-width: 50%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .product-cart-wrap {
+    width: 100%;
+    max-width: 280px;
   }
 
   .product-img img {
@@ -334,16 +336,46 @@ body {
     margin-bottom: 8px;
   }
 
+  /* Better centering for small screens */
+  .row.product__filter {
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .col-lg-3.col-md-4.col-12.col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    display: flex;
+    justify-content: center;
+    padding: 0 8px;
+  }
+
+  .product-cart-wrap {
+    width: 100%;
+    max-width: 240px;
+  }
+
   .product-img img {
     height: 180px;
   }
 
   .product-content-wrap {
     padding: 10px;
+    min-height: 160px;
   }
 
   .product-content-wrap h6 {
     font-size: 13px;
+    height: 36px;
+  }
+
+  .product-details {
+    min-height: 50px;
+  }
+
+  .product-content-wrap .small {
+    font-size: 11px;
+    height: 14px;
   }
 
   /* Smaller price display for extra small screens */
@@ -376,13 +408,50 @@ body {
     height: 200px;
   }
 
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /* Enhanced centering for very small screens */
+  .row.product__filter {
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .col-lg-3.col-md-4.col-12.col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    display: flex;
+    justify-content: center;
+    padding: 0 6px;
+  }
+
+  .product-cart-wrap {
+    width: 100%;
+    max-width: 200px;
+  }
+
   .product-img img {
     height: 160px;
   }
 
-  .container {
-    padding-left: 10px;
-    padding-right: 10px;
+  .product-content-wrap {
+    min-height: 150px;
+  }
+
+  .product-content-wrap h6 {
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .product-details {
+    min-height: 45px;
+  }
+
+  .product-content-wrap .small {
+    font-size: 10px;
+    height: 13px;
   }
 
   /* Ensure prices stay in one line on very small screens */
@@ -406,7 +475,7 @@ body {
 }
 
 /* Additional mobile improvements */
-@media screen and (max-width: 400px) {  
+@media screen and (max-width: 400px) {
   .carousel-item {
     height: 180px;
   }
@@ -420,12 +489,46 @@ body {
     font-size: 10px;
     margin-bottom: 8px;
   }
+
+  /* Perfect centering for ultra small screens */
+  .row.product__filter {
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .col-lg-3.col-md-4.col-12.col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    display: flex;
+    justify-content: center;
+    padding: 0 4px;
+  }
+
+  .product-cart-wrap {
+    width: 100%;
+    max-width: 180px;
+  }
+
   .product-img img {
     height: 140px;
   }
 
+  .product-content-wrap {
+    min-height: 140px;
+  }
+
   .product-content-wrap h6 {
     font-size: 12px;
+    height: 30px;
+  }
+
+  .product-details {
+    min-height: 40px;
+  }
+
+  .product-content-wrap .small {
+    font-size: 9px;
+    height: 12px;
   }
 
   /* Ultra small screen price display */
@@ -488,7 +591,7 @@ body {
     <div class="row product__filter">
       <% newArrivals.forEach(product => { %>
         <div class="col-lg-3 col-md-4 col-12 col-sm-6">
-          <div class="product-cart-wrap mb-30">
+          <div class="product-cart-wraps mb-30">
             <div class="product-img-action-wrap">
               <div class="product-img product-img-zoom">
                 <a href="/productDetails?id=<%= product._id %>">
@@ -535,7 +638,7 @@ body {
     <div class="row product__filter">
       <% menProducts.forEach(product => { %>
         <div class="col-lg-3 col-md-4 col-12 col-sm-6">
-          <div class="product-cart-wrap mb-30">
+          <div class="product-cart-wraps mb-30">
             <div class="product-img-action-wrap">
               <div class="product-img product-img-zoom">
                 <a href="/productDetails?id=<%= product._id %>">
