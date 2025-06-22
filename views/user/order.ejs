@@ -198,6 +198,7 @@ data-discount="<%= coupon.discount %>"
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 15px;
   }
 
   .modal-content {
@@ -206,7 +207,92 @@ data-discount="<%= coupon.discount %>"
     border-radius: 10px;
     max-width: 900px;
     width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
     position: relative;
+  }
+
+  /* Responsive adjustments for mobile devices */
+  @media (max-width: 768px) {
+    .modal-overlay {
+      padding: 10px;
+      align-items: flex-start;
+      padding-top: 20px;
+    }
+
+    .modal-content {
+      padding: 20px;
+      max-height: 95vh;
+      width: 100%;
+      margin: 0;
+      border-radius: 8px;
+    }
+
+    .modal-content h3 {
+      font-size: 1.3rem;
+      margin-bottom: 20px !important;
+    }
+
+    .modal-content .form-group {
+      margin-bottom: 15px;
+    }
+
+    .modal-content .form-control {
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    .modal-content .btn {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .modal-overlay {
+      padding: 5px;
+      padding-top: 10px;
+    }
+
+    .modal-content {
+      padding: 15px;
+      max-height: 98vh;
+      border-radius: 5px;
+    }
+
+    .modal-content h3 {
+      font-size: 1.2rem;
+      margin-bottom: 15px !important;
+    }
+
+    .modal-content .row {
+      margin: 0;
+    }
+
+    .modal-content .col-md-4,
+    .modal-content .col-md-6,
+    .modal-content .col-md-12 {
+      padding: 0 5px;
+      margin-bottom: 10px;
+    }
+
+    .modal-content .form-control {
+      padding: 8px;
+      font-size: 13px;
+    }
+
+    .modal-content .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .close-btn {
+      top: 10px !important;
+      right: 10px !important;
+      font-size: 20px !important;
+    }
   }
 
   .close-btn {

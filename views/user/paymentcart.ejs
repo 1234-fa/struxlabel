@@ -241,16 +241,88 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         color: "#3399cc"
       },
       modal: {
-    ondismiss: function () {
-      // Redirect on modal close or cancellation
-      window.location.href = "/order-failure";
-    }
-  }
+        ondismiss: function () {
+          // Handle cart payment cancellation
+          console.log('Cart payment modal dismissed');
+          handleCartPaymentFailure('USER_CANCELLED', 'Payment cancelled by user');
+        }
+      }
     };
 
     const rzp1 = new Razorpay(options);
+
+    // Handle cart payment failure
+    rzp1.on('payment.failed', function (response) {
+      console.log('Cart payment failed:', response.error);
+      handleCartPaymentFailure(
+        response.error.code,
+        response.error.description,
+        response.error.metadata ? response.error.metadata.order_id : order_id
+      );
+    });
+
     rzp1.open();
   }
 });
+
+// Function to handle cart payment failures
+function handleCartPaymentFailure(errorCode, errorDescription, razorpayOrderId = null) {
+  console.log('🔴 Handling cart payment failure:', errorCode, errorDescription);
+
+  // Get form data for cart failure handling
+  const cartItems = Array.from(document.querySelectorAll('input[name="cartItems[]"]')).map(input => input.value);
+  const totalPrice = document.querySelector('input[name="totalPrice"]').value;
+  const couponIdInput = document.querySelector('input[name="couponId"]');
+  const couponId = couponIdInput ? couponIdInput.value : null;
+  const totalDiscount = document.querySelector('input[name="totalDiscount"]').value;
+  const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
+
+  const selected = {
+    addressType: document.querySelector('input[name="selected[addressType]"]').value,
+    name: document.querySelector('input[name="selected[name]"]').value,
+    city: document.querySelector('input[name="selected[city]"]').value,
+    landMark: document.querySelector('input[name="selected[landMark]"]').value,
+    state: document.querySelector('input[name="selected[state]"]').value,
+    pincode: document.querySelector('input[name="selected[pincode]"]').value,
+    phone: document.querySelector('input[name="selected[phone]"]').value,
+    altphone: document.querySelector('input[name="selected[altphone]"]').value
+  };
+
+  console.log('📤 Sending cart payment failure data to server...');
+
+  fetch('/handle-payment-failure', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      razorpay_order_id: razorpayOrderId,
+      error_code: errorCode,
+      error_description: errorDescription,
+      cartItems: cartItems,
+      totalPrice: totalPrice,
+      selected: selected,
+      couponId: couponId,
+      deliveryCharge: deliveryCharge,
+      totalDiscount: totalDiscount,
+      isCartOrder: true
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('📥 Cart payment failure response:', data);
+    if (data.success) {
+      console.log('✅ Failed cart order created, redirecting to failure page');
+      window.location.href = data.redirect;
+    } else {
+      console.log('❌ Failed to create failed cart order, redirecting to failure page');
+      window.location.href = '/order-failure';
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error handling cart payment failure:', error);
+    window.location.href = '/order-failure';
+  });
+}
 </script>
 <%- include("../../views/partials/user/footer") %>

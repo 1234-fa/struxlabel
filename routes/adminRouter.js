@@ -59,6 +59,23 @@ router.get('/addBanner',adminAuth,bannerController.getAddBannerPage);
 router.post('/addBanner',adminAuth,uploads.single("image"),bannerController.addBanner)
 router.get('/deleteBanner',adminAuth,bannerController.deleteBanner);
 
+// Debug route to test WebP support
+router.get('/test-webp', adminAuth, (req, res) => {
+    res.json({
+        message: 'WebP support test',
+        multerConfig: {
+            allowedExtensions: 'jpeg|jpg|png|webp',
+            allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+            maxFileSize: '5MB'
+        },
+        instructions: [
+            '1. Try uploading a WebP image through the banner upload',
+            '2. Check server console for processing logs',
+            '3. Verify the saved file maintains WebP format'
+        ]
+    });
+});
+
 
 
 router.get('/orderList', adminAuth, orderController.getAllOrders);

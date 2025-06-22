@@ -30,6 +30,16 @@ router.post('/resend-otp',userController.resendOtp);
 
 
 router.get('/', userController.loadHomepage);
+
+// Debug route to test cart/wishlist counts
+router.get('/debug-counts', userAuth, (req, res) => {
+    res.json({
+        cartCount: res.locals.cartCount,
+        wishlistCount: res.locals.wishlistCount,
+        user: req.session.user ? 'logged in' : 'not logged in'
+    });
+});
+
 router.post('/search',userAuth,userController.searchProducts);
 
 
@@ -125,6 +135,44 @@ router.post('/verify-razorpay-payment', userAuth, checkoutController.verifyRazor
 router.post('/create-razorpay-order-cart', userAuth, checkoutController.createRazorpayOrderCart);
 router.post('/verify-razorpay-payment-cart', userAuth, checkoutController.verifyRazorpayPaymentCart);
 router.get('/order-failure',userAuth,checkoutController.getorderFailurePage);
+router.post('/handle-payment-failure', userAuth, checkoutController.handlePaymentFailure);
+router.get('/retry-payment/:orderId', userAuth, checkoutController.retryPayment);
+router.post('/verify-retry-payment', userAuth, checkoutController.verifyRetryPayment);
+
+// // Debug route to check failed orders
+// router.get('/debug-orders', userAuth, async (req, res) => {
+//   try {
+//     const userId = req.session.user?._id;
+//     const Order = require('../models/orderSchema');
+
+//     const allOrders = await Order.find({ user: userId }).select('orderId status paymentStatus');
+//     const failedOrders = await Order.find({ user: userId, status: 'payment_failed' }).select('orderId status paymentStatus');
+
+//     res.json({
+//       userId,
+//       totalOrders: allOrders.length,
+//       allOrders,
+//       failedOrders: failedOrders.length,
+//       failedOrdersList: failedOrders
+//     });
+//   } catch (error) {
+//     res.json({ error: error.message });
+//   }
+// });
+
+// // Test route for retry payment
+// router.get('/test-retry/:orderId', userAuth, (req, res) => {
+//   const { orderId } = req.params;
+//   const userId = req.session.user?._id;
+
+//   res.json({
+//     message: 'Test retry route working',
+//     orderId,
+//     userId,
+//     fullUrl: req.originalUrl,
+//     params: req.params
+//   });
+// });
 
 router.post('/filterSearchSort',userAuth,shopController.getfilter);
 router.get('/shop',userAuth,shopController.loadShoppingPage)

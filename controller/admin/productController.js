@@ -174,8 +174,12 @@ const addProducts = async (req, res) => {
             );
             const buffer = Buffer.from(base64Data, "base64");
 
-            // Generate filename
-            const filename = `product-${Date.now()}-${i}.jpg`;
+            // Extract format from base64 data
+            const formatMatch = imageData.src.match(/^data:image\/(\w+);base64,/);
+            const format = formatMatch ? formatMatch[1] : 'jpg';
+
+            // Generate filename with correct extension
+            const filename = `product-${Date.now()}-${i}.${format}`;
             const filepath = path.join(
               "public/uploads/product-images/",
               filename
@@ -522,10 +526,14 @@ const editProduct = async (req, res) => {
               );
               const buffer = Buffer.from(base64Content, "base64");
 
-              // Generate unique filename
+              // Extract format from base64 data
+              const formatMatch = base64Data.match(/^data:image\/(\w+);base64,/);
+              const format = formatMatch ? formatMatch[1] : 'jpg';
+
+              // Generate unique filename with correct extension
               const timestamp = Date.now();
               const random = Math.random().toString(36).substring(2, 15);
-              const filename = `product-${timestamp}-${random}-${i}.jpg`;
+              const filename = `product-${timestamp}-${random}-${i}.${format}`;
               const filePath = path.join(
                 "public/uploads/product-images/",
                 filename

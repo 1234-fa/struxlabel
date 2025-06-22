@@ -10,6 +10,7 @@ const {StatusCode} = require('../../config/statuscode');
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const PricingCalculator = require('../../utils/pricingUtils');
 const path = require('path');
 
 const generateOrderId = () => {
@@ -185,54 +186,66 @@ const getSingleOrderPage = async (req, res) => {
         altphone: selected.altphone,
       };
       
+      // Get coupon if provided
+      let appliedCoupon = null;
+      if (couponId) {
+        appliedCoupon = await Coupon.findById(couponId);
+      }
+
+      // Calculate pricing using centralized utility
+      const orderItems = [{
+        product: product,
+        quantity: orderQty,
+        variant: { size: variant || null }
+      }];
+
+      const pricingResult = PricingCalculator.calculateOrderPricing(
+        orderItems,
+        appliedCoupon,
+        deliveryCharge
+      );
+
+      console.log('Pricing calculation result:', pricingResult);
+
+      // Create ordered item with complete pricing info
       const orderedItem = {
         product: product._id,
         quantity: orderQty,
         price: product.salePrice,
-        variant: { 
-                size: variant || null 
-            },
-            status: 'processing'
+        regularPrice: product.regularPrice,
+        salePrice: product.salePrice,
+        offerDiscount: pricingResult.items[0].pricing.unitOfferDiscount,
+        variant: { size: variant || null },
+        status: 'processing'
       };
-      
-      const originalPrice = product.regularPrice * orderQty;
-      const salePrice = product.salePrice * orderQty;
-      const productDiscount = originalPrice - salePrice;
-      let finalAmount = Number(totalPrice);
-      let couponDiscount = 0;
-      let appliedCoupon = null;
-      
-      
-      if (couponId) {
-        appliedCoupon = await Coupon.findById(couponId);
-        
-        if (appliedCoupon) {
-          couponDiscount = (salePrice * appliedCoupon.discount / 100);
-          console.log('coupon discount is :',couponDiscount);
-          if (!appliedCoupon.usersUsed.includes(userId)) {
-            await Coupon.findByIdAndUpdate(
-              couponId,
-              { $push: { usersUsed: userId } }
-            );
-          }
+
+      // Mark coupon as used if applicable
+      if (appliedCoupon && pricingResult.coupon.isValid) {
+        if (!appliedCoupon.usersUsed.includes(userId)) {
+          await Coupon.findByIdAndUpdate(
+            couponId,
+            { $push: { usersUsed: userId } }
+          );
         }
       }
-      console.log('final amount:',finalAmount);
+
       const newOrder = new Order({
         orderId: generateOrderId(),
         user: userId,
         orderedItems: [orderedItem],
-        totalPrice: originalPrice, 
-        discount: productDiscount + couponDiscount, 
-        finalAmount: originalPrice-(productDiscount + couponDiscount), 
+        totalPrice: pricingResult.totals.originalAmount,
+        offerDiscount: pricingResult.totals.offerDiscount,
+        couponDiscount: pricingResult.totals.couponDiscount,
+        discount: pricingResult.totals.offerDiscount + pricingResult.totals.couponDiscount,
+        finalAmount: pricingResult.totals.finalAmount,
         address: address,
         invoiceDate: new Date(),
         status: 'processing',
         createdOn: new Date(),
-        coupon: couponId ? couponId : null, 
-        couponApplied: !!couponId, 
+        coupon: couponId ? couponId : null,
+        couponApplied: pricingResult.coupon.isValid,
         paymentMethod: paymentMethod,
-        deliveryCharge:deliveryCharge
+        deliveryCharge: pricingResult.totals.deliveryCharge
       });
       
       // Save the order
@@ -877,37 +890,30 @@ const getSingleOrderPage = async (req, res) => {
         return res.redirect('/checkout');
       }
   
-      // Price Calculation
-      let discountAmount = originalTotal - saleTotal;
-      let finalTotal = saleTotal;
-      let couponDiscount = 0;
+      // Get coupon if provided
       let appliedCoupon = null;
-  
-      // Apply coupon if available
       if (couponId) {
         appliedCoupon = await Coupon.findById(couponId);
-        if (appliedCoupon) {
-          couponDiscount = (saleTotal * appliedCoupon.discount) / 100;
-          finalTotal = saleTotal - couponDiscount;
-        }
       } else if (req.session.appliedCoupon) {
         appliedCoupon = req.session.appliedCoupon;
-        couponDiscount = saleTotal - req.session.appliedCoupon.newTotal;
-        finalTotal = req.session.appliedCoupon.newTotal;
       }
 
-      const deliveryCharge = Number(finalTotal <= 2000 ? 54 :0);
-
-      finalTotal=Number(finalTotal)+deliveryCharge;
-
-      console.log("Price details:", {
-        originalTotal,
-        saleTotal,
-        discountAmount,
-        couponDiscount,
-        deliveryCharge,
-        finalTotal
+      // Prepare items for pricing calculation
+      const orderItems = cartItems.map(item => {
+        return {
+          product: item.product,
+          quantity: item.quantity,
+          variant: item.variant
+        };
       });
+
+      // Calculate pricing using centralized utility
+      const pricingResult = PricingCalculator.calculateOrderPricing(
+        orderItems,
+        appliedCoupon
+      );
+
+      console.log('Cart pricing calculation result:', pricingResult);
 
       // console.log('cartItems :',cartItems)
 
@@ -919,14 +925,14 @@ const getSingleOrderPage = async (req, res) => {
         cartItems: cart.items,
         orderSummary: {
           quantity: cartItems.reduce((acc, item) => acc + item.quantity, 0),
-          total: finalTotal,
-          originalTotal,
-          saleTotal,
-          saveAmount: discountAmount,
-          couponDiscount,
+          total: pricingResult.totals.finalAmount,
+          originalTotal: pricingResult.totals.originalAmount,
+          saleTotal: pricingResult.totals.saleAmount,
+          saveAmount: pricingResult.totals.offerDiscount,
+          couponDiscount: pricingResult.totals.couponDiscount,
           couponId: appliedCoupon ? appliedCoupon._id : null,
           couponName: appliedCoupon ? appliedCoupon.name : null,
-          deliveryCharge:deliveryCharge
+          deliveryCharge: pricingResult.totals.deliveryCharge
         }
       });
   
@@ -1027,21 +1033,47 @@ const getSingleOrderPage = async (req, res) => {
         altphone: selected.altphone,
       };
   
+      // Create order items with complete pricing info
+      const finalOrderItems = pricingResult.items.map((item, index) => {
+        return {
+          product: item.product._id,
+          quantity: item.quantity,
+          price: item.product.salePrice,
+          regularPrice: item.product.regularPrice,
+          salePrice: item.product.salePrice,
+          offerDiscount: item.pricing.unitOfferDiscount,
+          variant: item.variant,
+          status: 'processing'
+        };
+      });
+
+      // Mark coupon as used if applicable
+      if (appliedCoupon && pricingResult.coupon.isValid) {
+        if (!appliedCoupon.usersUsed.includes(userId)) {
+          await Coupon.findByIdAndUpdate(
+            couponId,
+            { $push: { usersUsed: userId } }
+          );
+        }
+      }
+
       const newOrder = new Order({
         orderId: generateOrderId(),
         user: userId,
-        orderedItems: orderItems,
-        totalPrice: totalOriginalPrice,
-        discount: totalDiscount,
-        finalAmount:totalPrice,
+        orderedItems: finalOrderItems,
+        totalPrice: pricingResult.totals.originalAmount,
+        offerDiscount: pricingResult.totals.offerDiscount,
+        couponDiscount: pricingResult.totals.couponDiscount,
+        discount: pricingResult.totals.offerDiscount + pricingResult.totals.couponDiscount,
+        finalAmount: pricingResult.totals.finalAmount,
         address,
         invoiceDate: new Date(),
         status: 'processing',
         createdOn: new Date(),
         coupon: couponId || null,
-        couponApplied: !!couponId,
+        couponApplied: pricingResult.coupon.isValid,
         paymentMethod,
-        deliveryCharge
+        deliveryCharge: pricingResult.totals.deliveryCharge
       });
   
       await newOrder.save();

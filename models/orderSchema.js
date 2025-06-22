@@ -35,6 +35,18 @@ const orderSchema = new Schema(
           type: Number,
           default: 0,
         },
+        regularPrice: {
+          type: Number,
+          default: 0,
+        },
+        salePrice: {
+          type: Number,
+          default: 0,
+        },
+        offerDiscount: {
+          type: Number,
+          default: 0,
+        },
         status: {
           type: String,
           enum: [
@@ -46,6 +58,7 @@ const orderSchema = new Schema(
             "returned",
             "return approved",
             "return rejected",
+            "payment_failed",
           ],
           default: "processing",
           lowercase: true,
@@ -78,6 +91,14 @@ const orderSchema = new Schema(
       default: 0,
     },
     discount: {
+      type: Number,
+      default: 0,
+    },
+    offerDiscount: {
+      type: Number,
+      default: 0,
+    },
+    couponDiscount: {
       type: Number,
       default: 0,
     },
@@ -115,6 +136,7 @@ const orderSchema = new Schema(
         "returned",
         "return approved",
         "return rejected",
+        "payment_failed",
       ],
       lowercase: true,
     },
@@ -126,6 +148,10 @@ const orderSchema = new Schema(
     coupon: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Coupon",
+    },
+    couponApplied: {
+      type: Boolean,
+      default: false,
     },
     cancelReason: {
       type: String,
@@ -150,6 +176,17 @@ const orderSchema = new Schema(
     },
     razorpayPaymentId: {
       type: String,
+    },
+    paymentFailureReason: {
+      type: String,
+      default: "",
+    },
+    retryAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lastPaymentAttempt: {
+      type: Date,
     },
   },
   {

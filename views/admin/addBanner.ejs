@@ -197,7 +197,7 @@
                 type="file"
                 name="image"
                 id="inputFile"
-                accept="image/png, image/jpeg, image/jpg"
+                accept="image/png, image/jpeg, image/jpg, image/webp"
                 onchange="initCropper(event)"
               />
               <div id="image-error" class="error-message"></div>
@@ -243,7 +243,33 @@
 
   function initCropper(event) {
     const file = event.target.files[0];
+    const errorElement = document.getElementById("image-error");
+
     if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        errorElement.textContent = `Invalid file type: ${file.type}. Only JPG, JPEG, PNG, WebP allowed.`;
+        errorElement.style.display = "block";
+        event.target.value = '';
+        return;
+      }
+
+      // Validate file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        errorElement.textContent = `File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maximum 5MB allowed.`;
+        errorElement.style.display = "block";
+        event.target.value = '';
+        return;
+      }
+
+      // Clear any previous errors
+      errorElement.textContent = '';
+      errorElement.style.display = "none";
+
+      console.log(`Processing ${file.type} file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+
       const reader = new FileReader();
       reader.onload = function (e) {
         imageToCrop.src = e.target.result;
@@ -266,6 +292,22 @@
       height: 720,
     });
 
+    // Determine the original file type
+    const fileInput = document.getElementById("inputFile");
+    const originalFile = fileInput.files[0];
+    let outputFormat = "image/jpeg"; // default
+
+    if (originalFile) {
+      // Preserve original format if it's WebP, PNG, or JPEG
+      if (originalFile.type === "image/webp") {
+        outputFormat = "image/webp";
+      } else if (originalFile.type === "image/png") {
+        outputFormat = "image/png";
+      } else {
+        outputFormat = "image/jpeg";
+      }
+    }
+
     canvas.toBlob(function (blob) {
       const reader = new FileReader();
       reader.onloadend = function () {
@@ -283,7 +325,7 @@
         cropperContainer.style.display = "none";
       };
       reader.readAsDataURL(blob);
-    }, "image/jpeg");
+    }, outputFormat, 0.9); // 0.9 quality for better compression
   }
 
   function validateForm() {

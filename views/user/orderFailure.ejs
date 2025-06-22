@@ -202,17 +202,58 @@
     
     <div class="content">
       <div class="details">
-        <p class="message">
-          We're sorry, but there was a problem processing your order. This could be due to 
-          payment issues, inventory problems, or a temporary system error.
-        </p>
-        
-        <div class="error-code">Error Code: ORD-4023</div>
-        
-        <div class="buttons">
-          <a href="#" class="primary" id="retryButton">Retry Payment</a>
-          <a href="/shop" class="secondary">Continue Shopping</a>
-        </div>
+        <% if (failedOrder) { %>
+          <p class="message">
+            Your payment for Order #<%= failedOrder.orderId %> could not be processed.
+            Don't worry - your order details have been saved and you can retry the payment.
+          </p>
+
+          <div class="error-code">
+            Order ID: <%= failedOrder.orderId %>
+            <% if (failedOrder.paymentFailureReason) { %>
+              <br>Reason: <%= failedOrder.paymentFailureReason %>
+            <% } %>
+          </div>
+
+          <!-- Order Summary -->
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #333;">Order Summary</h4>
+            <% failedOrder.orderedItems.forEach(item => { %>
+              <% if (item.product) { %>
+                <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                  <img src="<%= item.product.productImages[0] %>" alt="<%= item.product.productName %>"
+                       style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 15px;">
+                  <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #333;"><%= item.product.productName %></div>
+                    <div style="color: #666; font-size: 0.9rem;">Size: <%= item.variant.size %> | Qty: <%= item.quantity %></div>
+                  </div>
+                  <div style="font-weight: 600; color: #333;">₹<%= (item.price * item.quantity).toFixed(2) %></div>
+                </div>
+              <% } %>
+            <% }) %>
+            <div style="text-align: right; font-size: 1.1rem; font-weight: 700; color: #333; margin-top: 15px;">
+              Total: ₹<%= failedOrder.finalAmount.toFixed(2) %>
+            </div>
+          </div>
+
+          <div class="buttons">
+            <a href="/retry-payment/<%= failedOrder.orderId %>" class="primary">Retry Payment</a>
+            <a href="/view-orders" class="secondary">View All Orders</a>
+            <a href="/" class="secondary">Continue Shopping</a>
+          </div>
+        <% } else { %>
+          <p class="message">
+            We're sorry, but there was a problem processing your order. This could be due to
+            payment issues, inventory problems, or a temporary system error.
+          </p>
+
+          <div class="error-code">Error Code: PAYMENT-FAILED</div>
+
+          <div class="buttons">
+            <a href="/view-orders" class="primary">View Orders</a>
+            <a href="/" class="secondary">Continue Shopping</a>
+          </div>
+        <% } %>
       </div>
       
       <div class="image-container">
@@ -237,9 +278,6 @@
   </div>
 </body>
 <script>
-  document.getElementById("retryButton").addEventListener("click", function(event) {
-    event.preventDefault(); // Prevent the default link behavior
-    history.back(); // Go to previous page
-  });
+  // No additional JavaScript needed - using direct links
 </script>
 </html>

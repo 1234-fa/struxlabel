@@ -32,10 +32,14 @@
               <div class="d-flex justify-content-between">
                 <div>
                   <strong>Order ID:</strong> <%= order.orderId %><br>
-                  <strong>Status:</strong> 
-                  <span class="<%= (order.status === 'cancelled' || order.status === 'returned') ? 'text-danger' : '' %>">
+                  <strong>Status:</strong>
+                  <span class="<%= (order.status === 'cancelled' || order.status === 'returned' || order.status === 'payment_failed') ? 'text-danger' : '' %>">
                     <%= order.status.charAt(0).toUpperCase() + order.status.slice(1).replaceAll("_", " ") %>
-                  </span>                </div>
+                  </span>
+                  <% if (order.paymentStatus === 'Failed' || order.status === 'payment_failed') { %>
+                    <span class="badge bg-danger ms-1">Payment Failed</span>
+                  <% } %>
+                </div>
                 <div class="text-end">
                   <strong>Date:</strong> <%= order.createdAt?.toLocaleString() || 'N/A' %><br>
                   <strong>Total:</strong> ₹<%= order.finalAmount.toFixed(2) %>
@@ -90,6 +94,13 @@
                 <button class="btn btn-sm btn-info text-white">
                   <a href="/viewOrderDetails/<%= order._id %>" class="text-white text-decoration-none">View Details</a>
                 </button>
+
+                <% if ((order.paymentStatus === 'Failed' || order.status === 'payment_failed') && order.paymentMethod === 'razorpay') { %>
+                  <a href="/retry-payment/<%= order.orderId %>" class="btn btn-sm btn-warning ms-2">
+                    <i class="fas fa-credit-card me-1"></i>
+                    Retry Payment
+                  </a>
+                <% } %>
               </div>
             </div>
           </div>
