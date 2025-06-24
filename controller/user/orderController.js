@@ -970,57 +970,41 @@ const getSingleOrderPage = async (req, res) => {
       if (orderedItems.length === 0) {
         return res.status(StatusCode.BAD_REQUEST).json({ message: "Selected items are no longer available." });
       }
-  
-      let totalOriginalPrice = 0;
-      let totalSalePrice = 0;
-      let orderItems = [];
-  
+
+      // Validate stock for all items
       for (const item of orderedItems) {
         const product = item.productId;
-        const price = product.salePrice || product.price || 0;
-        const originalPrice = product.regularPrice || 0;
         const quantity = item.quantity;
-        const variant = item.variant;
-  
+
         if (product.quantity < quantity) {
           return res.status(StatusCode.BAD_REQUEST).json({ message: `Insufficient stock for ${product.name}` });
         }
-  
-        const itemTotal = price * quantity;
-        const itemOriginalTotal = originalPrice * quantity;
-  
-        totalOriginalPrice += itemOriginalTotal;
-        totalSalePrice += itemTotal;
-  
-        orderItems.push({
-          product: product._id,
-          quantity,
-          variant,
-          price,
-          totalPrice: itemTotal,
-          status: "processing"
-        });
       }
   
-      // Coupon discount
-      let couponDiscount = 0;
+      // Get coupon if provided
       let appliedCoupon = null;
-  
       if (couponId) {
         appliedCoupon = await Coupon.findById(couponId);
-        if (appliedCoupon && !appliedCoupon.usersUsed.includes(userId)) {
-          couponDiscount = (totalSalePrice * appliedCoupon.discount) / 100;
-  
-          // Mark the coupon as used
-          await Coupon.findByIdAndUpdate(
-            couponId,
-            { $push: { usersUsed: userId } }
-          );
-        }
       }
-  
-      
-  console.log('delivery charge',deliveryCharge);
+
+      // Prepare items for pricing calculation
+      const pricingOrderItems = orderedItems.map(item => {
+        return {
+          product: item.productId,
+          quantity: item.quantity,
+          variant: item.variant
+        };
+      });
+
+      // Calculate pricing using centralized utility
+      const pricingResult = PricingCalculator.calculateOrderPricing(
+        pricingOrderItems,
+        appliedCoupon
+      );
+
+      console.log('Cart order pricing calculation result:', pricingResult);
+
+      console.log('delivery charge',deliveryCharge);
 
       const address = {
         addressType: selected.addressType,
@@ -1032,9 +1016,9 @@ const getSingleOrderPage = async (req, res) => {
         phone: selected.phone,
         altphone: selected.altphone,
       };
-  
+
       // Create order items with complete pricing info
-      const finalOrderItems = pricingResult.items.map((item, index) => {
+      const finalOrderItems = pricingResult.items.map((item) => {
         return {
           product: item.product._id,
           quantity: item.quantity,
@@ -1079,7 +1063,7 @@ const getSingleOrderPage = async (req, res) => {
       await newOrder.save();
   
       // Update product stock (variant-specific or general)
-            for (const item of orderItems) {
+            for (const item of finalOrderItems) {
               const product = await Product.findById(item.product);
               
               if (product.variants && item.variant?.size) {

@@ -426,7 +426,7 @@ rel="stylesheet">
                               <div class="product__item__pic set-bg" data-setbg="<%= products[i].productImages[0] %>">
                               </div>
                             </a>
-                            <a href="/addToWishlist?id=<%= products[i]._id %>" class="wishlist-btn">
+                            <a href="/addToWishlist?id=<%= products[i]._id %>" class="wishlist-btn" title="Add to Wishlist">
                                     <i class="fas fa-heart"></i>
                             </a>
 <div class="text-center">
@@ -554,7 +554,7 @@ function applyFilters() {
                             <div class="product__item__pic set-bg" data-setbg="${product.productImages[0]}">
                             </div>
                         </a>
-                        <a href="/addToWishlist?id=${product._id}"" class="wishlist-btn">
+                        <a href="/addToWishlist?id=${product._id}" class="wishlist-btn" title="Add to Wishlist">
                                     <i class="fas fa-heart"></i>
                             </a>
                         <div class="text-center">
@@ -588,7 +588,12 @@ function applyFilters() {
                 el.style.backgroundImage = `url(${bg})`;
             }
         });
-        
+
+        // Reinitialize wishlist buttons for new products
+        if (window.reinitializeWishlistButtons) {
+            window.reinitializeWishlistButtons();
+        }
+
         // Update pagination if provided
         if (data.pagination) {
             updatePagination(data.pagination);

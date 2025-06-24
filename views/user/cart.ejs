@@ -61,7 +61,12 @@ body {
   border: none;
   border-left: 1px solid #e0e0e0;
   border-right: 1px solid #e0e0e0;
-  background: #fafafa;
+  background: #f8f9fa !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+  cursor: default;
+  user-select: none;
 }
 
 /* Fixed remove button positioning */
@@ -90,12 +95,12 @@ body {
 }
 
 .stock-status {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .stock-low { color: #f57c00; background: #fff3e0; border: 1px solid #ffcc02; }
@@ -208,7 +213,7 @@ body {
         <div class="col-lg-8">
           <div class="card cart-card">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-              <h5 class="mb-0 fw-semibold">Cart Items (<%= cartItems.length %>)</h5>
+              <h6 class="mb-0 fw-semibold small">Cart Items (<%= cartItems.length %>)</h6>
             </div>
             
             <div class="card-body p-0">
@@ -235,20 +240,20 @@ body {
                       <div class="row">
                         <div class="col-lg-8">
                           <a href="/productDetails?id=<%= item.productId._id %>" class="text-decoration-none text-dark">
-                            <h6 class="fw-semibold mb-2 pe-5"><%= item.productId.productName %></h6>
+                            <h6 class="fw-semibold mb-2 pe-5 small"><%= item.productId.productName %></h6>
                           </a>
-                          <p class="text-muted mb-2 small">Brand:<%= item.productId.brand %></p>
-                          <p class="text-muted mb-2 small"><%= item.productId.longDescription %></p>
+                          <p class="text-muted mb-2" style="font-size: 0.75rem;">Brand: <%= item.productId.brand %></p>
+                          <p class="text-muted mb-2" style="font-size: 0.75rem;"><%= item.productId.longDescription %></p>
                           <div class="mt-3">
-                            <span class="h6 fw-bold text-primary">₹<%= item.productId.salePrice %></span>
-                            <span class="price-original ms-2">₹<%= Math.round(item.productId.salePrice * 1.2) %></span>
+                            <span class="fw-bold text-primary" style="font-size: 0.9rem;">₹<%= item.productId.salePrice %></span>
+                            <span class="price-original ms-2" style="font-size: 0.8rem;">₹<%= Math.round(item.productId.salePrice * 1.2) %></span>
                           </div>
 
                           <div class="mt-2 d-flex flex-wrap gap-2">
-                            <small class="badge bg-light text-dark">
+                            <small class="badge bg-light text-dark" style="font-size: 0.7rem;">
                               <strong>Size:</strong> <%= item.variant.size %>
                             </small>
-                            <small class="badge bg-light text-dark">
+                            <small class="badge bg-light text-dark" style="font-size: 0.7rem;">
                               <strong>Qty:</strong> <%= item.quantity %>
                             </small>
                           </div>
@@ -287,15 +292,15 @@ body {
                                  data-item-id="<%= item._id %>"
                                  data-stock="<%= item.productId.variants ? item.productId.variants.get(item.variant.size) || 0 : item.productId.quantity %>">
                               <button class="qty-btn" id="minus-<%= item._id %>" onclick="changeQty('<%= item._id %>', -1)">−</button>
-                              <input type="number" class="qty-input" id="qty-<%= item._id %>" 
+                              <input type="number" class="qty-input" id="qty-<%= item._id %>"
                                      value="<%= item.quantity %>" min="1" max="10"
-                                     onchange="submitQty('<%= item._id %>')"/>
+                                     readonly style="background-color: #f8f9fa; cursor: default;"/>
                               <button class="qty-btn" id="plus-<%= item._id %>" onclick="changeQty('<%= item._id %>', 1)">+</button>
                             </div>
 
                             <!-- Size Selection -->
-                            <select class="form-select-sm" id="size-<%= item._id %>" 
-                                    onchange="changeVariant('<%= item._id %>')" style="max-width: 150px;">
+                            <select class="form-select-sm" id="size-<%= item._id %>"
+                                    onchange="changeVariant('<%= item._id %>')" style="max-width: 150px; font-size: 0.8rem;">
                               <% if (item.productId.variants) { %>
                                 <% for (const [size, stock] of item.productId.variants) { %>
                                   <option value="<%= size %>" <%= item.variant.size === size ? 'selected' : '' %>
@@ -307,21 +312,21 @@ body {
                             </select>
 
                             <!-- Total Price -->
-                            <div class="p-2 rounded text-center item-total-price fw-bold text-primary">
+                            <div class="p-2 rounded text-center item-total-price fw-bold text-primary" style="font-size: 0.85rem;">
                               Total: ₹<%= item.totalPrice %>
                             </div>
 
                             <!-- Error Messages -->
-                            <div id="error-msg-<%= item._id %>" class="error-msg p-2 rounded small d-none"></div>
+                            <div id="error-msg-<%= item._id %>" class="error-msg p-2 rounded d-none" style="font-size: 0.75rem;"></div>
 
                             <% if (!sizeExists) { %>
                               <% hasInsufficientStock = true; %>
-                              <div class="error-msg p-2 rounded small">
+                              <div class="error-msg p-2 rounded" style="font-size: 0.75rem;">
                                 Selected size "<%= selectedSize %>" is no longer available. Please choose another size.
                               </div>
                             <% } else if (selectedStock === 0 || item.quantity > selectedStock) { %>
                               <% hasInsufficientStock = true; %>
-                              <div class="error-msg p-2 rounded small">
+                              <div class="error-msg p-2 rounded" style="font-size: 0.75rem;">
                                 <%= selectedStock === 0 ? 'Selected variant is out of stock.' : 'Insufficient stock available for the selected variant. Please reduce the quantity to proceed with your order.' %>
                               </div>
                             <% } %>
@@ -340,21 +345,21 @@ body {
         <div class="col-lg-4">
           <div class="card cart-card price-details-sticky">
             <div class="card-header bg-light">
-              <h6 class="mb-0 text-muted text-uppercase">Price Details</h6>
+              <h6 class="mb-0 text-muted text-uppercase small">Price Details</h6>
             </div>
-            
+
             <div class="card-body">
-              <div class="d-flex justify-content-between mb-3">
+              <div class="d-flex justify-content-between mb-3" style="font-size: 0.85rem;">
                 <span>Price (<%= cartItems.length %> items)</span>
                 <span>₹<%= Math.round(total * 1.2) %></span>
               </div>
-              
-              <div class="d-flex justify-content-between mb-3">
+
+              <div class="d-flex justify-content-between mb-3" style="font-size: 0.85rem;">
                 <span>Discount</span>
                 <span class="text-success">-₹<%= Math.round(total * 0.2) %></span>
               </div>
-              
-              <div class="d-flex justify-content-between mb-3">
+
+              <div class="d-flex justify-content-between mb-3" style="font-size: 0.85rem;">
                 <span>Delivery Charges</span>
                 <% if(total <= 2000) { %>
                   <span>₹54</span>
@@ -362,10 +367,10 @@ body {
                   <span class="text-success">FREE</span>
                 <% } %>
               </div>
-              
+
               <hr>
-              
-              <div class="d-flex justify-content-between fw-bold h6">
+
+              <div class="d-flex justify-content-between fw-bold" style="font-size: 0.9rem;">
                 <span>Total Amount</span>
                 <%if(total<=2000){%>
                   <span>₹<%= total + 54 %></span>
@@ -377,12 +382,12 @@ body {
             
             <div class="card-footer bg-white">
               <% if (hasInsufficientStock) { %>
-                <div class="alert alert-danger py-2 mb-3">
+                <div class="alert alert-danger py-2 mb-3" style="font-size: 0.8rem;">
                   <small>Some items in your cart have insufficient stock. Please review and update quantities.</small>
                 </div>
-                <button class="btn checkout-btn w-100 py-3" disabled>Place Order</button>
+                <button class="btn checkout-btn w-100 py-3" disabled style="font-size: 0.9rem;">Place Order</button>
               <% } else { %>
-                <a href="/orderOfCart" class="btn checkout-btn w-100 py-3 text-white text-decoration-none">Place Order</a>
+                <a href="/orderOfCart" class="btn checkout-btn w-100 py-3 text-white text-decoration-none" style="font-size: 0.9rem;">Place Order</a>
               <% } %>
             </div>
           </div>
@@ -503,30 +508,31 @@ function updateQuantityControlsForVariant(itemId) {
   const plusBtn = document.getElementById('plus-' + itemId);
   const minusBtn = document.getElementById('minus-' + itemId);
   const errorMsg = document.getElementById('error-msg-' + itemId);
-  
+
   const variantStock = getCurrentVariantStock(itemId);
   const currentQty = parseInt(input.value) || 1;
-  
+
   if (variantStock !== null) {
     let message = '';
     let newQty = currentQty;
-    
+
     // Update button states
     plusBtn.disabled = newQty >= Math.min(variantStock, 10) || variantStock === 0;
     minusBtn.disabled = newQty <= 1;
-    
+
     // Show/hide error message
     errorMsg.innerText = message;
     errorMsg.classList.toggle('d-none', !message);
-    
-    // If variant is out of stock, show appropriate message
+
+    // If variant is out of stock, show appropriate message and disable buttons
     if (variantStock === 0) {
       errorMsg.innerText = 'This size is out of stock.';
       errorMsg.classList.remove('d-none');
-      input.disabled = true;
-    } else {
-      input.disabled = false;
+      plusBtn.disabled = true;
+      minusBtn.disabled = true;
     }
+
+    // Input is always readonly - no need to enable/disable
   }
 }
 

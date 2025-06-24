@@ -21,7 +21,7 @@ const getWishlist = async (req, res) => {
     });
 
     const cartDoc = await Cart.findOne({ userId });
-    const cartProductIds = (cartDoc && cartDoc.items)  // ← Changed from 'products' to 'items'
+    const cartProductIds = (cartDoc && cartDoc.items)  
       ? cartDoc.items.map(p => p.productId.toString())  // ← Changed from 'products' to 'items'
       : [];
 
@@ -63,8 +63,20 @@ const addToWishlist = async (req, res) => {
         const productId = req.query.id;
         const userId = req.session.user._id;
 
+        // Debug logging
+        console.log('Add to wishlist request:', {
+            productId,
+            userId,
+            isXHR: req.xhr,
+            acceptHeader: req.headers.accept,
+            xRequestedWith: req.headers['x-requested-with']
+        });
+
         if (!userId) {
             console.error('User not logged in.');
+            if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+                return res.status(401).json({ success: false, message: 'Please login to add items to wishlist' });
+            }
             return res.redirect('/login');
         }
 
@@ -81,6 +93,9 @@ const addToWishlist = async (req, res) => {
             );
 
             if (isAlreadyInWishlist) {
+                if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+                    return res.json({ success: false, message: 'Product is already in your wishlist' });
+                }
                 return res.redirect('/wishlist');
             }
 
@@ -88,10 +103,30 @@ const addToWishlist = async (req, res) => {
         }
 
         await wishlist.save();
+
+        // Check if this is an AJAX request
+        const isAjax = req.xhr ||
+                      req.headers.accept?.indexOf('json') > -1 ||
+                      req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                      req.headers['content-type']?.indexOf('json') > -1;
+
+        console.log('Is AJAX request:', isAjax);
+
+        // Return JSON response for AJAX requests
+        if (isAjax) {
+            console.log('Returning JSON response for wishlist addition');
+            return res.json({ success: true, message: 'Product added to wishlist successfully!' });
+        }
+
+        // Fallback redirect for non-AJAX requests
+        console.log('Redirecting to wishlist page');
         res.redirect('/wishlist');
     } catch (error) {
         console.error("Error adding to wishlist:", error.message);
-        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+        if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+            return res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+        }
+        res.status(500).send("Internal Server Error");
     }
 };
 

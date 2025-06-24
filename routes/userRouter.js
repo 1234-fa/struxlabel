@@ -98,6 +98,26 @@ router.post('/remove-from-cart/:id',userAuth,cartController.removeCartItem);
 router.post('/update-cart/:id',userAuth,cartController.updateCartQty);
 router.post('/update-variant/:id',userAuth,cartController.updateVariant);
 
+// Debug route to test AJAX detection
+router.post('/test-ajax', userAuth, (req, res) => {
+    const isAjax = req.xhr ||
+                  req.headers.accept?.indexOf('json') > -1 ||
+                  req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                  req.headers['content-type']?.indexOf('json') > -1 ||
+                  req.headers['accept']?.includes('application/json');
+
+    console.log('Test AJAX detection:', {
+        isAjax,
+        headers: req.headers
+    });
+
+    if (isAjax) {
+        res.json({ success: true, message: 'AJAX detected successfully!' });
+    } else {
+        res.send('Non-AJAX request detected');
+    }
+});
+
 
 
 router.get('/orderOfCart',userAuth,orderController.getOrderPage);
@@ -139,40 +159,6 @@ router.post('/handle-payment-failure', userAuth, checkoutController.handlePaymen
 router.get('/retry-payment/:orderId', userAuth, checkoutController.retryPayment);
 router.post('/verify-retry-payment', userAuth, checkoutController.verifyRetryPayment);
 
-// // Debug route to check failed orders
-// router.get('/debug-orders', userAuth, async (req, res) => {
-//   try {
-//     const userId = req.session.user?._id;
-//     const Order = require('../models/orderSchema');
-
-//     const allOrders = await Order.find({ user: userId }).select('orderId status paymentStatus');
-//     const failedOrders = await Order.find({ user: userId, status: 'payment_failed' }).select('orderId status paymentStatus');
-
-//     res.json({
-//       userId,
-//       totalOrders: allOrders.length,
-//       allOrders,
-//       failedOrders: failedOrders.length,
-//       failedOrdersList: failedOrders
-//     });
-//   } catch (error) {
-//     res.json({ error: error.message });
-//   }
-// });
-
-// // Test route for retry payment
-// router.get('/test-retry/:orderId', userAuth, (req, res) => {
-//   const { orderId } = req.params;
-//   const userId = req.session.user?._id;
-
-//   res.json({
-//     message: 'Test retry route working',
-//     orderId,
-//     userId,
-//     fullUrl: req.originalUrl,
-//     params: req.params
-//   });
-// });
 
 router.post('/filterSearchSort',userAuth,shopController.getfilter);
 router.get('/shop',userAuth,shopController.loadShoppingPage)

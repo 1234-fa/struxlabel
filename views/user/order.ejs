@@ -366,22 +366,48 @@ document.addEventListener('DOMContentLoaded', function() {
         discountAmountElement.classList.add('text-success');
       }
       
-      // Close the modal - FIXED VERSION
-      const modalElement = document.getElementById('applyCouponModal');
-      const modalBackdrop = document.querySelector('.modal-backdrop');
-      
-      // Hide the modal properly
-      jQuery(modalElement).modal('hide');
-      
-      // Remove modal backdrop if it exists
-      if (modalBackdrop) {
-        modalBackdrop.remove();
+      // Close modal with multiple fallback methods
+      try {
+        const modalElement = document.getElementById('applyCouponModal');
+        if (modalElement) {
+          // Try to get existing modal instance
+          let modal = null;
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal && bootstrap.Modal.getInstance) {
+            modal = bootstrap.Modal.getInstance(modalElement);
+          }
+
+          if (modal) {
+            modal.hide();
+          } else {
+            // Manual modal close
+            modalElement.style.display = 'none';
+            modalElement.classList.remove('show');
+            modalElement.setAttribute('aria-hidden', 'true');
+            modalElement.removeAttribute('aria-modal');
+            modalElement.removeAttribute('role');
+
+            // Remove modal-open class from body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            // Remove backdrop
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+          }
+        }
+      } catch (modalError) {
+        // Force close everything
+        const modalElement = document.getElementById('applyCouponModal');
+        if (modalElement) {
+          modalElement.style.display = 'none';
+          modalElement.classList.remove('show');
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
       }
-      
-      // Remove modal-open class from body
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
       
       // Update the coupon button to show applied state
       updateCouponButton(true);
@@ -427,22 +453,43 @@ document.addEventListener('DOMContentLoaded', function() {
       coupon.checked = false;
     });
     
-    // Close the modal
-    const modalElement = document.getElementById('applyCouponModal');
-    const modalBackdrop = document.querySelector('.modal-backdrop');
-    
-    // Hide the modal properly
-    jQuery(modalElement).modal('hide');
-    
-    // Remove modal backdrop if it exists
-    if (modalBackdrop) {
-      modalBackdrop.remove();
+    // Close modal with multiple fallback methods
+    try {
+      const modalElement = document.getElementById('applyCouponModal');
+      if (modalElement) {
+        let modal = null;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal && bootstrap.Modal.getInstance) {
+          modal = bootstrap.Modal.getInstance(modalElement);
+        }
+
+        if (modal) {
+          modal.hide();
+        } else {
+          // Manual modal close
+          modalElement.style.display = 'none';
+          modalElement.classList.remove('show');
+          modalElement.setAttribute('aria-hidden', 'true');
+          modalElement.removeAttribute('aria-modal');
+          modalElement.removeAttribute('role');
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+          const backdrops = document.querySelectorAll('.modal-backdrop');
+          backdrops.forEach(backdrop => backdrop.remove());
+        }
+      }
+    } catch (modalError) {
+      // Force close modal
+      const modalElement = document.getElementById('applyCouponModal');
+      if (modalElement) {
+        modalElement.style.display = 'none';
+        modalElement.classList.remove('show');
+      }
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
     }
-    
-    // Remove modal-open class from body
-    document.body.classList.remove('modal-open');
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
     
     // Show success message after modal closes
     setTimeout(() => {

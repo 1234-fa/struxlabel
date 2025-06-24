@@ -187,7 +187,7 @@
                       </form>
                       <% } else { %>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#variantModal">Add to Cart</button>
-                        <a href="/addToWishlist?id=<%= product._id %>" class="btn btn-outline-danger btn-sm">
+                        <a href="/addToWishlist?id=<%= product._id %>" class="btn btn-outline-danger btn-sm" title="Add to Wishlist">
                           <i class="fas fa-heart"></i>
                         </a>
                         <% } %>
@@ -346,7 +346,7 @@
                       class="card-img-top img-fluid" 
                       style="height: 220px; object-fit: cover;">
                   </a>
-                  <a href="/addToWishlist?id=<%= item._id %>" class="wishlist-btn">
+                  <a href="/addToWishlist?id=<%= item._id %>" class="wishlist-btn" title="Add to Wishlist">
                 <i class="fas fa-heart"></i>
               </a>
                 </div>
@@ -395,7 +395,7 @@
         <h6 class="mb-0">Choose Size</h6>
         <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form action="/add-to-cart" method="POST" id="addToCartForm">
+      <form action="/add-to-cart" method="POST" id="productDetailsCartForm">
         <input type="hidden" name="productId" value="<%= product._id %>">
         <input type="hidden" name="variant" class="variant-input" id="selectedVariantCart">
         <input type="hidden" name="variantStock" class="stock-input" id="selectedStockCart">
@@ -520,6 +520,8 @@
     evt.currentTarget.classList.add("active");
   }
 
+
+
   document.querySelectorAll('.size-btn').forEach(button => {
     button.addEventListener('click', () => {
       const modal = button.closest('.modal');
@@ -564,6 +566,207 @@
     }
     isZoomed = !isZoomed;
   });
+
+  // ====================== CART BUTTON CLICK HANDLER ======================
+  // Find the submit button and attach a direct click handler
+  setTimeout(() => {
+    const submitButton = document.querySelector('#productDetailsCartForm button[type="submit"]');
+    if (submitButton && !submitButton.dataset.handlerAttached) {
+      submitButton.dataset.handlerAttached = 'true';
+
+      submitButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        // Prevent multiple clicks
+        if (this.disabled || window.simpleCartSubmissionInProgress) {
+          return false;
+        }
+        window.simpleCartSubmissionInProgress = true;
+
+        const form = this.closest('form');
+        const formData = new FormData(form);
+        const productId = formData.get('productId');
+        const variant = formData.get('variant');
+
+        if (!productId || !variant) {
+          alert('Please select a size');
+          window.simpleCartSubmissionInProgress = false;
+          return false;
+        }
+
+        // Show loading state
+        const originalContent = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        this.disabled = true;
+
+        // Make AJAX request
+        fetch('/add-to-cart', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.success === true) {
+            showSuccessMessage(data.message || 'Added to cart!');
+
+            // Close modal
+            try {
+              const modalElement = document.getElementById('variantModal');
+              if (modalElement) {
+                let modal = null;
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal && bootstrap.Modal.getInstance) {
+                  modal = bootstrap.Modal.getInstance(modalElement);
+                }
+
+                if (modal) {
+                  modal.hide();
+                } else {
+                  // Manual modal close
+                  modalElement.style.display = 'none';
+                  modalElement.classList.remove('show');
+                  modalElement.setAttribute('aria-hidden', 'true');
+                  modalElement.removeAttribute('aria-modal');
+                  modalElement.removeAttribute('role');
+                  document.body.classList.remove('modal-open');
+                  document.body.style.overflow = '';
+                  document.body.style.paddingRight = '';
+                  const backdrops = document.querySelectorAll('.modal-backdrop');
+                  backdrops.forEach(backdrop => backdrop.remove());
+                }
+              }
+            } catch (modalError) {
+              // Force close modal
+              const modalElement = document.getElementById('variantModal');
+              if (modalElement) {
+                modalElement.style.display = 'none';
+                modalElement.classList.remove('show');
+              }
+              document.body.classList.remove('modal-open');
+              document.body.style.overflow = '';
+              const backdrops = document.querySelectorAll('.modal-backdrop');
+              backdrops.forEach(backdrop => backdrop.remove());
+            }
+
+            updateCartButton(data.productId || productId);
+          } else {
+            alert(data.message || 'Failed to add to cart');
+          }
+        })
+        .catch(error => {
+          alert('Failed to add to cart');
+        })
+        .finally(() => {
+          this.innerHTML = originalContent;
+          this.disabled = false;
+          window.simpleCartSubmissionInProgress = false;
+        });
+
+        return false;
+      });
+    }
+  }, 500);
+
+  // Function to show success message
+  function showSuccessMessage(message) {
+    // Remove any existing messages
+    const existingMessage = document.querySelector('.cart-success-message');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'alert alert-success alert-dismissible fade show cart-success-message';
+    messageDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      min-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+
+    messageDiv.innerHTML = `
+      <div class="d-flex align-items-center">
+        <i class="fas fa-shopping-cart text-primary me-2"></i>
+        <span>${message}</span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `;
+
+    // Add to page
+    document.body.appendChild(messageDiv);
+
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+      if (messageDiv && messageDiv.parentNode) {
+        messageDiv.classList.remove('show');
+        setTimeout(() => {
+          if (messageDiv && messageDiv.parentNode) {
+            messageDiv.remove();
+          }
+        }, 150);
+      }
+    }, 4000);
+  }
+
+  // Function to update cart button
+  function updateCartButton(productId) {
+    // Add a small delay to ensure DOM is ready
+    setTimeout(() => {
+      // Find the action buttons container (the div that contains Add to Cart button)
+      const actionButtonsContainer = document.querySelector('.mb-3.d-flex.justify-content-center.gap-2.flex-wrap');
+
+      if (actionButtonsContainer) {
+        // Create the new "Go to Cart" button structure
+        const goToCartForm = document.createElement('form');
+        goToCartForm.action = '/cart';
+        goToCartForm.method = 'GET';
+        goToCartForm.innerHTML = `
+          <input type="hidden" name="productId" value="${productId}">
+          <input type="hidden" name="quantity" value="1">
+          <button type="submit" class="btn btn-primary btn-sm">Go to Cart</button>
+        `;
+
+        // Create Buy Now button (keep it)
+        const buyNowButton = document.createElement('button');
+        buyNowButton.type = 'button';
+        buyNowButton.className = 'btn btn-success btn-sm';
+        buyNowButton.setAttribute('data-bs-toggle', 'modal');
+        buyNowButton.setAttribute('data-bs-target', '#buyNowModal');
+        buyNowButton.textContent = 'Buy Now';
+
+        // Clear the container and add new buttons
+        actionButtonsContainer.innerHTML = '';
+        actionButtonsContainer.appendChild(buyNowButton);
+        actionButtonsContainer.appendChild(goToCartForm);
+      } else {
+        // Try to find the "Add to Cart" button directly
+        const addToCartButton = document.querySelector('button[data-bs-target="#variantModal"]');
+        if (addToCartButton) {
+          const goToCartForm = document.createElement('form');
+          goToCartForm.action = '/cart';
+          goToCartForm.method = 'GET';
+          goToCartForm.className = 'd-inline';
+          goToCartForm.innerHTML = `
+            <input type="hidden" name="productId" value="${productId}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn btn-primary btn-sm">Go to Cart</button>
+          `;
+
+          addToCartButton.parentNode.replaceChild(goToCartForm, addToCartButton);
+        }
+      }
+    }, 100);
+  }
+
+
 
 </script>
 

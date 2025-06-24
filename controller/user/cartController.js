@@ -45,14 +45,23 @@ const getCartPage = async (req, res) => {
 const addToCart = async (req, res) => {
   try {
     const userId = req.session.user;
-    if (!userId) return res.redirect('/login');
 
-    const { productId, variant,  quantity = 1 } = req.body;
+    if (!userId) {
+      console.log('❌ User not logged in');
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(401).json({ success: false, message: 'Please login to add items to cart' });
+    }
 
-    console.log('add to cart req.body',req.body);
+    const { productId, variant, quantity = 1 } = req.body;
+
+    console.log('add to cart req.body', req.body);
 
     const product = await Product.findById(productId);
-    if (!product) return res.status(StatusCode.NOT_FOUND).send("Product not found");
+    if (!product) {
+      console.log('❌ Product not found:', productId);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
 
     let cart = await Cart.findOne({ userId });
 
@@ -106,11 +115,51 @@ const addToCart = async (req, res) => {
 
     
 
+    // Check if this is an AJAX request - enhanced detection
+    const isAjax = req.xhr ||
+                  req.headers.accept?.indexOf('json') > -1 ||
+                  req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                  req.headers['content-type']?.indexOf('json') > -1 ||
+                  req.headers['accept']?.includes('application/json');
+
+    console.log('Cart addition debug:', {
+      isAjax,
+      xhr: req.xhr,
+      acceptHeader: req.headers.accept,
+      xRequestedWith: req.headers['x-requested-with'],
+      contentType: req.headers['content-type'],
+      variant,
+      cartItemsCount: cart.items.length,
+      allHeaders: req.headers
+    });
+
+    // Force JSON response for requests with XMLHttpRequest header
+    if (req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+        req.headers.accept?.includes('application/json')) {
+      console.log('✅ Returning JSON response for cart addition');
+      res.setHeader('Content-Type', 'application/json');
+      return res.json({
+        success: true,
+        message: `Product added to cart successfully! Size: ${variant}`,
+        cartItemsCount: cart.items.length,
+        productId: productId
+      });
+    }
+
+    // Fallback redirect for non-AJAX requests
+    console.log('❌ Redirecting to cart page - AJAX not detected');
     res.redirect('/cart');
 
   } catch (err) {
-    console.error("Error adding to cart:", err.message);
-    res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+    console.error("❌ Error adding to cart:", err.message);
+
+    // Always return JSON error for now (since we're using AJAX)
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to add product to cart',
+      error: err.message
+    });
   }
 };
 
