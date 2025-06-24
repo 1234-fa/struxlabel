@@ -1,6 +1,100 @@
 <%- include("../../views/partials/user/header") %>
 
-<div class="container mt-5 mb-5">
+<!-- Payment Process Typography Improvements -->
+<style>
+  /* Payment Process Typography */
+  .payment-process-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .payment-process-container h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+  }
+
+  .payment-process-container h4 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 0.75rem;
+  }
+
+  .payment-process-container h5 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+
+  .payment-process-container h6 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+  }
+
+  .payment-process-container p {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: #5a6c7d;
+    margin-bottom: 0.5rem;
+  }
+
+  .payment-process-container .small {
+    font-size: 0.8rem;
+  }
+
+  .payment-process-container .text-muted {
+    color: #6c757d !important;
+    font-size: 0.8rem;
+  }
+
+  .payment-process-container .card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .payment-process-container .card-body {
+    padding: 1.25rem;
+  }
+
+  .payment-process-container .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .payment-process-container .price-text {
+    font-weight: 600;
+    color: #27ae60;
+  }
+
+  .payment-process-container .cart-item {
+    border-bottom: 1px solid #f8f9fa;
+    padding: 1rem 0;
+  }
+
+  .payment-process-container .cart-item:last-child {
+    border-bottom: none;
+  }
+
+  .payment-process-container .cart-item p {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .payment-process-container .cart-item strong {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+</style>
+
+<div class="container mt-4 mb-5 payment-process-container">
+  <h1 class="text-center mb-4">Complete Your Payment</h1>
   <div class="row">
     <!-- Payment Methods -->
     <div class="col-md-7">
@@ -79,24 +173,30 @@
     <!-- Order Summary -->
     <div class="col-md-5">
       <h4 class="mb-4">Order Summary</h4>
-      <div class="card p-4 shadow-sm">
-        <% cartItems.forEach(item => { %>
-          <% if (item.productId) { %>
-            <div class="mb-3 border-bottom pb-2">
-              <p><strong>Product:</strong> <%= item.productId.productName %></p>
-              <% if (item.productId.productImages && item.productId.productImages[0]) { %>
-                <img src="<%= item.productId.productImages[0] %>" alt="Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
-              <% } else { %>
-                <img src="/uploads/product-images/default-image.png" alt="Default Product Image" class="me-3" style="width: 80px; height: 80px; object-fit: cover;">
-              <% } %>
-              <p><strong>Qty:</strong> <%= item.quantity %></p>
-              <p><strong>Price :</strong> ₹<%= item.productId.regularPrice %></p>
-              <p><strong>Size:</strong> <%= item.variant?.size || 'Not selected' %></p>
-              <p><strong>Offer Price (each):</strong> ₹<%= item.productId.salePrice %></p>
-              <p><strong>Total:</strong> ₹<%= item.totalPrice %></p>
-            </div>
-          <% } %>
-        <% }) %>
+      <div class="card">
+        <div class="card-body">
+          <% cartItems.forEach(item => { %>
+            <% if (item.productId) { %>
+              <div class="cart-item">
+                <div class="d-flex">
+                  <% if (item.productId.productImages && item.productId.productImages[0]) { %>
+                    <img src="<%= item.productId.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                  <% } else { %>
+                    <img src="/uploads/product-images/default-image.png" alt="Default Product Image" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                  <% } %>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1"><%= item.productId.productName %></h6>
+                    <p class="text-muted">Qty: <%= item.quantity %> | Size: <%= item.variant?.size || 'Not selected' %></p>
+                    <div class="d-flex align-items-center">
+                      <span class="price-text me-2">₹<%= item.productId.salePrice %></span>
+                      <del class="text-muted small">₹<%= item.productId.regularPrice %></del>
+                    </div>
+                    <p class="small"><strong>Total: ₹<%= item.totalPrice %></strong></p>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+          <% }) %>
         <hr>
 
         <div class="price-breakdown">
@@ -142,17 +242,25 @@
           <% } %>
         </div>
 
-        <hr>
-    
-        <!-- Displaying the Address -->
-        <h5 class="mb-3">Shipping Address</h5>
-        <p><strong>Name:</strong> <%= selected.name %></p>
-        <p><strong>Address:</strong> <%= selected.landMark %>, <%= selected.city %>, <%= selected.state %> - <%= selected.pincode %></p>
-        <p><strong>Phone:</strong> <%= selected.phone %></p>
-        <p><strong>Alternate Phone:</strong> <%= selected.altphone %></p>
-    
-        <hr>
-        <p><strong>Grand Total:</strong> ₹<%= orderSummary.total %></p>
+          <hr>
+
+          <!-- Displaying the Address -->
+          <div class="address-section">
+            <h6 class="mb-2">Shipping Address</h6>
+            <p class="mb-1"><strong><%= selected.name %></strong></p>
+            <p class="text-muted mb-1"><%= selected.landMark %>, <%= selected.city %>, <%= selected.state %> - <%= selected.pincode %></p>
+            <p class="text-muted mb-1">Phone: <%= selected.phone %></p>
+            <% if (selected.altphone) { %>
+              <p class="text-muted mb-0">Alt Phone: <%= selected.altphone %></p>
+            <% } %>
+          </div>
+
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span class="h6">Grand Total:</span>
+            <span class="h6 price-text">₹<%= orderSummary.total %></span>
+          </div>
+        </div>
       </div>
     </div>
   </div>

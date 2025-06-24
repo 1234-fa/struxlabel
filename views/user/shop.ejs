@@ -268,6 +268,42 @@ rel="stylesheet">
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             position: relative;
         }
+
+        /* Fix container margins and padding to remove white space */
+        .shop .container {
+            max-width: 100% !important;
+            padding-left: 15px !important;
+            padding-right: 15px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        /* Ensure full width on larger screens */
+        @media (min-width: 1200px) {
+            .shop .container {
+                max-width: 1200px !important;
+            }
+        }
+
+        @media (min-width: 992px) and (max-width: 1199px) {
+            .shop .container {
+                max-width: 960px !important;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 991px) {
+            .shop .container {
+                max-width: 720px !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .shop .container {
+                max-width: 100% !important;
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+        }
     </style>
 
 <!-- Shop Section Begin -->

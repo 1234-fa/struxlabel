@@ -4,34 +4,34 @@
 /* Enhanced styles for retry payment page */
 #retry-payment-page {
   background: url('../background.png') no-repeat center center/cover;
-  min-height: calc(100vh - 200px);
-  padding: 40px 0;
-  font-family: 'Roboto', Arial, sans-serif;
+  min-height: calc(100vh - 150px);
+  padding: 20px 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 #retry-payment-page .payment-card {
-  background: rgba(0, 0, 0, 0.98);
-  backdrop-filter: blur(15px);
-  border-radius: 15px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  max-width: 900px;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  padding: 25px;
+  max-width: 600px;
   margin: 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #retry-payment-page .order-summary {
   background: #ffffff;
   border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 15px;
+  margin-bottom: 15px;
 }
 
 #retry-payment-page .product-item {
   display: flex;
   align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 #retry-payment-page .product-item:last-child {
@@ -39,58 +39,90 @@
 }
 
 #retry-payment-page .product-image {
-  width: 80px;
-  height: 80px;
+  width: 50px;
+  height: 50px;
   object-fit: cover;
-  border-radius: 8px;
-  margin-right: 15px;
+  border-radius: 6px;
+  margin-right: 12px;
 }
 
 #retry-payment-page .payment-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
   color: white;
-  padding: 15px 30px;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 12px 25px;
+  border-radius: 6px;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   width: 100%;
 }
 
 #retry-payment-page .payment-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 #retry-payment-page .retry-info {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 20px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 15px;
+  color: #ffffff;
 }
 
 #retry-payment-page .price-breakdown {
   background: white;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
 }
 
 #retry-payment-page .price-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  font-size: 0.85rem;
 }
 
 #retry-payment-page .price-row.total {
   font-weight: bold;
-  font-size: 18px;
-  border-top: 2px solid #eee;
-  padding-top: 10px;
-  margin-top: 15px;
+  font-size: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+  margin-top: 10px;
+}
+
+/* Compact text styles */
+#retry-payment-page h2 {
+  font-size: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+#retry-payment-page h5 {
+  font-size: 1rem !important;
+  margin-bottom: 10px !important;
+}
+
+#retry-payment-page h6 {
+  font-size: 0.85rem !important;
+  margin-bottom: 8px !important;
+}
+
+#retry-payment-page p {
+  font-size: 0.8rem !important;
+  margin-bottom: 3px !important;
+}
+
+#retry-payment-page .retry-info h6 {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+#retry-payment-page .retry-info p {
+  font-size: 0.75rem !important;
 }
 </style>
 
@@ -98,73 +130,73 @@
 <div id="retry-payment-page">
   <div class="container">
     <div class="payment-card">
-      <div class="text-center mb-4">
+      <div class="text-center mb-3">
         <h2 style="color: #ffffff;">Retry Payment</h2>
-        <p style="color: #ffffff;">Complete your payment for Order #<%= order.orderId %></p>
+        <p style="color: #ffffff; font-size: 0.9rem;">Order #<%= order.orderId %></p>
       </div>
 
       <div class="retry-info">
-        <h6><i class="fas fa-info-circle"></i> Payment Retry Information</h6>
-        <p class="mb-1"><strong>Previous Attempts:</strong> <%= order.retryAttempts %></p>
-        <p class="mb-1"><strong>Last Attempt:</strong> <%= order.lastPaymentAttempt ? order.lastPaymentAttempt.toLocaleString() : 'N/A' %></p>
+        <h6><i class="fas fa-info-circle me-1"></i>Payment Info</h6>
+        <p><strong>Attempts:</strong> <%= order.retryAttempts %></p>
         <% if (order.paymentFailureReason) { %>
-          <p class="mb-0"><strong>Failure Reason:</strong> <%= order.paymentFailureReason %></p>
+          <p class="mb-0"><strong>Reason:</strong> <%= order.paymentFailureReason %></p>
         <% } %>
       </div>
 
       <div class="order-summary">
-        <h5 class="mb-3">Order Summary</h5>
-        
+        <h5>Order Summary</h5>
+
         <% order.orderedItems.forEach(item => { %>
           <div class="product-item">
             <img src="<%= item.product.productImages[0] %>" alt="<%= item.product.productName %>" class="product-image">
             <div class="flex-grow-1">
-              <h6 class="mb-1"><%= item.product.productName %></h6>
-              <p class="text-muted mb-1">Size: <%= item.variant?.size || item.variant || 'Not selected' %></p>
-              <p class="text-muted mb-0">Quantity: <%= item.quantity %></p>
+              <h6><%= item.product.productName %></h6>
+              <p class="text-muted">Qty: <%= item.quantity %> | Size: <%= item.variant?.size || item.variant || 'N/A' %></p>
             </div>
             <div class="text-end">
-              <p class="mb-0 fw-bold">₹<%= (item.price * item.quantity).toFixed(2) %></p>
+              <p class="mb-0 fw-bold" style="font-size: 0.9rem; color: #28a745;">₹<%= (item.price * item.quantity).toFixed(2) %></p>
             </div>
           </div>
         <% }) %>
       </div>
 
       <div class="price-breakdown">
-        <h6 class="mb-3">Price Breakdown</h6>
+        <h6>Price Summary</h6>
         <div class="price-row">
           <span>Subtotal:</span>
           <span>₹<%= order.totalPrice.toFixed(2) %></span>
         </div>
-        <div class="price-row">
-          <span>Discount:</span>
-          <span class="text-success">-₹<%= order.discount.toFixed(2) %></span>
-        </div>
-        <div class="price-row">
-          <span>Delivery Charge:</span>
-          <span>₹<%= order.deliveryCharge.toFixed(2) %></span>
-        </div>
+        <% if (order.discount > 0) { %>
+          <div class="price-row">
+            <span>Discount:</span>
+            <span class="text-success">-₹<%= order.discount.toFixed(2) %></span>
+          </div>
+        <% } %>
+        <% if (order.deliveryCharge > 0) { %>
+          <div class="price-row">
+            <span>Delivery:</span>
+            <span>₹<%= order.deliveryCharge.toFixed(2) %></span>
+          </div>
+        <% } %>
         <div class="price-row total">
-          <span>Total Amount:</span>
+          <span>Total:</span>
           <span class="text-primary">₹<%= order.finalAmount.toFixed(2) %></span>
         </div>
       </div>
 
-      <div class="text-center mt-4">
+      <div class="text-center mt-3">
         <button id="retryPaymentBtn" class="payment-btn">
           <i class="fas fa-credit-card me-2"></i>
           Retry Payment - ₹<%= order.finalAmount.toFixed(2) %>
         </button>
       </div>
 
-      <div class="text-center mt-3">
-        <a href="/view-orders" class="btn btn-outline-secondary me-2">
-          <i class="fas fa-list me-2"></i>
-          View All Orders
+      <div class="text-center mt-2">
+        <a href="/profile/orders" class="text-white-50 me-3" style="font-size: 0.8rem; text-decoration: none;">
+          <i class="fas fa-list me-1"></i>View Orders
         </a>
-        <a href="/order-failure?orderId=<%= order.orderId %>" class="btn btn-outline-secondary">
-          <i class="fas fa-arrow-left me-2"></i>
-          Back to Failure Page
+        <a href="/order-failure?orderId=<%= order.orderId %>" class="text-white-50" style="font-size: 0.8rem; text-decoration: none;">
+          <i class="fas fa-arrow-left me-1"></i>Back
         </a>
       </div>
     </div>
