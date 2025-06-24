@@ -52,6 +52,7 @@ const orderSchema = new Schema(
           enum: [
             "processing",
             "shipped",
+            "out_for_delivery",
             "delivered",
             "cancelled",
             "return request",
@@ -132,6 +133,7 @@ const orderSchema = new Schema(
         "shipped",
         "delivered",
         "cancelled",
+        "out_for_delivery",
         "return request",
         "returned",
         "return approved",

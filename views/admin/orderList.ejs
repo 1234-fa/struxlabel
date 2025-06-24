@@ -103,19 +103,26 @@
               </td>
               <td>₹<%= order.finalAmount.toFixed(2) %></td>
               <td>
-                <% 
+                <%
                   const status = order.status.toLowerCase();
                   let badgeClass = 'bg-secondary text-white';
-              
-                  if (['processing', 'shipped', 'out for delivery'].includes(status)) {
+                  const finalStates = ['cancelled', 'returned', 'payment_failed'];
+                  const isFinalState = finalStates.includes(status);
+
+                  if (['processing', 'shipped', 'out_for_delivery'].includes(status)) {
                     badgeClass = 'bg-primary text-white';
-                  } else if (['cancelled', 'canceled', 'returned', 'return requested', 'return request'].includes(status)) {
+                  } else if (isFinalState) {
                     badgeClass = 'bg-danger text-white';
                   } else if (status === 'delivered') {
                     badgeClass = 'bg-success text-white';
                   }
                 %>
                 <span class="badge <%= badgeClass %> text-uppercase"><%= order.status %></span>
+                <% if (isFinalState) { %>
+                  <br><small class="text-muted">
+                    <i class="fas fa-lock"></i> Final State
+                  </small>
+                <% } %>
               </td>
               <td>
                 <a href="/admin/singleOrderDetails/<%= order._id %>" class="btn btn-sm btn-primary">
@@ -145,7 +152,7 @@
                 const status = order.status.toLowerCase();
                 let badgeClass = 'bg-secondary text-white';
             
-                if (['processing', 'shipped', 'out for delivery'].includes(status)) {
+                if (['processing', 'shipped', 'out_for_delivery'].includes(status)) {
                   badgeClass = 'bg-primary text-white';
                 } else if (['cancelled', 'canceled', 'returned', 'return requested', 'return request'].includes(status)) {
                   badgeClass = 'bg-danger text-white';

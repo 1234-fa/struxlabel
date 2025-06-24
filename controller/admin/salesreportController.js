@@ -25,7 +25,7 @@ async function getSalesData(filterType, selectedYear, selectedMonth) {
           $gte: new Date(`${fiveYearsAgo}-01-01`),
           $lte: new Date(`${selectedYear}-12-31T23:59:59.999Z`),
         },
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       };
 
       groupStage = {
@@ -47,7 +47,7 @@ async function getSalesData(filterType, selectedYear, selectedMonth) {
           $gte: new Date(`${selectedYear}-01-01`),
           $lte: new Date(`${selectedYear}-12-31T23:59:59.999Z`),
         },
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       };
 
       groupStage = {
@@ -89,7 +89,7 @@ async function getSalesData(filterType, selectedYear, selectedMonth) {
               .padStart(2, "0")}-${daysInMonth}T23:59:59.999Z`
           ),
         },
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       };
 
       groupStage = {
@@ -148,7 +148,7 @@ async function getBestSellingProducts() {
     // Only include orders that were not cancelled or returned
     {
       $match: {
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       },
     },
     // Unwind to get individual order items
@@ -198,7 +198,7 @@ async function getBestSellingCategories() {
     // Only include orders that were not cancelled or returned
     {
       $match: {
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       },
     },
     // Unwind to get individual order items
@@ -258,7 +258,7 @@ async function getBestSellingBrands() {
     // Only include orders that were not cancelled or returned
     {
       $match: {
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       },
     },
     // Unwind to get individual order items
@@ -327,7 +327,7 @@ async function getStatistics() {
     {
       $match: {
         createdOn: { $gte: startOfToday, $lte: endOfToday },
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       },
     },
     {
@@ -344,7 +344,7 @@ async function getStatistics() {
     {
       $match: {
         createdOn: { $gte: startOfMonth, $lte: endOfMonth },
-        status: { $nin: ["cancelled", "return approved", "returned"] },
+        status: { $nin: ["cancelled", "return approved", "returned", "payment_failed"] },
       },
     },
     {
@@ -362,9 +362,10 @@ async function getStatistics() {
   // Get low stock products (less than 10 items)
   const lowStockCount = await Product.countDocuments({ quantity: { $lt: 10 } });
 
-  // Get pending orders count
+  // Get pending orders count (excluding failed orders)
   const pendingOrdersCount = await Order.countDocuments({
     status: { $in: ["processing", "placed", "shipped"] },
+    // Failed orders are already excluded by the $in filter
   });
 
   return {
@@ -439,6 +440,8 @@ const getLedger = async (req, res) => {
 
     const ledgerEntries = await Order.find({
       createdOn: { $gte: startDate, $lte: endDate },
+      // Exclude failed orders from ledger
+      status: { $nin: ["payment_failed"] }
     })
       .sort({ createdOn: 1 })
       .populate("user", "name email")
@@ -497,7 +500,11 @@ const loadsalesreport = async (req, res) => {
       }
     }
 
-    const query = {};
+    const query = {
+      // Exclude failed orders from sales report
+      status: { $nin: ["payment_failed"] }
+    };
+
     if (startDate && endDate) {
       query.createdAt = {
         $gte: new Date(startDate),
@@ -565,6 +572,8 @@ const downloadSalesReport = async (req, res) => {
         $gte: start,
         $lte: end,
       },
+      // Exclude failed orders from download report
+      status: { $nin: ["payment_failed"] }
     };
 
     const orders = await Order.find(query).populate("coupon");

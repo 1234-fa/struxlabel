@@ -76,6 +76,7 @@
                       <option value="pending" <%= item.status === 'pending' ? 'selected' : '' %>>Pending</option>
                       <option value="processing" <%= item.status === 'processing' ? 'selected' : '' %>>Processing</option>
                       <option value="shipped" <%= item.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                      <option value="out_for_delivery" <%= item.status === 'out_for_delivery' ? 'selected' : '' %>>Out for Delivery</option>
                       <option value="delivered" <%= item.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
                       <option value="cancelled" <%= item.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
                       <option value="return request" <%= item.status === 'return request' ? 'selected' : '' %>>Return Request</option>
@@ -108,6 +109,7 @@
                     <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
                     <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
                     <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="out_for_delivery" <%= order.status === 'out_for_delivery' ? 'selected' : '' %>>Out for Delivery</option>
                     <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
                     <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
                     <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>

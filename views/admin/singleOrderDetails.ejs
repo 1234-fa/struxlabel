@@ -75,6 +75,7 @@
                       <option value="pending" <%= item.status === 'pending' ? 'selected' : '' %>>Pending</option>
                       <option value="processing" <%= item.status === 'processing' ? 'selected' : '' %>>Processing</option>
                       <option value="shipped" <%= item.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                      <option value="out_for_delivery" <%= item.status === 'out_for_delivery' ? 'selected' : '' %>>Out for Delivery</option>
                       <option value="delivered" <%= item.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
                       <option value="cancelled" <%= item.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
                       <option value="return request" <%= item.status === 'return request' ? 'selected' : '' %>>Return Request</option>
@@ -97,23 +98,35 @@
             <p><strong>Ordered At:</strong> <%= order.createdAt?.toLocaleString() || 'N/A' %></p>
           </div>
           <div class="col-md-6 text-md-end">
-            <p><strong>Status:</strong> 
-              <span class="badge bg-<%= order.status === 'delivered' ? 'success' : order.status === 'cancelled' ? 'danger' : 'warning' %>">
+            <p><strong>Order Status:</strong>
+              <span class="badge bg-<%=
+                order.status === 'delivered' ? 'success' :
+                ['cancelled', 'returned', 'payment_failed'].includes(order.status.toLowerCase()) ? 'danger' :
+                'warning'
+              %>">
                 <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
               </span>
             </p>
-            <form action="/admin/update-order-status/<%= order._id %>" method="POST" class="d-flex align-items-center">
-                <select name="status" class="form-select form-select-sm me-2">
-                    <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                    <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
-                    <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                    <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                    <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                    <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>
-                    <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
-                  </select>
-                <button type="submit" class="btn btn-sm btn-outline-success">Update</button>
-              </form>
+
+            <% if (order.canChangeOrderStatus && order.allowedOrderStatuses.length > 0) { %>
+              <form action="/admin/update-order-status/<%= order._id %>" method="POST" class="d-flex align-items-center" onsubmit="return confirmStatusChange(event, 'order')">
+                  <select name="status" class="form-select form-select-sm me-2">
+                      <% order.allowedOrderStatuses.forEach(statusOption => { %>
+                        <option value="<%= statusOption.value %>" <%= order.status.toLowerCase() === statusOption.value ? 'selected' : '' %>>
+                          <%= statusOption.label %>
+                        </option>
+                      <% }) %>
+                    </select>
+                  <button type="submit" class="btn btn-sm btn-outline-success">Update Order Status</button>
+                </form>
+            <% } else { %>
+              <div class="alert alert-warning alert-sm mt-2">
+                <small>
+                  <i class="fas fa-lock me-1"></i>
+                  Order status cannot be changed. This order is in a final state.
+                </small>
+              </div>
+            <% } %>
           </div>
         </div>
       </div>
@@ -121,5 +134,71 @@
 
   <% } %>
 </div>
+
+<!-- Status Change Confirmation and Error Handling -->
+<script>
+function confirmStatusChange(event, type) {
+  const form = event.target;
+  const select = form.querySelector('select[name="status"]');
+  const newStatus = select.value;
+  const currentStatus = select.querySelector('option[selected]')?.value || select.options[0].value;
+
+  if (newStatus === currentStatus) {
+    event.preventDefault();
+    alert('Please select a different status to update.');
+    return false;
+  }
+
+  const message = `Are you sure you want to change the ${type} status to "${select.options[select.selectedIndex].text}"?`;
+
+  if (!confirm(message)) {
+    event.preventDefault();
+    return false;
+  }
+
+  return true;
+}
+
+// Handle form submission with AJAX for better error handling
+document.addEventListener('DOMContentLoaded', function() {
+  const forms = document.querySelectorAll('form[action*="update-order"]');
+
+  forms.forEach(form => {
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      if (!confirmStatusChange(e, 'order')) {
+        return;
+      }
+
+      try {
+        const formData = new FormData(form);
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Show success message and reload page
+          alert('Status updated successfully!');
+          window.location.reload();
+        } else {
+          // Show error message
+          alert('Error: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Error updating status:', error);
+        alert('An error occurred while updating the status. Please try again.');
+      }
+    });
+  });
+});
+</script>
 
 <%- include("../../views/partials/admin/footer") %>
