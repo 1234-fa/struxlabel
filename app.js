@@ -8,6 +8,7 @@ const env=require('dotenv').config();
 const userRouter=require('./routes/userRouter');
 const adminRouter=require('./routes/adminRouter')
 const db=require("./config/db");
+const {StatusCode} = require('./config/statuscode');
 db()
 
 app.use(morgan('dev'));
@@ -42,17 +43,17 @@ app.use('/',userRouter);
 app.use('/admin',adminRouter);
 
 app.use((req, res, next) => {
-    res.status(404).render('errorpage', { 
+    res.status(StatusCode.NOT_FOUND).render('errorpage', { 
         message: 'Page not found', 
-        status: 404 
+        status: StatusCode.NOT_FOUND 
     });
 });
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(err.status || 500).render('errorpage', { 
+    res.status(err.status || StatusCode.INTERNAL_SERVER_ERROR).render('errorpage', { 
         message: err.message || 'Internal Server Error', 
-        status: err.status || 500 
+        status: err.status || StatusCode.INTERNAL_SERVER_ERROR 
     });
 });
 

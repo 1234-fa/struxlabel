@@ -75,7 +75,7 @@ const addToWishlist = async (req, res) => {
         if (!userId) {
             console.error('User not logged in.');
             if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
-                return res.status(401).json({ success: false, message: 'Please login to add items to wishlist' });
+                return res.status(StatusCode.UNAUTHORIZED).json({ success: false, message: 'Please login to add items to wishlist' });
             }
             return res.redirect('/login');
         }
@@ -124,9 +124,9 @@ const addToWishlist = async (req, res) => {
     } catch (error) {
         console.error("Error adding to wishlist:", error.message);
         if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
-            return res.status(500).json({ success: false, message: 'Failed to add product to wishlist' });
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to add product to wishlist' });
         }
-        res.status(500).send("Internal Server Error");
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
 };
 

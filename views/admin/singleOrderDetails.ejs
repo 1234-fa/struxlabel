@@ -65,24 +65,40 @@
                   <p><strong>Price:</strong> ₹<%= item.price.toFixed(2) %></p>
                   <p><strong>Quantity:</strong> <%= item.quantity %></p>
 
-                  <!-- Status and Update Form -->
-                  <p><strong>Status:</strong> <%= item.status %></p>
-                  <form action="/admin/update-order-item-status" method="POST" class="d-flex align-items-center">
-                    <input type="hidden" name="orderId" value="<%= order._id %>">
-                    <input type="hidden" name="productId" value="<%= item.product._id %>">
-                  
-                    <select name="status" class="form-select form-select-sm me-2">
-                      <option value="pending" <%= item.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                      <option value="processing" <%= item.status === 'processing' ? 'selected' : '' %>>Processing</option>
-                      <option value="shipped" <%= item.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                      <option value="out_for_delivery" <%= item.status === 'out_for_delivery' ? 'selected' : '' %>>Out for Delivery</option>
-                      <option value="delivered" <%= item.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                      <option value="cancelled" <%= item.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                      <option value="return request" <%= item.status === 'return request' ? 'selected' : '' %>>Return Request</option>
-                      <option value="returned" <%= item.status === 'returned' ? 'selected' : '' %>>Returned</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-outline-success">Update</button>
-                  </form>
+                  <!-- Product Status Display -->
+                  <p><strong>Product Status:</strong>
+                    <span class="badge bg-<%=
+                      item.status === 'delivered' ? 'success' :
+                      ['cancelled', 'returned', 'payment_failed'].includes(item.status.toLowerCase()) ? 'danger' :
+                      'warning'
+                    %>">
+                      <%= item.status.charAt(0).toUpperCase() + item.status.slice(1).replace('_', ' ') %>
+                    </span>
+                  </p>
+
+                  <!-- Individual Product Status Management (Only for Multi-Product Orders) -->
+                  <% if (order.orderedItems.length > 1) { %>
+                    <form action="/admin/update-order-item-status" method="POST" class="d-flex align-items-center">
+                      <input type="hidden" name="orderId" value="<%= order._id %>">
+                      <input type="hidden" name="productId" value="<%= item.product._id %>">
+
+                      <select name="status" class="form-select form-select-sm me-2">
+                        <option value="processing" <%= item.status === 'processing' ? 'selected' : '' %>>Processing</option>
+                        <option value="shipped" <%= item.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                        <option value="out_for_delivery" <%= item.status === 'out_for_delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                        <option value="delivered" <%= item.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                        <option value="cancelled" <%= item.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                      </select>
+                      <button type="submit" class="btn btn-sm btn-outline-success">Update Product</button>
+                    </form>
+                  <% } else { %>
+                    <div class="alert alert-info alert-sm mt-2">
+                      <small>
+                        <i class="fas fa-info-circle me-1"></i>
+                        Product status syncs automatically with order status.
+                      </small>
+                    </div>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -98,32 +114,42 @@
             <p><strong>Ordered At:</strong> <%= order.createdAt?.toLocaleString() || 'N/A' %></p>
           </div>
           <div class="col-md-6 text-md-end">
+            <!-- Order Status Display -->
             <p><strong>Order Status:</strong>
               <span class="badge bg-<%=
                 order.status === 'delivered' ? 'success' :
                 ['cancelled', 'returned', 'payment_failed'].includes(order.status.toLowerCase()) ? 'danger' :
                 'warning'
               %>">
-                <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                <%= order.status.charAt(0).toUpperCase() + order.status.slice(1).replace('_', ' ') %>
               </span>
             </p>
 
-            <% if (order.canChangeOrderStatus && order.allowedOrderStatuses.length > 0) { %>
-              <form action="/admin/update-order-status/<%= order._id %>" method="POST" class="d-flex align-items-center" onsubmit="return confirmStatusChange(event, 'order')">
-                  <select name="status" class="form-select form-select-sm me-2">
-                      <% order.allowedOrderStatuses.forEach(statusOption => { %>
-                        <option value="<%= statusOption.value %>" <%= order.status.toLowerCase() === statusOption.value ? 'selected' : '' %>>
-                          <%= statusOption.label %>
-                        </option>
-                      <% }) %>
-                    </select>
-                  <button type="submit" class="btn btn-sm btn-outline-success">Update Order Status</button>
-                </form>
-            <% } else { %>
-              <div class="alert alert-warning alert-sm mt-2">
+            <!-- Order Status Management (Always Available) -->
+            <form action="/admin/update-order-status/<%= order._id %>" method="POST" class="d-flex align-items-center" onsubmit="return confirmStatusChange(event, 'order')">
+                <select name="status" class="form-select form-select-sm me-2">
+                    <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
+                    <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="out_for_delivery" <%= order.status === 'out_for_delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                    <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                    <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                  </select>
+                <button type="submit" class="btn btn-sm btn-outline-success">Update Order Status</button>
+              </form>
+
+            <!-- Information about behavior -->
+            <% if (order.orderedItems.length === 1) { %>
+              <div class="alert alert-info alert-sm mt-2">
                 <small>
-                  <i class="fas fa-lock me-1"></i>
-                  Order status cannot be changed. This order is in a final state.
+                  <i class="fas fa-info-circle me-1"></i>
+                  Product status will sync automatically with order status.
+                </small>
+              </div>
+            <% } else { %>
+              <div class="alert alert-info alert-sm mt-2">
+                <small>
+                  <i class="fas fa-info-circle me-1"></i>
+                  You can manage both order status and individual product statuses above.
                 </small>
               </div>
             <% } %>

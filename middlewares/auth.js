@@ -1,4 +1,5 @@
 const User = require("../models/userSchema");
+const { StatusCode } = require("../config/statuscode");
 
 const userAuth = (req, res, next) => {
   if (req.session.user) {
@@ -13,7 +14,7 @@ const userAuth = (req, res, next) => {
       })
       .catch((error) => {
         console.log("Error in user auth middleware:", error);
-        res.status(500).send("Internal server error");
+        res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Internal server error");
       });
   } else {
     res.redirect("/login");
@@ -31,7 +32,7 @@ const adminAuth = async (req, res, next) => {
     const user = await User.findById(userId);
 
     if (user && user.isAdmin) {
-      next(); // Admin confirmed
+      next(); 
     } else {
       res.redirect("/admin/login");
     }

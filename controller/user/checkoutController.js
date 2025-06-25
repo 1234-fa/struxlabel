@@ -334,7 +334,7 @@ const createRazorpayOrder = async (req, res) => {
       
       // If order was created but there was an error, still return the order ID
       if (newOrder && newOrder.orderId) {
-        return res.status(500).json({
+        return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
           success: false,
           message: 'Error processing payment',
           orderId: newOrder.orderId,
@@ -342,7 +342,7 @@ const createRazorpayOrder = async (req, res) => {
         });
       }
       
-      return res.status(500).json({
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'Error processing payment',
         redirect: '/order-failure'

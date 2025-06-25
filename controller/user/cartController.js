@@ -49,7 +49,7 @@ const addToCart = async (req, res) => {
     if (!userId) {
       console.log('❌ User not logged in');
       res.setHeader('Content-Type', 'application/json');
-      return res.status(401).json({ success: false, message: 'Please login to add items to cart' });
+      return res.status(StatusCode.UNAUTHORIZED).json({ success: false, message: 'Please login to add items to cart' });
     }
 
     const { productId, variant, quantity = 1 } = req.body;
@@ -60,7 +60,7 @@ const addToCart = async (req, res) => {
     if (!product) {
       console.log('❌ Product not found:', productId);
       res.setHeader('Content-Type', 'application/json');
-      return res.status(404).json({ success: false, message: 'Product not found' });
+      return res.status(StatusCode.NOT_FOUND).json({ success: false, message: 'Product not found' });
     }
 
     let cart = await Cart.findOne({ userId });
@@ -155,7 +155,7 @@ const addToCart = async (req, res) => {
 
     // Always return JSON error for now (since we're using AJAX)
     res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({
+    return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Failed to add product to cart',
       error: err.message
@@ -243,13 +243,13 @@ const updateVariant = async (req, res) => {
 
     await cart.save();
 
-    res.status(200).json({ 
+    res.status(StatusCode.OK).json({ 
       message: 'Variant updated successfully',
       newSize: newSize 
     });
   } catch (error) {
     console.error('Error updating variant:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: 'Server error' });
   }
 };
 

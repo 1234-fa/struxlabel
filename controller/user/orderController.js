@@ -417,7 +417,7 @@ const getSingleOrderPage = async (req, res) => {
         .populate('address');
   
       if (!order) {
-        return res.status(404).json({ message: 'Order not found' });
+        return res.status(StatusCode.NOT_FOUND).json({ message: 'Order not found' });
       }
   
       res.render('order-success', { order });

@@ -102,7 +102,7 @@ const addProducts = async (req, res) => {
       !salePrice ||
       !color
     ) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "All required fields must be filled",
       });
@@ -111,7 +111,7 @@ const addProducts = async (req, res) => {
     // Find category by name and get ObjectId
     const categoryDoc = await Category.findOne({ name: category });
     if (!categoryDoc) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Invalid category selected",
       });
@@ -149,7 +149,7 @@ const addProducts = async (req, res) => {
 
     // Validate that at least one size has quantity
     if (sizeArray.length === 0) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "At least one size must have quantity greater than 0",
       });
@@ -203,14 +203,14 @@ const addProducts = async (req, res) => {
 
     // Validate image requirements
     if (imageUrls.length < 4) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "At least 4 product images are required",
       });
     }
 
     if (imageUrls.length > 10) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Maximum 10 product images allowed",
       });
@@ -261,7 +261,7 @@ const addProducts = async (req, res) => {
       });
     }
 
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error adding product. Please try again.",
       error: error.message,
@@ -394,7 +394,7 @@ const editProduct = async (req, res) => {
     const existingProduct = await Product.findById(productId);
     if (!existingProduct) {
       return res
-        .status(404)
+        .status(StatusCode.NOT_FOUND)
         .json({ success: false, message: "Product not found" });
     }
 
@@ -414,7 +414,7 @@ const editProduct = async (req, res) => {
       !specifications
     ) {
       return res
-        .status(400)
+        .status(StatusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "All required fields must be filled",
@@ -426,12 +426,12 @@ const editProduct = async (req, res) => {
 
     if (regPrice <= 0 || salPrice <= 0) {
       return res
-        .status(400)
+        .status(StatusCode.BAD_REQUEST)
         .json({ success: false, message: "Prices must be greater than 0" });
     }
     if (salPrice >= regPrice) {
       return res
-        .status(400)
+        .status(StatusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "Sale price must be less than regular price",
@@ -462,7 +462,7 @@ const editProduct = async (req, res) => {
 
     if (totalQuantity === 0) {
       return res
-        .status(400)
+        .status(StatusCode.BAD_REQUEST)
         .json({
           success: false,
           message: "At least one size quantity must be specified",
@@ -601,7 +601,7 @@ const editProduct = async (req, res) => {
     // Validate image count (4-10 images required)
     if (finalImages.length < 4 || finalImages.length > 10) {
       console.error("Invalid image count:", finalImages.length);
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: `Product must have between 4-10 images. Current: ${finalImages.length}`,
       });
@@ -637,7 +637,7 @@ const editProduct = async (req, res) => {
 
     if (!updatedProduct) {
       return res
-        .status(500)
+        .status(StatusCode.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: "Failed to update product" });
     }
 
@@ -654,18 +654,18 @@ const editProduct = async (req, res) => {
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((err) => err.message);
       return res
-        .status(400)
+        .status(StatusCode.BAD_REQUEST)
         .json({ success: false, message: messages.join(", ") });
     }
 
     if (error.name === "CastError") {
       return res
-        .status(400)
+        .status(StatusCode.BAD_REQUEST)
         .json({ success: false, message: "Invalid product ID format" });
     }
 
     res
-      .status(500)
+      .status(StatusCode.INTERNAL_SERVER_ERROR)
       .json({
         success: false,
         message: "Error updating product: " + error.message,
