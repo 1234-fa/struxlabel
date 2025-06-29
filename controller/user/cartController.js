@@ -167,14 +167,66 @@ const addToCart = async (req, res) => {
 const removeCartItem = async (req, res) => {
   try {
     const cartItemId = req.params.id; 
+    const userId = req.session.user._id;
+    
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.json({ success: false, message: 'Cart not found' });
+    }
+
+    // Remove the item
     await Cart.updateOne(
-      { userId: req.session.user._id },
+      { userId },
       { $pull: { items: { _id: cartItemId } } }
     );
 
+    // Get updated cart data
+    const updatedCart = await Cart.findOne({ userId });
+    
+    // Calculate updated cart summary
+    let total = 0;
+    let itemCount = 0;
+    
+    if (updatedCart && updatedCart.items.length > 0) {
+      total = updatedCart.items.reduce((sum, cartItem) => sum + cartItem.totalPrice, 0);
+      itemCount = updatedCart.items.reduce((sum, cartItem) => sum + cartItem.quantity, 0);
+    }
+
+    // Check if this is an AJAX request
+    const isAjax = req.xhr ||
+                  req.headers.accept?.indexOf('json') > -1 ||
+                  req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                  req.headers['content-type']?.indexOf('json') > -1;
+
+    if (isAjax) {
+      return res.json({
+        success: true,
+        message: 'Item removed successfully',
+        cartData: {
+          total: total,
+          itemCount: itemCount
+        }
+      });
+    }
+
+    // Fallback redirect for non-AJAX requests
     res.redirect('/cart');
   } catch (err) {
     console.error('Error removing item:', err);
+    
+    // Check if this is an AJAX request
+    const isAjax = req.xhr ||
+                  req.headers.accept?.indexOf('json') > -1 ||
+                  req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                  req.headers['content-type']?.indexOf('json') > -1;
+
+    if (isAjax) {
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Something went wrong'
+      });
+    }
+    
     res.status(StatusCode.INTERNAL_SERVER_ERROR).send("Something went wrong");
   }
 };
@@ -213,7 +265,19 @@ const updateCartQty = async (req, res) => {
 
     await cart.save();
 
-    res.json({ success: true, message: 'Quantity updated successfully' });
+    // Calculate updated cart summary
+    const total = cart.items.reduce((sum, cartItem) => sum + cartItem.totalPrice, 0);
+    const itemCount = cart.items.reduce((sum, cartItem) => sum + cartItem.quantity, 0);
+
+    res.json({ 
+      success: true, 
+      message: 'Quantity updated successfully',
+      itemTotal: item.totalPrice,
+      cartData: {
+        total: total,
+        itemCount: itemCount
+      }
+    });
   } catch (err) {
     console.error('Error:', err);
     res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Something went wrong');
@@ -243,9 +307,17 @@ const updateVariant = async (req, res) => {
 
     await cart.save();
 
+    // Calculate updated cart summary
+    const total = cart.items.reduce((sum, cartItem) => sum + cartItem.totalPrice, 0);
+    const itemCount = cart.items.reduce((sum, cartItem) => sum + cartItem.quantity, 0);
+
     res.status(StatusCode.OK).json({ 
       message: 'Variant updated successfully',
-      newSize: newSize 
+      newSize: newSize,
+      cartData: {
+        total: total,
+        itemCount: itemCount
+      }
     });
   } catch (error) {
     console.error('Error updating variant:', error);

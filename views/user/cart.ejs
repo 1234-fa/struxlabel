@@ -220,10 +220,8 @@ body {
               <% cartItems.forEach(item => { %>
                 <div class="border-bottom p-3 p-md-4 cart-item-wrapper">
                   <!-- Remove Button - Fixed positioning -->
-                  <form action="/remove-from-cart/<%= item._id %>" method="POST"
-                        onsubmit="return confirm('Are you sure you want to remove this item?')">
-                    <button type="submit" class="btn remove-btn" title="Remove item">X</button>
-                  </form>
+                  <button type="button" class="btn remove-btn" title="Remove item" 
+                          onclick="removeCartItem('<%= item._id %>')">X</button>
 
                   <div class="row g-3 align-items-start">
                     <!-- Product Image -->
@@ -491,6 +489,11 @@ function changeVariant(id) {
         // After variant change, update quantity controls based on new variant stock
         updateQuantityControlsForVariant(id);
         
+        // Update cart summary if data is provided
+        if (data.cartData) {
+            updateCartSummary(data.cartData);
+        }
+        
         showToast('Size updated successfully!', 'success');
     })
     .catch(error => {
@@ -548,7 +551,10 @@ function updateCartQtyAjax(id, qty) {
     .then(data => {
       if (data.success) {
         console.log('Quantity updated!');
-        // optionally update subtotal or reload parts of the page
+        // Update cart summary with new data
+        updateCartSummary(data.cartData);
+        // Update individual item total price
+        updateItemTotalPrice(id, data.itemTotal);
       } else {
         alert(data.message || 'Error updating quantity');
       }
@@ -557,6 +563,102 @@ function updateCartQtyAjax(id, qty) {
       console.error('AJAX Error:', err);
       alert('Something went wrong');
     });
+}
+
+// Function to update cart summary
+function updateCartSummary(cartData) {
+  if (!cartData) return;
+  
+  // Update item count
+  const itemCountElement = document.querySelector('.price-details-sticky .card-body .d-flex:first-child span:first-child');
+  if (itemCountElement) {
+    itemCountElement.textContent = `Price (${cartData.itemCount} items)`;
+  }
+  
+  // Update price breakdown
+  const priceElement = document.querySelector('.price-details-sticky .card-body .d-flex:first-child span:last-child');
+  if (priceElement) {
+    priceElement.textContent = `₹${Math.round(cartData.total * 1.2)}`;
+  }
+  
+  // Update discount
+  const discountElement = document.querySelector('.price-details-sticky .card-body .d-flex:nth-child(2) span:last-child');
+  if (discountElement) {
+    discountElement.textContent = `-₹${Math.round(cartData.total * 0.2)}`;
+  }
+  
+  // Update delivery charges
+  const deliveryElement = document.querySelector('.price-details-sticky .card-body .d-flex:nth-child(3) span:last-child');
+  if (deliveryElement) {
+    if (cartData.total <= 2000) {
+      deliveryElement.textContent = '₹54';
+      deliveryElement.className = '';
+    } else {
+      deliveryElement.textContent = 'FREE';
+      deliveryElement.className = 'text-success';
+    }
+  }
+  
+  // Update total amount
+  const totalElement = document.querySelector('.price-details-sticky .card-body .d-flex:last-child span:last-child');
+  if (totalElement) {
+    if (cartData.total <= 2000) {
+      totalElement.textContent = `₹${cartData.total + 54}`;
+    } else {
+      totalElement.textContent = `₹${cartData.total}`;
+    }
+  }
+}
+
+// Function to update individual item total price
+function updateItemTotalPrice(itemId, itemTotal) {
+  const itemTotalElement = document.querySelector(`[data-item-id="${itemId}"]`).closest('.cart-item-wrapper').querySelector('.item-total-price');
+  if (itemTotalElement) {
+    itemTotalElement.innerHTML = `Total: ₹${itemTotal}`;
+  }
+}
+
+// Function to remove cart item via AJAX
+function removeCartItem(itemId) {
+  if (!confirm('Are you sure you want to remove this item?')) {
+    return;
+  }
+
+  fetch(`/remove-from-cart/${itemId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // Remove the item from DOM
+      const itemElement = document.querySelector(`[data-item-id="${itemId}"]`).closest('.cart-item-wrapper');
+      if (itemElement) {
+        itemElement.remove();
+      }
+      
+      // Update cart summary
+      if (data.cartData) {
+        updateCartSummary(data.cartData);
+      }
+      
+      // Check if cart is empty
+      if (data.cartData && data.cartData.itemCount === 0) {
+        // Reload page to show empty cart state
+        window.location.reload();
+      }
+      
+      showToast('Item removed from cart', 'success');
+    } else {
+      showToast(data.message || 'Error removing item', 'error');
+    }
+  })
+  .catch(err => {
+    console.error('Error removing item:', err);
+    showToast('Something went wrong', 'error');
+  });
 }
 
 // Helper function for toast notifications
