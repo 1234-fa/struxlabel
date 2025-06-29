@@ -25,6 +25,20 @@
 
   .error-message {
     color: red;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+
+  .success-message {
+    color: green;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
   }
 
   /* Form modal styles */
@@ -71,6 +85,42 @@
       Add Brand
     </button>
   </div>
+
+  <!-- Error/Success Messages -->
+  <script>
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMsg = urlParams.get('error');
+    const successMsg = urlParams.get('success');
+
+    if (errorMsg) {
+      document.addEventListener('DOMContentLoaded', function() {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'error-message';
+        messageDiv.textContent = decodeURIComponent(errorMsg);
+        document.querySelector('.content-main').insertBefore(messageDiv, document.querySelector('.overlay'));
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+        }, 5000);
+      });
+    }
+
+    if (successMsg) {
+      document.addEventListener('DOMContentLoaded', function() {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'success-message';
+        messageDiv.textContent = decodeURIComponent(successMsg);
+        document.querySelector('.content-main').insertBefore(messageDiv, document.querySelector('.overlay'));
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+        }, 5000);
+      });
+    }
+  </script>
 
   <!-- Overlay -->
   <div class="overlay" id="overlay" onclick="toggleBrandForm()"></div>

@@ -33,26 +33,51 @@ const categoryInfo = async (req, res) => {
 const addCategory = async (req, res) => {
   const { name, description } = req.body;
 
+  // Validate input
   if (!name || !description) {
     return res
-      .status(StatusCode.NOT_FOUND)
+      .status(StatusCode.BAD_REQUEST)
       .json({ error: "Name and description are required." });
   }
 
+  // Trim and validate name
+  const trimmedName = name.trim();
+  if (trimmedName.length === 0) {
+    return res
+      .status(StatusCode.BAD_REQUEST)
+      .json({ error: "Category name cannot be empty or just spaces." });
+  }
+
   try {
-    const existingCategory = await Category.findOne({ name });
+    // Check for existing category (case-insensitive)
+    const existingCategory = await Category.findOne({
+      name: { $regex: new RegExp(`^${trimmedName}$`, 'i') }
+    });
+
     if (existingCategory) {
       return res
-        .status(StatusCode.NOT_FOUND)
-        .json({ error: "Category already exists" });
+        .status(StatusCode.CONFLICT)
+        .json({ error: "Category with this name already exists" });
     }
 
-    const newCategory = new Category({ name, description });
+    // Create new category
+    const newCategory = new Category({
+      name: trimmedName,
+      description: description.trim()
+    });
     await newCategory.save();
 
     return res.json({ message: "Category added successfully" });
   } catch (error) {
     console.error("Error in addCategory:", error);
+
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000) {
+      return res
+        .status(StatusCode.CONFLICT)
+        .json({ error: "Category with this name already exists" });
+    }
+
     return res
       .status(StatusCode.INTERNAL_SERVER_ERROR)
       .json({ error: "Internal server error", details: error.message });
@@ -161,17 +186,36 @@ const editCategory = async (req, res) => {
     const id = req.params.id;
     const { name, description } = req.body;
 
-    const existingCategory = await Category.findOne({ name });
-
-    if (existingCategory && existingCategory._id.toString() !== id) {
+    // Validate input
+    if (!name || !description) {
       return res
         .status(StatusCode.BAD_REQUEST)
+        .json({ status: false, message: "Name and description are required" });
+    }
+
+    // Trim and validate name
+    const trimmedName = name.trim();
+    if (trimmedName.length === 0) {
+      return res
+        .status(StatusCode.BAD_REQUEST)
+        .json({ status: false, message: "Category name cannot be empty or just spaces" });
+    }
+
+    // Check for existing category with same name (case-insensitive) but different ID
+    const existingCategory = await Category.findOne({
+      name: { $regex: new RegExp(`^${trimmedName}$`, 'i') },
+      _id: { $ne: id }
+    });
+
+    if (existingCategory) {
+      return res
+        .status(StatusCode.CONFLICT)
         .json({ status: false, message: "Category name already exists" });
     }
 
     const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      { name, description },
+      { name: trimmedName, description: description.trim() },
       { new: true }
     );
 
@@ -186,6 +230,14 @@ const editCategory = async (req, res) => {
     }
   } catch (error) {
     console.error("Edit Category Error:", error);
+
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000) {
+      return res
+        .status(StatusCode.CONFLICT)
+        .json({ status: false, message: "Category name already exists" });
+    }
+
     return res
       .status(StatusCode.INTERNAL_SERVER_ERROR)
       .json({ status: false, message: "Internal server error" });

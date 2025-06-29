@@ -279,6 +279,42 @@ const verifyNewEmailOtp = async (req, res) => {
   }
 };
 
+const resendNewEmailOtp = async (req, res) => {
+  try {
+      const newEmail = req.session.tempEmail;
+
+      if (!newEmail) {
+          return res.status(StatusCode.BAD_REQUEST).json({
+              success: false,
+              message: "Email not found in session. Please start the process again."
+          });
+      }
+
+      const otp = generateOtp();
+      const emailSent = await sendVerificationEmail(newEmail, otp);
+
+      if (emailSent) {
+          req.session.emailOtp = otp;
+          console.log("New email OTP resent:", otp);
+          res.status(StatusCode.OK).json({
+              success: true,
+              message: "OTP resent successfully"
+          });
+      } else {
+          res.status(StatusCode.BAD_REQUEST).json({
+              success: false,
+              message: "Failed to resend OTP. Please try again."
+          });
+      }
+  } catch (error) {
+      console.error("Error resending new email OTP:", error);
+      res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          message: "Internal server error. Please try again later."
+      });
+  }
+};
+
 const changePassword = async (req,res)=>{
     try {
         res.render('change-password');
@@ -330,6 +366,42 @@ const verifychangepassOtp = async (req, res) => {
   } catch (error) {
     return res.status(StatusCode.INTERNAL_SERVER_ERROR).render('change-password-otp', {
       message: "An error occurred. Please try again later."
+    });
+  }
+};
+
+const resendChangePasswordOtp = async (req, res) => {
+  try {
+    const email = req.session.email;
+
+    if (!email) {
+      return res.status(StatusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Email not found in session. Please start the process again."
+      });
+    }
+
+    const otp = generateOtp();
+    const emailSent = await sendVerificationEmail(email, otp);
+
+    if (emailSent) {
+      req.session.userOtp = otp;
+      console.log("Change password OTP resent:", otp);
+      res.status(StatusCode.OK).json({
+        success: true,
+        message: "OTP resent successfully"
+      });
+    } else {
+      res.status(StatusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Failed to resend OTP. Please try again."
+      });
+    }
+  } catch (error) {
+    console.error("Error resending change password OTP:", error);
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error. Please try again later."
     });
   }
 };
@@ -616,10 +688,12 @@ module.exports ={getForgotPassPage,
     changeEmailvalid,
     verifyEmailOtp,
     verifyNewEmailOtp,
+    resendNewEmailOtp,
     updateEmail ,
     changePassword,
     changePasswordvalid ,
     verifychangepassOtp ,
+    resendChangePasswordOtp,
     resetPassword ,
     resetPasswordforgot,
     addAddress ,

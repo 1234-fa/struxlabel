@@ -72,10 +72,12 @@ router.get('/change-email',userAuth,profileController.changeEmail)
 router.post('/change-email', userAuth, profileController.changeEmailvalid);
 router.post('/verify-email-otp',userAuth, profileController.verifyEmailOtp);
 router.post('/verify-new-email-otp',userAuth ,profileController.verifyNewEmailOtp)
+router.post('/resend-new-email-otp',userAuth, profileController.resendNewEmailOtp)
 router.post('/update-email',userAuth, profileController.updateEmail);
 router.get('/change-password',userAuth , profileController.changePassword);
 router.post('/change-password',userAuth , profileController.changePasswordvalid);
 router.post('/verify-changepassword-otp',userAuth,profileController.verifychangepassOtp)
+router.post('/resend-changepassword-otp',userAuth,profileController.resendChangePasswordOtp)
 router.post('/upload-profile-image', userAuth,profileUpload.single('profileImage'), profileController .uploadProfileImage);
 router.post('/update-profile',userAuth, profileController.updateProfile);
 
@@ -160,9 +162,11 @@ router.get('/retry-payment/:orderId', userAuth, checkoutController.retryPayment)
 router.post('/verify-retry-payment', userAuth, checkoutController.verifyRetryPayment);
 
 
-router.post('/filterSearchSort',userAuth,shopController.getfilter);
-router.get('/shop',userAuth,shopController.loadShoppingPage)
+// router.post('/filterSearchSort',userAuth,shopController.getfilter);
+router.get('/shop', userAuth, shopController.loadShoppingPage);
+router.get('/products/filter', userAuth, shopController.loadShoppingPage);
 router.get('/newArrivals',userAuth,shopController.loadNewArrivalPage);
+
 
 router.get('/privacyPolicy',userAuth,shopDetailController.getPrivacyPolicy)
 router.get('/aboutUs',userAuth,shopDetailController.getAboutPage);

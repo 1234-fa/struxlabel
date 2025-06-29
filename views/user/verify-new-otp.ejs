@@ -17,7 +17,10 @@
                     <div class="otp-timer mb-2">
                         <span id="otpTimer">OTP Expires in: 1:00</span>
                     </div>
-                    <button type="button" onclick="resendOTP()" class="btn btn-link p-0">Resend OTP</button>
+                    <button type="button" onclick="resendOTP()" class="btn btn-link p-0" id="resendBtn" disabled>
+                        <span id="resendText">Resend OTP</span>
+                        <span id="resendTimer"> (01:00)</span>
+                    </button>
                 </div>
 
                 <% if (locals.message && message.length > 0) { %>
@@ -32,18 +35,48 @@
 
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
+ let otpTimer = 60;
+ let otpInterval;
+ let resendTimer = 60;
+ let resendInterval;
+
  function startOTPTimer(durationInSeconds) {
-   let timer = durationInSeconds;
+   otpTimer = durationInSeconds;
    const timerElement = document.getElementById('otpTimer');
-   const countdown = setInterval(function () {
-     const minutes = Math.floor(timer / 60);
-     const seconds = timer % 60;
+
+   otpInterval = setInterval(function () {
+     const minutes = Math.floor(otpTimer / 60);
+     const seconds = otpTimer % 60;
 
      timerElement.textContent = `OTP Expires in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
-     if (--timer < 0) {
-       clearInterval(countdown);
+     if (--otpTimer < 0) {
+       clearInterval(otpInterval);
        timerElement.textContent = 'OTP Expired';
+       document.getElementById('otp').disabled = true;
+     }
+   }, 1000);
+ }
+
+ function startResendTimer() {
+   resendTimer = 60;
+   const resendBtn = document.getElementById('resendBtn');
+   const resendText = document.getElementById('resendText');
+   const resendTimerSpan = document.getElementById('resendTimer');
+
+   resendBtn.disabled = true;
+   resendText.textContent = 'Resend OTP in';
+
+   resendInterval = setInterval(function () {
+     const minutes = Math.floor(resendTimer / 60);
+     const seconds = resendTimer % 60;
+     resendTimerSpan.textContent = ` (${minutes}:${seconds < 10 ? '0' : ''}${seconds})`;
+
+     if (--resendTimer < 0) {
+       clearInterval(resendInterval);
+       resendBtn.disabled = false;
+       resendText.textContent = 'Resend OTP';
+       resendTimerSpan.textContent = '';
      }
    }, 1000);
  }
@@ -51,22 +84,45 @@
  function resendOTP() {
    $.ajax({
      type: 'POST',
-     url: '/resend-new-email-otp', // Make sure this route exists in your backend
+     url: '/resend-new-email-otp',
      success: function (response) {
        if (response.success) {
-         startOTPTimer(60); // Restart timer
+         // Clear existing timers
+         clearInterval(otpInterval);
+         clearInterval(resendInterval);
+
+         // Re-enable OTP input and clear it
+         document.getElementById('otp').disabled = false;
+         document.getElementById('otp').value = '';
+
+         // Restart both timers
+         startOTPTimer(60);
+         startResendTimer();
+
+         alert('OTP resent successfully!');
        } else {
+         // Re-enable resend button on failure
+         document.getElementById('resendBtn').disabled = false;
+         document.getElementById('resendText').textContent = 'Resend OTP';
+         document.getElementById('resendTimer').textContent = '';
+
          alert('Failed to resend OTP. Please try again.');
        }
      },
      error: function () {
+       // Re-enable resend button on error
+       document.getElementById('resendBtn').disabled = false;
+       document.getElementById('resendText').textContent = 'Resend OTP';
+       document.getElementById('resendTimer').textContent = '';
+
        alert('Error occurred while resending OTP. Please try again.');
      }
    });
  }
 
- // Start the OTP timer when the page loads
+ // Start both timers when the page loads
  startOTPTimer(60);
+ startResendTimer();
 </script>
 
 <%- include("../../views/partials/user/footerp") %>

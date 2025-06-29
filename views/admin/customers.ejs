@@ -1,10 +1,38 @@
 <%- include("../../views/partials/admin/header") %>
 <style>
-    
+  .error-message {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+
+  .success-message {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+
+  .warning-message {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
 </style>
 <div class="content-header row">
   <div class="d-flex justify-content-between align-items-center">
-    <h2 class="content-title card-title">Customers</h2>
+    <div>
+      <h2 class="content-title card-title">Customers</h2>
+      <small class="text-muted">Sorted by latest joined</small>
+    </div>
   </div>
 </div>
 
@@ -26,6 +54,7 @@
           <th scope="col"><b>Name</b></th>
           <th scope="col"><b>Email</b></th>
           <th scope="col"><b>Phone No</b></th>
+          <th scope="col"><b>Join Date</b></th>
           <th scope="col"><b>Action</b></th>
         </tr>
       </thead>
@@ -36,10 +65,31 @@
           <td><%= data[i].email %></td>
           <td><%= data[i].phone %></td>
           <td>
-            <% if (data[i].isBlocked === false) { %>
-              <a href="/admin/blockCustomer?id=<%= data[i]._id %>" class="btn btn-danger btn-sm text-white">Block</a>
+            <% if (data[i].createdOn) { %>
+              <%= new Date(data[i].createdOn).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              }) %>
             <% } else { %>
-              <a href="/admin/unblockCustomer?id=<%= data[i]._id %>" class="btn btn-success btn-sm text-white">Unblock</a>
+              N/A
+            <% } %>
+          </td>
+          <td>
+            <% if (data[i].isBlocked === false) { %>
+              <button
+                class="btn btn-danger btn-sm text-white"
+                onclick="confirmBlockUser('<%= data[i]._id %>', '<%= data[i].name %>', '<%= data[i].email %>')"
+              >
+                Block
+              </button>
+            <% } else { %>
+              <button
+                class="btn btn-success btn-sm text-white"
+                onclick="confirmUnblockUser('<%= data[i]._id %>', '<%= data[i].name %>', '<%= data[i].email %>')"
+              >
+                Unblock
+              </button>
             <% } %>
           </td>
         </tr>
@@ -61,5 +111,68 @@
     </ul>
   </nav>
 </div>
+
+<script>
+// Display messages from URL parameters
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const errorMsg = urlParams.get('error');
+  const successMsg = urlParams.get('success');
+  const warningMsg = urlParams.get('warning');
+
+  if (errorMsg) {
+    showMessage(decodeURIComponent(errorMsg), 'error-message');
+  }
+
+  if (successMsg) {
+    showMessage(decodeURIComponent(successMsg), 'success-message');
+  }
+
+  if (warningMsg) {
+    showMessage(decodeURIComponent(warningMsg), 'warning-message');
+  }
+});
+
+function showMessage(message, className) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = className;
+  messageDiv.textContent = message;
+
+  // Insert message after the content header
+  const contentHeader = document.querySelector('.content-header');
+  contentHeader.parentNode.insertBefore(messageDiv, contentHeader.nextSibling);
+
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    messageDiv.style.display = 'none';
+  }, 5000);
+}
+
+function confirmBlockUser(userId, userName, userEmail) {
+  // Create a more detailed confirmation message
+  const message = `Are you sure you want to BLOCK this user?\n\n` +
+                  `Name: ${userName}\n` +
+                  `Email: ${userEmail}\n\n` +
+                  `This will prevent the user from accessing their account.`;
+
+  if (confirm(message)) {
+    // If confirmed, redirect to block URL
+    window.location.href = `/admin/blockCustomer?id=${userId}`;
+  }
+}
+
+function confirmUnblockUser(userId, userName, userEmail) {
+  // Create a more detailed confirmation message
+  const message = `Are you sure you want to UNBLOCK this user?\n\n` +
+                  `Name: ${userName}\n` +
+                  `Email: ${userEmail}\n\n` +
+                  `This will restore the user's access to their account.`;
+
+  if (confirm(message)) {
+    // If confirmed, redirect to unblock URL
+    window.location.href = `/admin/unblockCustomer?id=${userId}`;
+  }
+}
+</script>
 
 <%- include("../../views/partials/admin/footer") %>
