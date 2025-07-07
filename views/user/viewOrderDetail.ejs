@@ -350,6 +350,11 @@ const totalRefundAmount = cancelledAmount + returnedAmount;
             You saved ₹<%= ((order.offerDiscount||0)+(order.couponDiscount||0)).toFixed(2) %> on this order
           </div>
         <% } %>
+        <% if (order.refundAmount && order.refundAmount > 0) { %>
+          <div class="text-danger mt-2">
+            Refund Amount: ₹<%= order.refundAmount.toFixed(2) %>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
