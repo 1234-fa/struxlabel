@@ -47,6 +47,10 @@ const orderSchema = new Schema(
           type: Number,
           default: 0,
         },
+        couponDiscount: {
+          type: Number,
+          default: 0,
+        },
         status: {
           type: String,
           enum: [
@@ -138,7 +142,7 @@ const orderSchema = new Schema(
         "returned",
         "return approved",
         "return rejected",
-        "payment_failed",
+        "payment_failed"
       ],
       lowercase: true,
     },
@@ -166,7 +170,7 @@ const orderSchema = new Schema(
     paymentMethod: {
       type: String,
       required: true,
-      enum: ["credit_card", "paypal", "razorpay", "cash_on_delivery"],
+      enum: ["credit_card", "paypal", "razorpay", "cash_on_delivery", "wallet"],
     },
     paymentStatus: {
       type: String,

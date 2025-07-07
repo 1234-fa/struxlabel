@@ -144,7 +144,7 @@ async function generateInvoice(order, res) {
                 .fontSize(7)
                 .fillColor('black')
                 .text(item.name, 40, y, { width: 115 })
-                .text(`₹${item.realPrice}`, 160, y, { width: 45, align: 'right' })
+                .text(`₹${item.regularPrice}`, 160, y, { width: 45, align: 'right' })
                 .text(`₹${item.salePrice}`, 210, y, { width: 45, align: 'right' })
                 .text(item.quantity.toString(), 260, y, { width: 20, align: 'center' })
                 .text(`₹${lineTotal.toFixed(2)}`, 285, y, { width: 40, align: 'right' })
@@ -152,6 +152,16 @@ async function generateInvoice(order, res) {
                 .text(item.status.toUpperCase(), 330, y, { width: 50, align: 'center' })
                 .fillColor(refundAmount > 0 ? '#d32f2f' : 'black')
                 .text(refundAmount > 0 ? `₹${refundAmount.toFixed(2)}` : '-', 385, y, { width: 40, align: 'right' });
+            
+            // Show coupon discount per item if applicable
+            if (item.couponDiscount && item.couponDiscount > 0) {
+                y += 12;
+                doc
+                    .fontSize(6)
+                    .fillColor('#4caf50')
+                    .text(`Coupon Discount: -₹${item.couponDiscount.toFixed(2)}`, 40, y, { width: 115 });
+            }
+            
             y += 18;
         }
     });
@@ -166,8 +176,8 @@ async function generateInvoice(order, res) {
         .font('Helvetica')
         .fontSize(9)
         .fillColor('black')
-        .text('Subtotal (Real Price):', 300, y)
-        .text(`₹${calculations.realPriceSubtotal.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
+        .text('Subtotal (Original Price):', 300, y)
+        .text(`₹${calculations.originalPriceSubtotal.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
     y += 15;
     
     // Offer Discount (if any)
@@ -197,11 +207,11 @@ async function generateInvoice(order, res) {
     }
     
     // Coupon Discount (only if > 0)
-    if (calculations.applicableCouponDiscount > 0) {
+    if (calculations.totalCouponDiscount > 0) {
         doc
             .fillColor('#4caf50')
             .text('Coupon Discount:', 300, y)
-            .text(`-₹${calculations.applicableCouponDiscount.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
+            .text(`-₹${calculations.totalCouponDiscount.toFixed(2)}`, 430, y, { width: 70, align: 'right' });
         y += 15;
     }
     
@@ -336,83 +346,59 @@ async function calculateRefundsAndTotals(order) {
         item.status.toLowerCase() === 'return approved'
     );
     
-    // Calculate subtotals with pricing details
+    // Calculate subtotals using the saved order data
     const displayItems = order.items.filter(item => [
         'confirmed', 'processing', 'shipped', 'shipping', 'in transit', 
         'out for delivery', 'delivered', 'return approved', 'cancelled', 'returned'
     ].includes(item.status.toLowerCase()));
     
-    // 1. Use sale prices for subtotal (offer discount is already applied to sale price)
-    const subtotal = displayItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
+    // 1. Use the actual prices that were charged (sale prices)
+    const subtotal = displayItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    // 2. For display purposes only - show what the original price would have been
-    const realPriceSubtotal = displayItems.reduce((sum, item) => sum + (item.realPrice * item.quantity), 0);
+    // 2. Calculate original price total using saved regular prices
+    const originalPriceSubtotal = displayItems.reduce((sum, item) => sum + (item.regularPrice * item.quantity), 0);
     
-    // 3. Calculate offer discount for display (difference between real and sale price)
-    const totalOfferDiscount = displayItems.reduce((sum, item) => {
-        const offerDiscount = (item.realPrice - item.salePrice) * item.quantity;
-        return sum + Math.max(0, offerDiscount);
-    }, 0);
+    // 3. Calculate total offer discount from saved data
+    const totalOfferDiscount = displayItems.reduce((sum, item) => sum + (item.offerDiscount || 0), 0);
     
-    // 4. Calculate valid items subtotal using SALE PRICES (for coupon eligibility)
-    const validSubtotal = validItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
+    // 4. Calculate total coupon discount from saved data
+    const totalCouponDiscount = displayItems.reduce((sum, item) => sum + (item.couponDiscount || 0), 0);
     
-    // 5. Check if remaining valid items still qualify for coupon (based on sale price total)
-    let couponStillValid = false;
-    if (order.coupon && order.coupon.price && validSubtotal > 0) {
-        couponStillValid = validSubtotal >= order.coupon.price;
-    }
+    // 5. Calculate valid items subtotal (items that are not cancelled/returned)
+    const validSubtotal = validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    // 6. Calculate refunds for each cancelled/returned/return approved item
+    // 6. Calculate refunds for cancelled/returned items
     const itemRefunds = {};
     let totalRefund = 0;
     
     const refundableItems = [...cancelledItems, ...returnApprovedItems];
     
     for (const item of refundableItems) {
-        // Use sale price for refund calculation (since that's what was actually charged)
-        const itemAmount = item.salePrice * item.quantity;
-        const refundAmount = itemAmount;
+        // Calculate refund based on what was actually paid (price - coupon discount)
+        const itemAmount = (item.price * item.quantity) - (item.couponDiscount || 0);
+        const refundAmount = Math.max(0, itemAmount);
         
         itemRefunds[item._id] = Math.round(refundAmount * 100) / 100;
         totalRefund += refundAmount;
     }
     
-    // 7. Calculate coupon discount that should be applied
-    let applicableCouponDiscount = 0;
-    if (couponStillValid && order.coupon) {
-        // Apply coupon based on valid items subtotal (sale prices)
-        if (order.coupon.discount) {
-            // Percentage discount
-            applicableCouponDiscount = (validSubtotal * order.coupon.discount) / 100;
-        } else if (order.discount) {
-            // Fixed discount from order
-            applicableCouponDiscount = order.discount;
-        }
+    // 7. Calculate final amount using the order's saved finalAmount
+    let finalAmount = order.finalAmount;
+    
+    // If there are refunds, adjust the final amount
+    if (totalRefund > 0) {
+        finalAmount = Math.max(0, finalAmount - totalRefund);
     }
-    
-    // 8. Calculate final amount
-    let finalAmount = validSubtotal; // Start with valid items at sale prices
-    
-    
-    // Apply coupon discount
-    if (applicableCouponDiscount > 0) {
-        finalAmount -= applicableCouponDiscount;
-    }
-    
-    // Ensure final amount is not negative
-    finalAmount = Math.max(0, finalAmount);
     
     return {
-        subtotal: subtotal, // This is at sale prices (offer already applied)
-        realPriceSubtotal,
+        subtotal: subtotal,
+        originalPriceSubtotal,
         totalOfferDiscount,
+        totalCouponDiscount,
         totalRefund: Math.round(totalRefund * 100) / 100,
         finalAmount: Math.round(finalAmount * 100) / 100,
         itemRefunds,
-        couponStillValid,
-        applicableCouponDiscount: Math.round(applicableCouponDiscount * 100) / 100,
-        validSubtotal: Math.round(validSubtotal * 100) / 100 // For debugging
+        validSubtotal: Math.round(validSubtotal * 100) / 100
     };
 }
 

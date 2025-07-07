@@ -184,7 +184,14 @@
                         <img src="<%= item.product.productImages[0] %>" class="me-3" style="width: 55px; height: 55px; object-fit: cover; border-radius: 5px;">
                         <div>
                           <strong><%= item.product.productName %></strong><br>
-                          Quantity: <%= item.quantity %>, Price: ₹<%= item.price.toFixed(2) %>, Total: ₹<%= (item.quantity * item.price).toFixed(2) %><br>
+                          Quantity: <%= item.quantity %>,
+                          <span class="text-muted small">MRP: <del>₹<%= item.regularPrice ? item.regularPrice.toFixed(2) : item.product.regularPrice.toFixed(2) %></del></span>,
+                          <span class="text-success small">Sale Price: ₹<%= item.salePrice ? item.salePrice.toFixed(2) : item.price.toFixed(2) %></span>,
+                          <span class="text-info small">Offer Discount: -₹<%= item.offerDiscount ? item.offerDiscount.toFixed(2) : ((item.regularPrice||item.product.regularPrice)-(item.salePrice||item.price)).toFixed(2) %></span>,
+                          <% if (item.couponDiscount && item.couponDiscount > 0) { %>
+                            <span class="text-warning small">Coupon Discount: -₹<%= item.couponDiscount.toFixed(2) %></span>,
+                          <% } %>
+                          <span class="fw-bold small">Net Paid: ₹<%= item.netPaid ? item.netPaid.toFixed(2) : ((item.salePrice||item.price)*item.quantity-(item.couponDiscount||0)).toFixed(2) %></span>,
                           Ordered Size : <%= item.variant.size%>
                         </div>
                       </div>
@@ -305,113 +312,43 @@ const totalRefundAmount = cancelledAmount + returnedAmount;
         <strong>Date:</strong> <%= order.createdAt?.toLocaleString() || 'N/A' %><br>
         <strong>Payment Method:</strong> <%= order.paymentMethod || "Not specified" %><br>
       </div>
-
-      <!-- Original Order Amount -->
       <div class="border-bottom pb-2 mb-2">
         <div class="d-flex justify-content-between">
           <span><strong>Original Order Total:</strong></span>
-          <span>₹<%= originalTotalAmount.toFixed(2) %></span>
+          <span>₹<%= order.totalPrice ? order.totalPrice.toFixed(2) : '' %></span>
         </div>
       </div>
-
-      <!-- Active Items -->
-      <% if (activeItems.length > 0) { %>
+      <div class="mb-2">
+        <div class="d-flex justify-content-between">
+          <span>Offer Discount:</span>
+          <span class="text-info">-₹<%= order.offerDiscount ? order.offerDiscount.toFixed(2) : '0.00' %></span>
+        </div>
+      </div>
+      <% if (order.couponDiscount && order.couponDiscount > 0) { %>
         <div class="mb-2">
           <div class="d-flex justify-content-between">
-            <span>Active Items (<%= activeItems.length %>):</span>
-            <span>₹<%= activeItemsTotal.toFixed(2) %></span>
+            <span>Coupon Discount:</span>
+            <span class="text-warning">-₹<%= order.couponDiscount.toFixed(2) %></span>
           </div>
-          <% activeItems.forEach(item => { %>
-            <% if (item.product) { %>
-              <div class="small text-muted ms-3">
-                • <%= item.product.productName %> (Qty: <%= item.quantity %>) - ₹<%= item.itemTotal.toFixed(2) %>
-              </div>
-            <% } %>
-          <% }) %>
         </div>
       <% } %>
-
-      <!-- Cancelled Items -->
-      <% if (cancelledItems.length > 0) { %>
+      <% if (order.deliveryCharge && order.deliveryCharge > 0) { %>
         <div class="mb-2">
-          <div class="d-flex justify-content-between text-danger">
-            <span>Cancelled Items (<%= cancelledItems.length %>):</span>
-            <span>-₹<%= cancelledAmount.toFixed(2) %></span>
-          </div>
-          <% cancelledItems.forEach(item => { %>
-            <% if (item.product) { %>
-              <div class="small text-muted ms-3">
-                • <%= item.product.productName %> (Qty: <%= item.quantity %>) - ₹<%= item.itemTotal.toFixed(2) %>
-              </div>
-            <% } %>
-          <% }) %>
-        </div>
-      <% } %>
-
-      <!-- Returned Items -->
-      <% if (returnedItems.length > 0) { %>
-        <div class="mb-2">
-          <div class="d-flex justify-content-between text-warning">
-            <span>Returned Items (<%= returnedItems.length %>):</span>
-            <span>-₹<%= returnedAmount.toFixed(2) %></span>
-          </div>
-          <% returnedItems.forEach(item => { %>
-            <% if (item.product) { %>
-              <div class="small text-muted ms-3">
-                • <%= item.product.productName %> (Qty: <%= item.quantity %>) - ₹<%= item.itemTotal.toFixed(2) %>
-              </div>
-            <% } %>
-          <% }) %>
-        </div>
-      <% } %>
-
-      <!-- Coupon Information -->
-      <% if (order.coupon) { %>
-        <div class="border-top pt-2 mt-2">
           <div class="d-flex justify-content-between">
-            <span><strong>Coupon Applied:</strong></span>
-            <span class="text-success">-₹<%= couponDiscount.toFixed(2) %></span>
-          </div>
-          <div class="small text-muted">
-            <%= order.coupon.name || order.coupon.code %> (<%= order.coupon.discount %>% off on active items)
+            <span>Delivery Charge:</span>
+            <span>₹<%= order.deliveryCharge.toFixed(2) %></span>
           </div>
         </div>
       <% } %>
-
-      <!-- Coupon Information -->
-      <% if (order.deliveryCharge) { %>
-        <div class="border-top pt-2 mt-2">
-          <div class="d-flex justify-content-between">
-            <span><strong>Delivery Charge:</strong></span>
-            <span class="text-success">₹<%= order.deliveryCharge.toFixed(2) %></span>
-          </div>
-        </div>
-      <% } %>
-
-      <!-- Final Amounts -->
       <div class="border-top pt-2 mt-3">
-        <% if (activeItems.length > 0) { %>
-          <div class="d-flex justify-content-between">
-            <span><strong> Order Amount:</strong></span>
-            <span class="text-success"><strong>₹<%= order.finalAmount.toFixed(2) %></strong></span>
+        <div class="d-flex justify-content-between">
+          <span><strong>Final Paid:</strong></span>
+          <span class="text-success"><strong>₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '' %></strong></span>
+        </div>
+        <% if ((order.offerDiscount||0)+(order.couponDiscount||0) > 0) { %>
+          <div class="text-success mt-2">
+            You saved ₹<%= ((order.offerDiscount||0)+(order.couponDiscount||0)).toFixed(2) %> on this order
           </div>
-        <% } %>
-        
-        <% if (totalRefundAmount > 0) { %>
-          <div class="d-flex justify-content-between text-info">
-            <span><strong>Total Refund Amount:</strong></span>
-            <span><strong>₹<%= totalRefundAmount.toFixed(2) %></strong></span>
-          </div>
-        <% } %>
-      </div>
-
-      <!-- Additional Info -->
-      <div class="mt-3 pt-2 border-top">
-        <% if (order.expectedDelivery) { %>
-          <strong>Expected Delivery:</strong> <%= new Date(order.expectedDelivery).toDateString() %><br>
-        <% } %>
-        <% if (order.notes) { %>
-          <strong>Order Notes:</strong> <%= order.notes %><br>
         <% } %>
       </div>
     </div>
@@ -436,7 +373,7 @@ const totalRefundAmount = cancelledAmount + returnedAmount;
 <!-- -------------------------------------------------------------------------------------------------------------------- -->
 
               <!-- Invoice Download (only for successful orders) -->
-              <% if (order.status === 'delivered'||order.paymentStatus === 'Paid') { %>
+              <% if (order.status === 'delivered'||order.paymentStatus === 'Paid' ||order.paymentStatus === 'paid') { %>
                 <a href="/download-invoice/<%= order._id %>" class="btn btn-success btn-sm" target="_blank">
                   <i class="fas fa-download"></i> Download Invoice
                 </a>

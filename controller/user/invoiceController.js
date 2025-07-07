@@ -16,12 +16,36 @@ const downloadInvoice = async (req, res) => {
             return res.status(StatusCode.NOT_FOUND).send('Order not found');
         }
         
+        console.log('=== INVOICE GENERATION DEBUG ===');
+        console.log('Order ID:', order.orderId);
+        console.log('Order Status:', order.status);
+        console.log('Payment Status:', order.paymentStatus);
+        console.log('Payment Method:', order.paymentMethod);
+        console.log('Total Price:', order.totalPrice);
+        console.log('Delivery Charge:', order.deliveryCharge);
+        console.log('Final Amount:', order.finalAmount);
+        console.log('Refund Amount:', order.refundAmount);
+        console.log('Ordered Items Count:', order.orderedItems.length);
+        
+        order.orderedItems.forEach((item, index) => {
+            console.log(`Item ${index + 1}:`);
+            console.log('  - Product Name:', item.product?.productName);
+            console.log('  - Quantity:', item.quantity);
+            console.log('  - Price (sale):', item.price);
+            console.log('  - Regular Price:', item.regularPrice);
+            console.log('  - Sale Price:', item.salePrice);
+            console.log('  - Offer Discount:', item.offerDiscount);
+            console.log('  - Coupon Discount:', item.couponDiscount);
+            console.log('  - Status:', item.status);
+        });
+        console.log('===============================');
+        
         //  Check if payment method allows invoice generation
-        const allowedPaymentMethods = ['razorpay', 'cash_on_delivery'];
+        const allowedPaymentMethods = ['razorpay', 'cash_on_delivery', 'wallet'];
         if (!allowedPaymentMethods.includes(order.paymentMethod.toLowerCase())) {
             return res
                 .status(StatusCode.FORBIDDEN)
-                .send('Invoice is only available for Razorpay and Cash on Delivery payments.');
+                .send('Invoice is only available for Razorpay, Wallet, and Cash on Delivery payments.');
         }
         
         //  Check payment status - this is the main requirement
@@ -128,24 +152,50 @@ const downloadInvoice = async (req, res) => {
             razorpayPaymentId: order.razorpayPaymentId,
             status: formatOrderStatus(order.status),
             coupon: couponInfo,
-            // Include all invoiceable items with pricing details
+            // Include all invoiceable items with pricing details from the actual saved order data
             items: order.orderedItems.map(i => ({
                 _id: i._id,
                 name: i.product.productName,
                 quantity: i.quantity,
-                price: i.price,
-                realPrice: i.product.regularPrice || i.price,
-                salePrice: i.product.salePrice || i.price,
-                offerPercentage: i.product.offerPercentage || 0,
+                price: i.price, // This is the sale price that was actually charged
+                regularPrice: i.regularPrice || i.product.regularPrice, // Use saved regular price
+                salePrice: i.salePrice || i.price, // Use saved sale price
+                offerDiscount: i.offerDiscount || 0, // Use saved offer discount
+                couponDiscount: i.couponDiscount || 0, // Use saved coupon discount per item
                 status: i.status,
                 variant: i.variant ? i.variant.size : null
             })),
             discount: order.discount || 0,
             deliveryCharge: order.deliveryCharge || 0,
             totalPrice: order.totalPrice,
-            finalAmount: order.finalAmount-order.refundAmount,
+            finalAmount: order.finalAmount,
             refundAmount: order.refundAmount || 0
         };
+        
+        console.log('=== FORMATTED ORDER DATA ===');
+        console.log('Formatted Order ID:', formattedOrder._id);
+        console.log('Customer Name:', formattedOrder.customerName);
+        console.log('Payment Method:', formattedOrder.paymentMethod);
+        console.log('Payment Status:', formattedOrder.paymentStatus);
+        console.log('Order Status:', formattedOrder.status);
+        console.log('Total Price:', formattedOrder.totalPrice);
+        console.log('Delivery Charge:', formattedOrder.deliveryCharge);
+        console.log('Final Amount:', formattedOrder.finalAmount);
+        console.log('Refund Amount:', formattedOrder.refundAmount);
+        console.log('Items Count:', formattedOrder.items.length);
+        
+        formattedOrder.items.forEach((item, index) => {
+            console.log(`Formatted Item ${index + 1}:`);
+            console.log('  - Name:', item.name);
+            console.log('  - Quantity:', item.quantity);
+            console.log('  - Price:', item.price);
+            console.log('  - Regular Price:', item.regularPrice);
+            console.log('  - Sale Price:', item.salePrice);
+            console.log('  - Offer Discount:', item.offerDiscount);
+            console.log('  - Coupon Discount:', item.couponDiscount);
+            console.log('  - Status:', item.status);
+        });
+        console.log('============================');
         
         //  Generate invoice PDF
         await generateInvoice(formattedOrder, res);

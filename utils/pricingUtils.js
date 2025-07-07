@@ -119,6 +119,32 @@ class PricingCalculator {
       ? this.calculateCouponDiscount(coupon, totalSaleAmount, coupon.price || 0)
       : { isValid: false, discount: 0 };
 
+    // Proportionally split coupon discount among items
+    let perItemCouponDiscounts = [];
+    if (couponCalculation.isValid && couponCalculation.discount > 0 && totalSaleAmount > 0) {
+      let distributed = 0;
+      // Calculate each item's share, rounding to 2 decimals, last item gets the remainder
+      perItemCouponDiscounts = itemBreakdown.map((item, idx) => {
+        if (idx === itemBreakdown.length - 1) {
+          // Last item gets the remainder to ensure total matches exactly
+          return Math.round((couponCalculation.discount - distributed) * 100) / 100;
+        } else {
+          const itemShare = Math.round((item.pricing.saleAmount / totalSaleAmount) * couponCalculation.discount * 100) / 100;
+          distributed += itemShare;
+          return itemShare;
+        }
+      });
+    } else {
+      // No coupon or invalid coupon - zero discount for all items
+      perItemCouponDiscounts = itemBreakdown.map(() => 0);
+    }
+
+    // Attach coupon discount to each item
+    itemBreakdown.forEach((item, idx) => {
+      item.couponDiscount = perItemCouponDiscounts[idx] || 0;
+      item.netPaid = item.pricing.saleAmount - item.couponDiscount;
+    });
+
     // Calculate final amounts
     const subtotalAfterOffers = totalSaleAmount;
     const subtotalAfterCoupon = subtotalAfterOffers - couponCalculation.discount;

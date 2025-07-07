@@ -171,8 +171,48 @@
             </div>
           </div>
         </div>
+
+        <!-- Wallet Payment Option -->
+        <% if (typeof walletBalance !== 'undefined' && walletBalance >= orderSummary.total) { %>
+        <div class="card payment-method-card mb-3">
+          <div class="card-body">
+            <div class="form-check">
+              <div class="d-flex align-items-center justify-content-between">
+                <!-- Icon and Details -->
+                <div class="d-flex align-items-center gap-3">
+                  <i class="fas fa-wallet text-primary" style="font-size: 28px;"></i>
+                  <div>
+                    <h6 class="mb-1">Wallet Payment</h6>
+                    <p class="text-muted small mb-0">Pay using your wallet</p>
+                  </div>
+                </div>
+                <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet"/>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } else if (typeof walletBalance !== 'undefined' && walletBalance > 0) { %>
+        <div class="card payment-method-card mb-3" style="opacity: 0.6;">
+          <div class="card-body">
+            <div class="form-check">
+              <div class="d-flex align-items-center justify-content-between">
+                <!-- Icon and Details -->
+                <div class="d-flex align-items-center gap-3">
+                  <i class="fas fa-wallet text-muted" style="font-size: 28px;"></i>
+                  <div>
+                    <h6 class="mb-1 text-muted">Wallet Payment</h6>
+                    <p class="text-muted small mb-0">Insufficient balance (₹<%= walletBalance.toFixed(2) %> available)</p>
+                  </div>
+                </div>
+                <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet" disabled/>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
         <%if(orderSummary.total>1000){%>
-          <h5 style="color: green;">“Cash on Delivery is available only for orders up to ₹1000.”</h5>
+          <h5 style="color: green;">"Cash on Delivery is available only for orders up to ₹1000."</h5>
           <%}else{%>
             <div class="card p-3 mb-3">
           <div class="form-check">
@@ -203,6 +243,10 @@
                   <del class="text-muted small">₹<%= orderSummary.regularPrice %></del>
                 <% } %>
               </div>
+              <% if (orderSummary.itemCouponDiscount && orderSummary.itemCouponDiscount > 0) { %>
+                <div class="text-success small">Coupon Discount: -₹<%= orderSummary.itemCouponDiscount.toFixed(2) %></div>
+              <% } %>
+              <div class="fw-bold">Net Paid: ₹<%= orderSummary.netPaid.toFixed(2) %></div>
             </div>
           </div>
         
@@ -218,13 +262,6 @@
           <div class="d-flex justify-content-between mb-2">
             <span>Discount</span>
             <span class="text-success">-₹<%= orderSummary.saveAmount %></span>
-          </div>
-          <% } %>
-          
-          <% if (orderSummary.couponDiscount > 0) { %>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Coupon Discount <% if (orderSummary.couponName) { %><small>(<%= orderSummary.couponName %>)</small><% } %></span>
-            <span class="text-success">-₹<%= orderSummary.couponDiscount.toFixed(2) %></span>
           </div>
           <% } %>
           
@@ -252,6 +289,29 @@
         </div>
         
         <hr>
+        
+        <!-- Wallet Balance Display -->
+        <% if (typeof walletBalance !== 'undefined' && walletBalance !== null) { %>
+        <div class="wallet-section mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Wallet Balance:</span>
+          </div>
+          <% if (walletBalance >= orderSummary.total) { %>
+            <div class="text-success small mt-1">
+              <i class="fas fa-check-circle"></i> Sufficient balance for this order
+            </div>
+          <% } else if (walletBalance > 0) { %>
+            <div class="text-warning small mt-1">
+              <i class="fas fa-exclamation-triangle"></i> Insufficient balance for this order
+            </div>
+          <% } else { %>
+            <div class="text-muted small mt-1">
+              <i class="fas fa-info-circle"></i> No wallet balance available
+            </div>
+          <% } %>
+        </div>
+        <hr>
+        <% } %>
         
           <div class="address-section">
             <h6 class="mb-2">Delivery Address:</h6>
@@ -371,8 +431,55 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       });
 
       rzp.open();
+    } else if (method === 'wallet') {
+      // Handle wallet payment
+      const productId = document.querySelector('input[name="productId"]').value;
+      const quantity = document.querySelector('input[name="quantity"]').value;
+      const variant = document.querySelector('input[name="variant"]').value;
+      const totalPrice = document.querySelector('input[name="totalPrice"]').value;
+      const couponIdInput = document.querySelector('input[name="couponId"]');
+      const couponId = couponIdInput?.value || null;
+      const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
+
+      const selected = {
+        addressType: document.querySelector('input[name="selected[addressType]"]').value,
+        name: document.querySelector('input[name="selected[name]"]').value,
+        city: document.querySelector('input[name="selected[city]"]').value,
+        landMark: document.querySelector('input[name="selected[landMark]"]').value,
+        state: document.querySelector('input[name="selected[state]"]').value,
+        pincode: document.querySelector('input[name="selected[pincode]"]').value,
+        phone: document.querySelector('input[name="selected[phone]"]').value,
+        altphone: document.querySelector('input[name="selected[altphone]"]').value
+      };
+
+      try {
+        const response = await fetch('/process-wallet-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId,
+            quantity,
+            variant,
+            totalPrice,
+            selected,
+            couponId,
+            deliveryCharge
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          window.location.href = data.redirect;
+        } else {
+          alert(data.message || 'Wallet payment failed');
+        }
+      } catch (error) {
+        console.error('Wallet payment error:', error);
+        alert('Something went wrong with wallet payment');
+      }
     } else {
-      // For other payment methods, submit the form normally
+      // For other payment methods (COD), submit the form normally
       this.submit();
     }
 });

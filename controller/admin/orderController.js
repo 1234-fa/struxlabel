@@ -289,7 +289,7 @@ const approveReturnItem = async (req, res) => {
 
     if (allReturned) {
       order.status = "return approved";
-      refundAmount = order.finalAmount;
+      refundAmount = Number(order.finalAmount) - Number(order.deliveryCharge || 0);
     } else {
       const activeItems = order.orderedItems.filter(
         (i) =>

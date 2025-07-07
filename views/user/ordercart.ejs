@@ -295,6 +295,9 @@
                         <span class="price-text me-2">₹<%= item.totalPrice %></span>
                         <del class="text-muted small">₹<%= item.product.regularPrice * item.quantity %></del>
                       </div>
+                      <% if (item.couponDiscount && item.couponDiscount > 0) { %>
+                        <div class="text-success small">Coupon Discount: -₹<%= item.couponDiscount.toFixed(2) %></div>
+                      <% } %>
                       <small class="discount-text">
                         You save ₹<%= (item.product.regularPrice - item.product.salePrice) * item.quantity %>
                       </small>
@@ -309,6 +312,16 @@
                 <span class="text-muted">Total Amount:</span>
                 <span class="h6 price-text final-price">₹<%= totalAmount %></span>
               </div>
+              <% if (pricingResult && pricingResult.totals.couponDiscount > 0) { %>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted">Coupon Discount:</span>
+                  <span class="text-success">-₹<%= pricingResult.totals.couponDiscount.toFixed(2) %></span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted">Net Amount:</span>
+                  <span class="h6 price-text">₹<%= pricingResult.totals.finalAmount.toFixed(2) %></span>
+                </div>
+              <% } %>
               <div class="discount-amount"></div>
             </div>
 
@@ -469,6 +482,88 @@ const removeCouponBtn = document.getElementById('removeCouponBtn');
 let activeCouponId = null;
 let originalPrice = parseFloat(totalPriceInput.value);
 
+// Corrected function to calculate split coupon discount for individual products
+function itemPriceAfterDiscount(itemPrice, couponDiscount, cartTotal, quantity) {
+    console.log('Calculating split discount:', { itemPrice, couponDiscount, cartTotal, quantity });
+    
+    const totalPrice = itemPrice * quantity;
+    const itemShareOfDiscount = Math.round((totalPrice / cartTotal) * couponDiscount * 100) / 100;
+    const finalPrice = totalPrice - itemShareOfDiscount;
+    
+    console.log('Split calculation:', {
+        totalPrice,
+        itemShareOfDiscount,
+        finalPrice
+    });
+    
+    return {
+        originalPrice: totalPrice,
+        discountShare: itemShareOfDiscount,
+        finalPrice: finalPrice
+    };
+}
+
+// Function to update individual product prices with split discount
+function updateProductPricesWithSplitDiscount(couponDiscount, cartTotal) {
+    const cartItems = document.querySelectorAll('.cart-item');
+    let totalFinalPrice = 0;
+    
+    cartItems.forEach((item, index) => {
+        const priceElement = item.querySelector('.price-text');
+        const originalPriceText = priceElement.textContent;
+        const originalPrice = parseFloat(originalPriceText.replace('₹', ''));
+        
+        // Get product details from the item
+        const quantityElement = item.querySelector('.text-muted');
+        const quantityMatch = quantityElement.textContent.match(/Qty: (\d+)/);
+        const quantity = quantityMatch ? parseInt(quantityMatch[1]) : 1;
+        
+        const itemPrice = originalPrice / quantity; // Price per unit
+        
+        const result = itemPriceAfterDiscount(itemPrice, couponDiscount, cartTotal, quantity);
+        
+        // Update the price display
+        priceElement.textContent = `₹${result.finalPrice.toFixed(2)}`;
+        
+        // Add or update coupon discount display
+        let discountElement = item.querySelector('.coupon-discount');
+        if (!discountElement) {
+            discountElement = document.createElement('div');
+            discountElement.className = 'text-success small coupon-discount';
+            const priceContainer = item.querySelector('.d-flex.align-items-center');
+            priceContainer.appendChild(discountElement);
+        }
+        discountElement.textContent = `Coupon Discount: -₹${result.discountShare.toFixed(2)}`;
+        
+        totalFinalPrice += result.finalPrice;
+    });
+    
+    // Update total price
+    totalPriceInput.value = totalFinalPrice.toFixed(2);
+    finalPriceElements.forEach(el => {
+        el.textContent = totalFinalPrice.toFixed(2);
+    });
+    
+    return totalFinalPrice;
+}
+
+// Function to reset product prices to original
+function resetProductPrices() {
+    const cartItems = document.querySelectorAll('.cart-item');
+    
+    cartItems.forEach((item) => {
+        const priceElement = item.querySelector('.price-text');
+        const originalPriceText = priceElement.getAttribute('data-original-price') || priceElement.textContent;
+        priceElement.textContent = originalPriceText;
+        
+        // Remove coupon discount display
+        const discountElement = item.querySelector('.coupon-discount');
+        if (discountElement) {
+            discountElement.remove();
+        }
+    });
+}
+
 couponForm.addEventListener('submit', function(e) {
 e.preventDefault();
 const selectedCoupon = document.querySelector('input[name="selectedCoupons"]:checked');
@@ -476,16 +571,19 @@ if (selectedCoupon) {
 const couponId = selectedCoupon.value;
 const discountPercent = parseFloat(selectedCoupon.dataset.discount);
 const discountAmount = (originalPrice * discountPercent / 100);
-const newPrice = originalPrice - discountAmount;
-totalPriceInput.value = newPrice.toFixed(2);
+
+// Update with split discount logic
+const finalPrice = updateProductPricesWithSplitDiscount(discountAmount, originalPrice);
+
+// Update form inputs
+totalPriceInput.value = finalPrice.toFixed(2);
 couponIdInput.value = couponId;
-finalPriceElements.forEach(el => {
-el.textContent = newPrice.toFixed(2);
- });
+
+// Update discount display
 if (discountAmountElement) {
-discountAmountElement.textContent = `You save ₹${discountAmount.toFixed(2)} with coupon`;
-discountAmountElement.classList.add('fw-bold', 'text-success');
- }
+  discountAmountElement.textContent = `Total Coupon Discount: -₹${discountAmount.toFixed(2)}`;
+  discountAmountElement.classList.add('fw-bold', 'text-success');
+}
 // Close modal with multiple fallback methods
 try {
   const modalElement = document.getElementById('applyCouponModal');
@@ -539,6 +637,9 @@ showAlert('Coupon applied successfully!', 'success');
 // NEW: Remove Coupon Event Listener
 removeCouponBtn.addEventListener('click', function(e) {
   e.preventDefault();
+  
+  // Reset individual product prices
+  resetProductPrices();
   
   // Reset to original price
   totalPriceInput.value = originalPrice.toFixed(2);

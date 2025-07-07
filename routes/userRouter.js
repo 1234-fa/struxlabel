@@ -156,6 +156,8 @@ router.post('/create-razorpay-order', userAuth, checkoutController.createRazorpa
 router.post('/verify-razorpay-payment', userAuth, checkoutController.verifyRazorpayPayment);
 router.post('/create-razorpay-order-cart', userAuth, checkoutController.createRazorpayOrderCart);
 router.post('/verify-razorpay-payment-cart', userAuth, checkoutController.verifyRazorpayPaymentCart);
+router.post('/process-wallet-payment', userAuth, orderController.processWalletPayment);
+router.post('/process-wallet-payment-cart', userAuth, orderController.processWalletPaymentCart);
 router.get('/order-failure',userAuth,checkoutController.getorderFailurePage);
 router.post('/handle-payment-failure', userAuth, checkoutController.handlePaymentFailure);
 router.get('/retry-payment/:orderId', userAuth, checkoutController.retryPayment);

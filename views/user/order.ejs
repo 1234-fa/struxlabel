@@ -140,7 +140,7 @@
         </div>
       </div>
     </div>
-
+    
     <!-- Product Summary -->
     <div class="col-md-6 mb-4">
       <div class="card">
@@ -157,6 +157,9 @@
                   <span class="price-text me-2 final-price">₹<%= item.totalPrice %></span>
                   <del class="text-muted small">₹<%= item.product.regularPrice * item.quantity %></del>
                 </div>
+                <% if (item.couponDiscount && item.couponDiscount > 0) { %>
+                  <div class="text-success small">Coupon Discount: -₹<%= item.couponDiscount.toFixed(2) %></div>
+                <% } %>
                 <small class="discount-text discount-amount">
                   You save ₹<%= (item.product.regularPrice - item.product.salePrice) * item.quantity %>
                 </small>
@@ -175,6 +178,16 @@
                 <span class="text-muted">Total Amount:</span>
                 <span class="h6 price-text final-price">₹<%= item.totalPrice %></span>
               </div>
+              <% if (item.couponDiscount && item.couponDiscount > 0) { %>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted">Coupon Discount:</span>
+                  <span class="text-success">-₹<%= item.couponDiscount.toFixed(2) %></span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted">Net Amount:</span>
+                  <span class="h6 price-text">₹<%= item.netPaid.toFixed(2) %></span>
+                </div>
+              <% } %>
               <div class="discount-amount"></div>
             </div>
 
@@ -450,7 +463,6 @@
 </style>
 
 <script>
-
 document.addEventListener('DOMContentLoaded', function() {
   // Get references to important elements
   const couponForm = document.getElementById('couponForm');
@@ -466,6 +478,71 @@ document.addEventListener('DOMContentLoaded', function() {
   let activeCouponId = null;
   let originalPrice = parseFloat(totalPriceInput.value);
   
+  // Function to calculate split coupon discount for single product
+  function itemPriceAfterDiscount(itemPrice, couponDiscount, cartTotal, quantity) {
+    console.log('Calculating split discount:', { itemPrice, couponDiscount, cartTotal, quantity });
+    
+    const totalPrice = itemPrice * quantity;
+    const itemShareOfDiscount = Math.round((totalPrice / cartTotal) * couponDiscount * 100) / 100;
+    const finalPrice = totalPrice - itemShareOfDiscount;
+    
+    console.log('Split calculation:', {
+        totalPrice,
+        itemShareOfDiscount,
+        finalPrice
+    });
+    
+    return {
+        originalPrice: totalPrice,
+        discountShare: itemShareOfDiscount,
+        finalPrice: finalPrice
+    };
+  }
+
+  // Function to update single product price with split discount
+  function updateSingleProductPriceWithSplitDiscount(couponDiscount, cartTotal) {
+    const priceElement = document.querySelector('.final-price');
+    const originalPriceText = priceElement.textContent;
+    const originalPrice = parseFloat(originalPriceText.replace('₹', ''));
+    
+    // Get quantity from the product display
+    const quantityElement = document.querySelector('.text-muted');
+    const quantityMatch = quantityElement.textContent.match(/Qty: (\d+)/);
+    const quantity = quantityMatch ? parseInt(quantityMatch[1]) : 1;
+    
+    const itemPrice = originalPrice / quantity; // Price per unit
+    
+    const result = itemPriceAfterDiscount(itemPrice, couponDiscount, cartTotal, quantity);
+    
+    // Update the price display
+    priceElement.textContent = `₹${result.finalPrice.toFixed(2)}`;
+    
+    // Add or update coupon discount display
+    let discountElement = document.querySelector('.coupon-discount');
+    if (!discountElement) {
+        discountElement = document.createElement('div');
+        discountElement.className = 'text-success small coupon-discount';
+        const priceContainer = document.querySelector('.d-flex.align-items-center');
+        priceContainer.appendChild(discountElement);
+    }
+    discountElement.textContent = `Coupon Discount: -₹${result.discountShare.toFixed(2)}`;
+    
+    return result.finalPrice;
+  }
+
+  // Function to reset single product price to original
+  function resetSingleProductPrice() {
+    const priceElement = document.querySelector('.final-price');
+    const originalPriceText = priceElement.getAttribute('data-original-price') || priceElement.textContent;
+    priceElement.textContent = originalPriceText;
+    
+    // Remove coupon discount display
+    const discountElement = document.querySelector('.coupon-discount');
+    if (discountElement) {
+        discountElement.remove();
+    }
+  }
+
   // Handle coupon application
   couponForm.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -475,27 +552,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (selectedCoupon) {
       const couponId = selectedCoupon.value;
-      const discountLabel = selectedCoupon.dataset.discount;
-      const discountPercent = parseFloat(discountLabel);
-      
-      // Calculate the new price after discount
+      const discountPercent = parseFloat(selectedCoupon.dataset.discount);
       const discountAmount = (originalPrice * discountPercent / 100);
-      const newPrice = originalPrice - discountAmount;
-      
-      // Update the hidden input for the payment form
-      totalPriceInput.value = newPrice.toFixed(2);
+
+      // Update with split discount logic
+      const finalPrice = updateSingleProductPriceWithSplitDiscount(discountAmount, originalPrice);
+
+      // Update form inputs
+      totalPriceInput.value = finalPrice.toFixed(2);
       couponIdInput.value = couponId;
-      
-      // Update the displayed price on the page
-      finalPriceElements.forEach(el => {
-        el.textContent = newPrice.toFixed(2);
-      });
-      
-      // Update the discount amount display
+
+      // Update discount display
       if (discountAmountElement) {
-        discountAmountElement.textContent = `You save ₹${discountAmount.toFixed(2)} with coupon`;
-        discountAmountElement.classList.add('fw-bold');
-        discountAmountElement.classList.add('text-success');
+        discountAmountElement.textContent = `Total Coupon Discount: -₹${discountAmount.toFixed(2)}`;
+        discountAmountElement.classList.add('fw-bold', 'text-success');
       }
       
       // Close modal with multiple fallback methods
@@ -686,8 +756,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-
-
 function openAddressForm() {
   document.getElementById('addressModal').style.display = 'flex';
 }
@@ -695,13 +763,6 @@ function openAddressForm() {
 function closeAddressForm() {
   document.getElementById('addressModal').style.display = 'none';
 }
-
-// REMOVE THIS - DUPLICATE EVENT LISTENER
-// document.getElementById('addressForm').addEventListener('submit', function (event) {
-//   if (!validateForm()) {
-//     event.preventDefault();
-//   }
-// });
 
 function showFieldError(field, message) {
   const input = document.getElementById(field);
@@ -882,7 +943,6 @@ function addNewAddressToList(newAddress) {
       location.reload();
   }
 }
-
 
     // Set selected address before submitting the payment form
     const paymentForm = document.querySelector('form[action="/payment"]');

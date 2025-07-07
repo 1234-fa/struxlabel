@@ -110,6 +110,16 @@
         <input type="hidden" name="selected[pincode]" value="<%= selected.pincode %>">
         <input type="hidden" name="selected[phone]" value="<%= selected.phone %>">
         <input type="hidden" name="selected[altphone]" value="<%= selected.altphone %>">
+        <!-- Pre-calculated pricing data to ensure consistency -->
+        <input type="hidden" name="calculatedTotal" value="<%= orderSummary.total %>">
+        <input type="hidden" name="calculatedOriginalTotal" value="<%= orderSummary.originalTotal %>">
+        <input type="hidden" name="calculatedSaleTotal" value="<%= orderSummary.saleTotal %>">
+        <input type="hidden" name="calculatedSaveAmount" value="<%= orderSummary.saveAmount %>">
+        <input type="hidden" name="calculatedCouponDiscount" value="<%= orderSummary.couponDiscount %>">
+        <input type="hidden" name="calculatedDeliveryCharge" value="<%= orderSummary.deliveryCharge %>">
+        <input type="hidden" name="calculatedFinalAmount" value="<%= orderSummary.total %>">
+        
+        <!-- Legacy fields for backward compatibility -->
         <input type="hidden" name="totalPrice" value="<%= orderSummary.total %>">
         <input type="hidden" name="totalDiscount" value="<%= (orderSummary.saveAmount + orderSummary.couponDiscount).toFixed(2) %>">
         <input type="hidden" name="orderType" value="cart">
@@ -117,7 +127,10 @@
 
         
 
-        <% cartItems.forEach(item => { %>
+        <!-- Debug: Cart Items being passed -->
+        <% console.log('Template: Cart items count:', cartItems.length); %>
+        <% cartItems.forEach((item, index) => { %>
+          <% console.log(`Template: Item ${index + 1} ID:`, item._id); %>
           <input type="hidden" name="cartItems[]" value="<%= item._id %>">
         <% }) %>
 
@@ -155,8 +168,44 @@
             </div>
           </div>
         </div>
+
+        <!-- Wallet Payment Option -->
+        <% if (typeof walletBalance !== 'undefined' && walletBalance >= orderSummary.total) { %>
+        <div class="card p-3 mb-3">
+          <div class="form-check">
+            <div class="d-flex align-items-center justify-content-between">
+              <!-- Icon and Details -->
+              <div class="d-flex align-items-center gap-3">
+                <i class="fas fa-wallet text-primary" style="font-size: 32px;"></i>
+                <div>
+                  <div class="fw-bold">Wallet Payment</div>
+                  <div class="text-muted small">Pay using your wallet</div>
+                </div>
+              </div>
+              <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet"/>
+            </div>
+          </div>
+        </div>
+        <% } else if (typeof walletBalance !== 'undefined' && walletBalance > 0) { %>
+        <div class="card p-3 mb-3" style="opacity: 0.6;">
+          <div class="form-check">
+            <div class="d-flex align-items-center justify-content-between">
+              <!-- Icon and Details -->
+              <div class="d-flex align-items-center gap-3">
+                <i class="fas fa-wallet text-muted" style="font-size: 32px;"></i>
+                <div>
+                  <div class="fw-bold text-muted">Wallet Payment</div>
+                  <div class="text-muted small">Insufficient balance available</div>
+                </div>
+              </div>
+              <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet" disabled/>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
         <%if(orderSummary.total>1000){%>
-          <h5 style="color: green;">“Cash on Delivery is available only for orders up to ₹1000.”</h5>
+          <h5 style="color: green;">"Cash on Delivery is available only for orders up to ₹1000."</h5>
           <%}else{%>
           <div class="card p-3 mb-3">
           <div class="form-check">
@@ -176,22 +225,26 @@
       <div class="card">
         <div class="card-body">
           <% cartItems.forEach(item => { %>
-            <% if (item.productId) { %>
+            <% if (item.product) { %>
               <div class="cart-item">
                 <div class="d-flex">
-                  <% if (item.productId.productImages && item.productId.productImages[0]) { %>
-                    <img src="<%= item.productId.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                  <% if (item.product.productImages && item.product.productImages[0]) { %>
+                    <img src="<%= item.product.productImages[0] %>" alt="Product Image" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
                   <% } else { %>
                     <img src="/uploads/product-images/default-image.png" alt="Default Product Image" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
                   <% } %>
                   <div class="flex-grow-1">
-                    <h6 class="mb-1"><%= item.productId.productName %></h6>
+                    <h6 class="mb-1"><%= item.product.productName %></h6>
                     <p class="text-muted">Qty: <%= item.quantity %> | Size: <%= item.variant?.size || 'Not selected' %></p>
                     <div class="d-flex align-items-center">
-                      <span class="price-text me-2">₹<%= item.productId.salePrice %></span>
-                      <del class="text-muted small">₹<%= item.productId.regularPrice %></del>
+                      <span class="price-text me-2">₹<%= item.product.salePrice %></span>
+                      <del class="text-muted small">₹<%= item.product.regularPrice %></del>
                     </div>
                     <p class="small"><strong>Total: ₹<%= item.totalPrice %></strong></p>
+                    <% if (item.couponDiscount && item.couponDiscount > 0) { %>
+                      <p class="text-success small mb-1">Coupon Discount: -₹<%= item.couponDiscount.toFixed(2) %></p>
+                    <% } %>
+                    <p class="fw-bold small">Net Paid: ₹<%= item.netPaid.toFixed(2) %></p>
                   </div>
                 </div>
               </div>
@@ -209,13 +262,6 @@
           <div class="d-flex justify-content-between mb-2">
             <span>Discount</span>
             <span class="text-success">-₹<%= orderSummary.saveAmount %></span>
-          </div>
-          <% } %>
-          
-          <% if (orderSummary.couponDiscount > 0) { %>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Coupon Discount <% if (orderSummary.couponName) { %><small>(<%= orderSummary.couponName %>)</small><% } %></span>
-            <span class="text-success">-₹<%= orderSummary.couponDiscount.toFixed(2) %></span>
           </div>
           <% } %>
           
@@ -243,6 +289,29 @@
         </div>
 
           <hr>
+
+          <!-- Wallet Balance Display -->
+          <% if (typeof walletBalance !== 'undefined' && walletBalance !== null) { %>
+          <div class="wallet-section mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold">Wallet Balance:</span>
+            </div>
+            <% if (walletBalance >= orderSummary.total) { %>
+              <div class="text-success small mt-1">
+                <i class="fas fa-check-circle"></i> Sufficient balance for this order
+              </div>
+            <% } else if (walletBalance > 0) { %>
+              <div class="text-warning small mt-1">
+                <i class="fas fa-exclamation-triangle"></i> Insufficient balance for this order
+              </div>
+            <% } else { %>
+              <div class="text-muted small mt-1">
+                <i class="fas fa-info-circle"></i> No wallet balance available
+              </div>
+            <% } %>
+          </div>
+          <hr>
+          <% } %>
 
           <!-- Displaying the Address -->
           <div class="address-section">
@@ -276,11 +345,23 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
     e.preventDefault();
 
     const cartItems = Array.from(document.querySelectorAll('input[name="cartItems[]"]')).map(input => input.value);
+    console.log('🔍 Razorpay: Extracted cart items:', cartItems);
+    console.log('🔍 Razorpay: Cart items type:', typeof cartItems);
+    console.log('🔍 Razorpay: Cart items length:', cartItems.length);
     const totalPrice = document.querySelector('input[name="totalPrice"]').value;
     const couponIdInput = document.querySelector('input[name="couponId"]');
     const couponId = couponIdInput ? couponIdInput.value : null;
     const totalDiscount = document.querySelector('input[name="totalDiscount"]').value;
     const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
+    
+    // Get pre-calculated pricing data for consistency
+    const calculatedTotal = document.querySelector('input[name="calculatedTotal"]').value;
+    const calculatedOriginalTotal = document.querySelector('input[name="calculatedOriginalTotal"]').value;
+    const calculatedSaleTotal = document.querySelector('input[name="calculatedSaleTotal"]').value;
+    const calculatedSaveAmount = document.querySelector('input[name="calculatedSaveAmount"]').value;
+    const calculatedCouponDiscount = document.querySelector('input[name="calculatedCouponDiscount"]').value;
+    const calculatedDeliveryCharge = document.querySelector('input[name="calculatedDeliveryCharge"]').value;
+    const calculatedFinalAmount = document.querySelector('input[name="calculatedFinalAmount"]').value;
 
     const selected = {
       addressType: document.querySelector('input[name="selected[addressType]"]').value,
@@ -302,7 +383,15 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
         totalPrice,
         couponId : couponId || null,
         deliveryCharge,
-        selected
+        selected,
+        // Include pre-calculated pricing data for consistency
+        calculatedTotal,
+        calculatedOriginalTotal,
+        calculatedSaleTotal,
+        calculatedSaveAmount,
+        calculatedCouponDiscount,
+        calculatedDeliveryCharge,
+        calculatedFinalAmount
       })
     });
 
@@ -318,27 +407,46 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
       order_id: order_id,
       handler: async function (response) {
         // Step 3: Verify payment
+        const paymentVerificationData = {
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+          cartItems,
+          totalPrice,
+          couponId: couponId || null,
+          selected,
+          deliveryCharge,
+          totalDiscount,
+          // Include pre-calculated pricing data for consistency
+          calculatedTotal,
+          calculatedOriginalTotal,
+          calculatedSaleTotal,
+          calculatedSaveAmount,
+          calculatedCouponDiscount,
+          calculatedDeliveryCharge,
+          calculatedFinalAmount
+        };
+
+        console.log('🔍 Sending payment verification data:', paymentVerificationData);
+        console.log('📦 Cart items being sent:', cartItems);
+        console.log('📦 Cart items type:', typeof cartItems);
+        console.log('📦 Cart items length:', cartItems ? cartItems.length : 'undefined');
+
         const res2 = await fetch('/verify-razorpay-payment-cart', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            cartItems,
-            totalPrice,
-            couponId: couponId || null,
-            selected,
-            deliveryCharge,
-            totalDiscount
-          })
+          body: JSON.stringify(paymentVerificationData)
         });
 
         const data = await res2.json();
+        console.log('📥 Payment verification response:', data);
+        
         if (data.success && data.redirect) {
+          console.log('✅ Payment successful, redirecting to:', data.redirect);
           window.location.href = data.redirect;
         } else {
-          window.location.href = data.redirect;
+          console.log('❌ Payment failed, redirecting to:', data.redirect || '/order-failure');
+          window.location.href = data.redirect || '/order-failure';
         }
       },
       prefill: {
@@ -370,6 +478,72 @@ document.getElementById('checkoutForm').addEventListener('submit', async functio
     });
 
     rzp1.open();
+  } else if (method === 'wallet') {
+    e.preventDefault();
+
+    const cartItems = Array.from(document.querySelectorAll('input[name="cartItems[]"]')).map(input => input.value);
+    console.log('🔍 Wallet: Extracted cart items:', cartItems);
+    console.log('🔍 Wallet: Cart items type:', typeof cartItems);
+    console.log('🔍 Wallet: Cart items length:', cartItems.length);
+    const totalPrice = document.querySelector('input[name="totalPrice"]').value;
+    const couponIdInput = document.querySelector('input[name="couponId"]');
+    const couponId = couponIdInput ? couponIdInput.value : null;
+    const totalDiscount = document.querySelector('input[name="totalDiscount"]').value;
+    const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
+    
+    // Get pre-calculated pricing data for consistency
+    const calculatedTotal = document.querySelector('input[name="calculatedTotal"]').value;
+    const calculatedOriginalTotal = document.querySelector('input[name="calculatedOriginalTotal"]').value;
+    const calculatedSaleTotal = document.querySelector('input[name="calculatedSaleTotal"]').value;
+    const calculatedSaveAmount = document.querySelector('input[name="calculatedSaveAmount"]').value;
+    const calculatedCouponDiscount = document.querySelector('input[name="calculatedCouponDiscount"]').value;
+    const calculatedDeliveryCharge = document.querySelector('input[name="calculatedDeliveryCharge"]').value;
+    const calculatedFinalAmount = document.querySelector('input[name="calculatedFinalAmount"]').value;
+
+    const selected = {
+      addressType: document.querySelector('input[name="selected[addressType]"]').value,
+      name: document.querySelector('input[name="selected[name]"]').value,
+      city: document.querySelector('input[name="selected[city]"]').value,
+      landMark: document.querySelector('input[name="selected[landMark]"]').value,
+      state: document.querySelector('input[name="selected[state]"]').value,
+      pincode: document.querySelector('input[name="selected[pincode]"]').value,
+      phone: document.querySelector('input[name="selected[phone]"]').value,
+      altphone: document.querySelector('input[name="selected[altphone]"]').value
+    };
+
+    try {
+      const response = await fetch('/process-wallet-payment-cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartItems,
+          totalPrice,
+          selected,
+          couponId,
+          deliveryCharge,
+          totalDiscount,
+          // Include pre-calculated pricing data for consistency
+          calculatedTotal,
+          calculatedOriginalTotal,
+          calculatedSaleTotal,
+          calculatedSaveAmount,
+          calculatedCouponDiscount,
+          calculatedDeliveryCharge,
+          calculatedFinalAmount
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        window.location.href = data.redirect;
+      } else {
+        alert(data.message || 'Wallet payment failed');
+      }
+    } catch (error) {
+      console.error('Wallet payment error:', error);
+      alert('Something went wrong with wallet payment');
+    }
   }
 });
 
@@ -384,6 +558,15 @@ function handleCartPaymentFailure(errorCode, errorDescription, razorpayOrderId =
   const couponId = couponIdInput ? couponIdInput.value : null;
   const totalDiscount = document.querySelector('input[name="totalDiscount"]').value;
   const deliveryCharge = document.querySelector('input[name="deliveryCharge"]').value;
+  
+  // Get pre-calculated pricing data for consistency
+  const calculatedTotal = document.querySelector('input[name="calculatedTotal"]').value;
+  const calculatedOriginalTotal = document.querySelector('input[name="calculatedOriginalTotal"]').value;
+  const calculatedSaleTotal = document.querySelector('input[name="calculatedSaleTotal"]').value;
+  const calculatedSaveAmount = document.querySelector('input[name="calculatedSaveAmount"]').value;
+  const calculatedCouponDiscount = document.querySelector('input[name="calculatedCouponDiscount"]').value;
+  const calculatedDeliveryCharge = document.querySelector('input[name="calculatedDeliveryCharge"]').value;
+  const calculatedFinalAmount = document.querySelector('input[name="calculatedFinalAmount"]').value;
 
   const selected = {
     addressType: document.querySelector('input[name="selected[addressType]"]').value,
@@ -413,7 +596,15 @@ function handleCartPaymentFailure(errorCode, errorDescription, razorpayOrderId =
       couponId: couponId,
       deliveryCharge: deliveryCharge,
       totalDiscount: totalDiscount,
-      isCartOrder: true
+      isCartOrder: true,
+      // Include pre-calculated pricing data for consistency
+      calculatedTotal,
+      calculatedOriginalTotal,
+      calculatedSaleTotal,
+      calculatedSaveAmount,
+      calculatedCouponDiscount,
+      calculatedDeliveryCharge,
+      calculatedFinalAmount
     })
   })
   .then(response => response.json())

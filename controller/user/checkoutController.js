@@ -7,6 +7,7 @@ const razorpay = require('../../config/payments');
 const Coupon = require('../../models/coupenSchema');
 const UserCoupon = require('../../models/userCouponSchema');
 const {StatusCode} = require('../../config/statuscode');
+const PricingCalculator = require('../../utils/pricingUtils');
 
 const crypto = require('crypto');
 const mongoose = require('mongoose');
@@ -83,12 +84,38 @@ const createRazorpayOrder = async (req, res) => {
 
   const createRazorpayOrderCart = async (req, res) => {
     try {
-      const { cartItems, totalPrice, couponId, selected } = req.body;
+      const { 
+        cartItems, 
+        totalPrice, 
+        couponId, 
+        selected,
+        // Include pre-calculated pricing data for consistency
+        calculatedTotal,
+        calculatedOriginalTotal,
+        calculatedSaleTotal,
+        calculatedSaveAmount,
+        calculatedCouponDiscount,
+        calculatedDeliveryCharge,
+        calculatedFinalAmount
+      } = req.body;
       const userId = req.session.user;
   
       if (!userId) {
         return res.status(StatusCode.UNAUTHORIZED).json({ error: 'User not authenticated' });
       }
+
+      console.log('=== CREATING RAZORPAY ORDER FOR CART ===');
+      console.log('Cart items:', cartItems);
+      console.log('Pre-calculated pricing data:', {
+        calculatedTotal,
+        calculatedOriginalTotal,
+        calculatedSaleTotal,
+        calculatedSaveAmount,
+        calculatedCouponDiscount,
+        calculatedDeliveryCharge,
+        calculatedFinalAmount
+      });
+      console.log('==========================================');
   
       const amount = Math.round(parseFloat(totalPrice) * 100); // Convert to paise
   
@@ -100,7 +127,15 @@ const createRazorpayOrder = async (req, res) => {
           userId: String(userId),
           cartItems: JSON.stringify(cartItems),
           selected: JSON.stringify(selected),
-          couponId: couponId || ''
+          couponId: couponId || '',
+          // Store pre-calculated pricing data in Razorpay order notes
+          calculatedTotal: calculatedTotal || '',
+          calculatedOriginalTotal: calculatedOriginalTotal || '',
+          calculatedSaleTotal: calculatedSaleTotal || '',
+          calculatedSaveAmount: calculatedSaveAmount || '',
+          calculatedCouponDiscount: calculatedCouponDiscount || '',
+          calculatedDeliveryCharge: calculatedDeliveryCharge || '',
+          calculatedFinalAmount: calculatedFinalAmount || ''
         }
       });
   
@@ -197,37 +232,52 @@ const createRazorpayOrder = async (req, res) => {
         altphone: selected.altphone,
       };
 
+      // Get coupon if provided
+      let appliedCoupon = null;
+      if (couponId) {
+        appliedCoupon = await Coupon.findById(couponId);
+      }
+
+      // Ensure deliveryCharge is a number
+      const deliveryChargeNum = Number(deliveryCharge) || 0;
+      console.log('Razorpay payment - Delivery charge from request:', deliveryCharge, 'Converted to:', deliveryChargeNum);
+
+      // Calculate pricing using centralized utility for consistent split coupon discount
+      const orderItemsForPricing = [{
+        product: product,
+        quantity: orderQty,
+        variant: { size: variant || null }
+      }];
+
+      const pricingResult = PricingCalculator.calculateOrderPricing(orderItemsForPricing, appliedCoupon, deliveryChargeNum);
+
+      console.log('Razorpay payment - Pricing calculation result:', pricingResult);
+      console.log('Razorpay payment - Final amount includes delivery charge:', pricingResult.totals.finalAmount);
+
       const orderedItem = {
         product: product._id,
         quantity: orderQty,
         price: product.salePrice,
+        regularPrice: product.regularPrice,
+        salePrice: product.salePrice,
+        offerDiscount: pricingResult.items[0].pricing.unitOfferDiscount,
+        couponDiscount: pricingResult.items[0].couponDiscount || 0,
         variant: { 
           size: variant || null 
         },
         status: isPaymentValid ? 'processing' : 'payment_failed'
       };
 
-      const originalPrice = product.regularPrice * orderQty;
-      const salePrice = product.salePrice * orderQty;
-      const productDiscount = originalPrice - salePrice;
-      let couponDiscount = 0;
-      let appliedCoupon = null;
-
-      if (couponId && isPaymentValid) {
-        appliedCoupon = await Coupon.findById(couponId);
-        if (appliedCoupon) {
-          couponDiscount = (salePrice * appliedCoupon.discount) / 100;
-          // Update coupon usage only on successful payment
-          if (!appliedCoupon.usersUsed.includes(userId)) {
-            await Coupon.findByIdAndUpdate(
-              couponId,
-              { $push: { usersUsed: userId } }
-            );
-          }
+      // Mark coupon as used if applicable
+      if (appliedCoupon && pricingResult.coupon.isValid && isPaymentValid) {
+        if (!appliedCoupon.usersUsed.includes(userId)) {
+          await Coupon.findByIdAndUpdate(
+            couponId,
+            { $push: { usersUsed: userId } }
+          );
         }
       }
 
-      const finalAmount = originalPrice - (productDiscount + couponDiscount);
       let orderId = generateOrderId();
 
       // ALWAYS CREATE AND SAVE THE ORDER REGARDLESS OF PAYMENT STATUS
@@ -235,22 +285,30 @@ const createRazorpayOrder = async (req, res) => {
         orderId,
         user: userId,
         orderedItems: [orderedItem],
-        totalPrice: originalPrice,
-        discount: productDiscount + couponDiscount,
-        finalAmount: finalAmount,
+        totalPrice: pricingResult.totals.originalAmount,
+        offerDiscount: pricingResult.totals.offerDiscount,
+        couponDiscount: pricingResult.totals.couponDiscount,
+        discount: pricingResult.totals.offerDiscount + pricingResult.totals.couponDiscount,
+        finalAmount: pricingResult.totals.finalAmount,
         address: address,
         invoiceDate: new Date(),
         status: isPaymentValid ? 'processing' : 'payment_failed',
         createdOn: new Date(),
         coupon: couponId ? couponId : null,
-        couponApplied: !!couponId,
+        couponApplied: pricingResult.coupon.isValid,
         paymentMethod: 'razorpay',
         paymentStatus: isPaymentValid ? 'Paid' : 'Failed',
-        deliveryCharge: deliveryCharge,
+        deliveryCharge: pricingResult.totals.deliveryCharge,
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id || null,
         failureReason: paymentVerificationError || (isPaymentValid ? null : 'Payment verification failed')
       });
+
+      console.log('Razorpay order being saved with:');
+      console.log('- totalPrice:', newOrder.totalPrice);
+      console.log('- deliveryCharge:', newOrder.deliveryCharge);
+      console.log('- finalAmount:', newOrder.finalAmount);
+      console.log('- Expected total (totalPrice + deliveryCharge):', newOrder.totalPrice + newOrder.deliveryCharge);
 
       console.log('Attempting to save order with status:', newOrder.status);
       const savedOrder = await newOrder.save();
@@ -361,9 +419,52 @@ const createRazorpayOrder = async (req, res) => {
         selected,
         couponId,
         deliveryCharge,
-        totalDiscount
+        totalDiscount,
+        // Use the pre-calculated pricing data from the payment page
+        calculatedTotal,
+        calculatedOriginalTotal,
+        calculatedSaleTotal,
+        calculatedSaveAmount,
+        calculatedCouponDiscount,
+        calculatedDeliveryCharge,
+        calculatedFinalAmount
       } = req.body;
-      console.log('total discount:',totalDiscount);
+
+      // Normalize cartItems to handle both array and string formats
+      let normalizedCartItems = cartItems;
+      if (typeof cartItems === 'string') {
+        try {
+          normalizedCartItems = JSON.parse(cartItems);
+        } catch (e) {
+          // If it's not JSON, it might be a single item
+          normalizedCartItems = [cartItems];
+        }
+      } else if (!Array.isArray(cartItems)) {
+        // If it's not an array, make it an array
+        normalizedCartItems = cartItems ? [cartItems] : [];
+      }
+
+      console.log('=== CART RAZORPAY PAYMENT VERIFICATION DEBUG ===');
+      console.log('Raw request body:', req.body);
+      console.log('Form data keys:', Object.keys(req.body));
+      console.log('Original cartItems:', cartItems);
+      console.log('Original cartItems type:', typeof cartItems);
+      console.log('Normalized cartItems:', normalizedCartItems);
+      console.log('Normalized cartItems type:', typeof normalizedCartItems);
+      if (Array.isArray(normalizedCartItems)) {
+        console.log('Normalized cart items array length:', normalizedCartItems.length);
+        console.log('Normalized cart items array contents:', normalizedCartItems);
+      }
+      console.log('Received pricing data from payment page:');
+      console.log('- calculatedTotal:', calculatedTotal);
+      console.log('- calculatedOriginalTotal:', calculatedOriginalTotal);
+      console.log('- calculatedSaleTotal:', calculatedSaleTotal);
+      console.log('- calculatedSaveAmount:', calculatedSaveAmount);
+      console.log('- calculatedCouponDiscount:', calculatedCouponDiscount);
+      console.log('- calculatedDeliveryCharge:', calculatedDeliveryCharge);
+      console.log('- calculatedFinalAmount:', calculatedFinalAmount);
+      console.log('total discount:', totalDiscount);
+      console.log('================================================');
   
       const generated_signature = crypto
         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -378,85 +479,147 @@ const createRazorpayOrder = async (req, res) => {
       if (!userId) {
         return res.status(StatusCode.UNAUTHORIZED).json({ message: "User not logged in" });
       }
+
+      // Validate cart items
+      if (!normalizedCartItems || normalizedCartItems.length === 0) {
+        console.log('❌ Invalid cart items received:', cartItems);
+        console.log('❌ Normalized cart items:', normalizedCartItems);
+        return res.status(StatusCode.BAD_REQUEST).json({ 
+          success: false, 
+          message: "Invalid cart items provided" 
+        });
+      }
   
       const cart = await Cart.findOne({ userId }).populate("items.productId");
       if (!cart) {
+        console.log('❌ Cart not found for user:', userId);
         return res.status(StatusCode.NOT_FOUND).json({ message: "Cart not found" });
       }
-  
+
+      console.log('📦 Cart found with items:', cart.items.length);
+      console.log('🔍 Looking for cart items:', normalizedCartItems);
+      
       const orderedItems = cart.items
-        .filter(item => cartItems.includes(item._id.toString()))
+        .filter(item => normalizedCartItems.includes(item._id.toString()))
         .filter(item => item.productId); // filter valid products
-  
+
+      console.log('✅ Found ordered items:', orderedItems.length);
+      console.log('📋 Ordered items details:', orderedItems.map(item => ({
+        id: item._id,
+        productId: item.productId?._id,
+        productName: item.productId?.productName,
+        quantity: item.quantity,
+        variant: item.variant
+      })));
+
       if (orderedItems.length === 0) {
-        return res.status(StatusCode.BAD_REQUEST).json({ message: "No valid products to order" });
+        console.log('❌ No valid products to order');
+        console.log('🔍 Available cart items:', cart.items.map(item => ({
+          id: item._id,
+          productId: item.productId?._id,
+          productName: item.productId?.productName
+        })));
+        console.log('🔍 Requested cart items:', normalizedCartItems);
+        return res.status(StatusCode.BAD_REQUEST).json({ 
+          success: false,
+          message: "No valid products to order. The selected items may have been removed from your cart." 
+        });
       }
   
-      let totalOriginalPrice = 0;
-            let totalSalePrice = 0;
-            let orderItems = [];
-        
-            for (const item of orderedItems) {
-              const product = item.productId;
-              const price = product.salePrice || product.price || 0;
-              const originalPrice = product.regularPrice || 0;
-              const quantity = item.quantity;
-              const variant = item.variant;
-        
-              let availableStock;
-        if (product.variants && variant?.size) {
-          // For products with variants, check variant-specific stock
-          availableStock = product.variants.get(variant.size) || 0;
+      // Get coupon if provided
+      let appliedCoupon = null;
+      if (couponId) {
+        appliedCoupon = await Coupon.findById(couponId);
+      }
+
+      // Use the pre-calculated pricing data instead of recalculating
+      const finalAmount = Number(calculatedFinalAmount) || 0;
+      const originalAmount = Number(calculatedOriginalTotal) || 0;
+      const saleAmount = Number(calculatedSaleTotal) || 0;
+      const offerDiscount = Number(calculatedSaveAmount) || 0;
+      const couponDiscount = Number(calculatedCouponDiscount) || 0;
+      const deliveryChargeNum = Number(calculatedDeliveryCharge) || 0;
+
+      console.log('Using pre-calculated pricing for Razorpay payment:');
+      console.log('- finalAmount:', finalAmount);
+      console.log('- originalAmount:', originalAmount);
+      console.log('- saleAmount:', saleAmount);
+      console.log('- offerDiscount:', offerDiscount);
+      console.log('- couponDiscount:', couponDiscount);
+      console.log('- deliveryCharge:', deliveryChargeNum);
+
+      // Still need to calculate per-item coupon discounts for the order items
+      const orderItemsForPricing = orderedItems.map(item => {
+        return {
+          product: item.productId,
+          quantity: item.quantity,
+          variant: item.variant
+        };
+      });
+
+      const pricingResult = PricingCalculator.calculateOrderPricing(orderItemsForPricing, appliedCoupon, deliveryChargeNum);
+
+      console.log('Per-item pricing calculation for coupon distribution:', pricingResult);
+
+      // Validate stock for all items
+      console.log('🔍 Validating stock for ordered items...');
+      for (const item of orderedItems) {
+        const product = item.productId;
+        const quantity = item.quantity;
+        const variant = item.variant?.size;
+
+        console.log(`📦 Checking stock for ${product.productName} (Size: ${variant || 'N/A'}) - Quantity: ${quantity}`);
+
+        let availableStock;
+        if (product.variants && variant) {
+          availableStock = product.variants.get(variant) || 0;
           
           if (availableStock < quantity) {
+            console.log(`❌ Insufficient stock for ${product.productName} (Size: ${variant}). Available: ${availableStock}, Required: ${quantity}`);
             return res.status(StatusCode.BAD_REQUEST).json({ 
-              message: `Insufficient stock for ${product.name} (Size: ${variant.size}). Only ${availableStock} available.` 
+              success: false,
+              message: `Insufficient stock for ${product.productName} (Size: ${variant}). Only ${availableStock} available.` 
             });
           }
         } else {
-          // For products without variants, check general stock
           availableStock = product.quantity || 0;
           
           if (availableStock < quantity) {
+            console.log(`❌ Insufficient stock for ${product.productName}. Available: ${availableStock}, Required: ${quantity}`);
             return res.status(StatusCode.BAD_REQUEST).json({ 
-              message: `Insufficient stock for ${product.name}. Only ${availableStock} available.` 
+              success: false,
+              message: `Insufficient stock for ${product.productName}. Only ${availableStock} available.` 
             });
           }
         }
-        
-              const itemTotal = price * quantity;
-              const itemOriginalTotal = originalPrice * quantity;
-        
-              totalOriginalPrice += itemOriginalTotal;
-              totalSalePrice += itemTotal;
-        
-              orderItems.push({
-                product: product._id,
-                quantity,
-                variant: variant || { size: null },
-                price,
-                totalPrice: itemTotal,
-                status: "processing"
-              });
-            }
-        
-            // Coupon discount
-            let couponDiscount = 0;
-            let appliedCoupon = null;
-        
-            if (couponId) {
-              appliedCoupon = await Coupon.findById(couponId);
-              if (appliedCoupon && !appliedCoupon.usersUsed.includes(userId)) {
-                couponDiscount = (totalSalePrice * appliedCoupon.discount) / 100;
-        
-                // Mark the coupon as used
-                await Coupon.findByIdAndUpdate(
-                  couponId,
-                  { $push: { usersUsed: userId } }
-                );
-              }
-            }
-  
+        console.log(`✅ Stock sufficient for ${product.productName} - Available: ${availableStock}`);
+      }
+
+      // Create order items with complete pricing info
+      const finalOrderItems = pricingResult.items.map((item) => {
+        return {
+          product: item.product._id,
+          quantity: item.quantity,
+          price: item.product.salePrice,
+          regularPrice: item.product.regularPrice,
+          salePrice: item.product.salePrice,
+          offerDiscount: item.pricing.unitOfferDiscount,
+          couponDiscount: item.couponDiscount || 0,
+          variant: item.variant,
+          status: "processing"
+        };
+      });
+
+      // Mark coupon as used if applicable
+      if (appliedCoupon && pricingResult.coupon.isValid) {
+        if (!appliedCoupon.usersUsed.includes(userId)) {
+          await Coupon.findByIdAndUpdate(
+            couponId,
+            { $push: { usersUsed: userId } }
+          );
+        }
+      }
+
       const address = {
         addressType: selected.addressType,
         name: selected.name,
@@ -467,29 +630,37 @@ const createRazorpayOrder = async (req, res) => {
         phone: selected.phone,
         altphone: selected.altphone
       };
-  
+
       const newOrder = new Order({
         orderId: generateOrderId(),
         user: userId,
-        orderedItems: orderItems,
-        totalPrice: totalOriginalPrice,
-        discount: Number(totalDiscount),
-        deliveryCharge:deliveryCharge,
-        finalAmount: totalPrice,
+        orderedItems: finalOrderItems,
+        totalPrice: originalAmount,
+        offerDiscount: offerDiscount,
+        couponDiscount: couponDiscount,
+        discount: offerDiscount + couponDiscount,
+        deliveryCharge: deliveryChargeNum,
+        finalAmount: finalAmount,
         address,
         invoiceDate: new Date(),
         status: "processing",
         createdOn: new Date(),
         coupon: couponId || null,
-        couponApplied: !!couponId,
+        couponApplied: pricingResult.coupon.isValid,
         paymentMethod: "razorpay",
         paymentStatus: "Paid"
       });
-  console.log(newOrder.discount);
+
+      console.log('Cart Razorpay order being saved with pre-calculated values:');
+      console.log('- totalPrice:', newOrder.totalPrice);
+      console.log('- deliveryCharge:', newOrder.deliveryCharge);
+      console.log('- finalAmount:', newOrder.finalAmount);
+      console.log('- Expected total (totalPrice + deliveryCharge):', newOrder.totalPrice + newOrder.deliveryCharge);
+
       await newOrder.save();
   
       // Update product stock (variant-specific or general)
-      for (const item of orderItems) {
+      for (const item of finalOrderItems) {
         const product = await Product.findById(item.product);
         
         if (product.variants && item.variant?.size) {
@@ -515,9 +686,13 @@ const createRazorpayOrder = async (req, res) => {
       }
   
       // Remove ordered items from cart
+      console.log('🗑️ Removing ordered items from cart...');
+      const originalCartItemCount = cart.items.length;
       cart.items = cart.items.filter(item =>
-        !cartItems.includes(item._id.toString())
+        !normalizedCartItems.includes(item._id.toString())
       );
+      const removedItemCount = originalCartItemCount - cart.items.length;
+      console.log(`✅ Removed ${removedItemCount} items from cart. Remaining: ${cart.items.length}`);
       await cart.save();
   
       // Clear session coupon
@@ -525,6 +700,14 @@ const createRazorpayOrder = async (req, res) => {
         delete req.session.appliedCoupon;
       }
   
+      console.log('🎉 Cart order placed successfully!');
+      console.log('📋 Order details:', {
+        orderId: newOrder.orderId,
+        totalItems: newOrder.orderedItems.length,
+        finalAmount: newOrder.finalAmount,
+        status: newOrder.status
+      });
+
       return res.json({
         success: true,
         redirect: `/order-success?orderId=${newOrder.orderId}`
@@ -532,10 +715,16 @@ const createRazorpayOrder = async (req, res) => {
   
     } catch (error) {
       console.error("❌ Error verifying Razorpay cart payment:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        cartItems: cartItems,
+        userId: req.session.user?._id
+      });
       return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
         success: false,
         redirect: '/order-failure',
-        message: "Payment verification failed"
+        message: "Payment verification failed. Please try again or contact support."
       });
     }
   };
@@ -568,7 +757,15 @@ const handlePaymentFailure = async (req, res) => {
       razorpay_order_id,
       error_code,
       error_description,
-      isCartOrder
+      isCartOrder,
+      // Use the pre-calculated pricing data from the payment page
+      calculatedTotal,
+      calculatedOriginalTotal,
+      calculatedSaleTotal,
+      calculatedSaveAmount,
+      calculatedCouponDiscount,
+      calculatedDeliveryCharge,
+      calculatedFinalAmount
     } = req.body;
 
     console.log('📝 Creating failed order...');
@@ -585,13 +782,33 @@ const handlePaymentFailure = async (req, res) => {
         throw new Error('Cart not found');
       }
 
+      // Normalize cartItems to handle both array and string formats
+      let normalizedCartItems = cartItems;
+      if (typeof cartItems === 'string') {
+        try {
+          normalizedCartItems = JSON.parse(cartItems);
+        } catch (e) {
+          // If it's not JSON, it might be a single item
+          normalizedCartItems = [cartItems];
+        }
+      } else if (!Array.isArray(cartItems)) {
+        // If it's not an array, make it an array
+        normalizedCartItems = cartItems ? [cartItems] : [];
+      }
+
+      console.log('📦 Cart found with items:', cart.items.length);
+      console.log('🔍 Looking for cart items:', normalizedCartItems);
+
       const orderItems = [];
       let totalOriginalPrice = 0;
       let calculatedDiscount = 0;
 
-      for (const itemId of cartItems) {
+      for (const itemId of normalizedCartItems) {
         const cartItem = cart.items.find(item => item._id.toString() === itemId);
-        if (!cartItem) continue;
+        if (!cartItem) {
+          console.log('⚠️ Cart item not found:', itemId);
+          continue;
+        }
 
         const product = cartItem.productId;
         const itemQuantity = cartItem.quantity;
@@ -613,6 +830,8 @@ const handlePaymentFailure = async (req, res) => {
         });
       }
 
+      console.log('✅ Created order items for failed cart order:', orderItems.length);
+
       const address = {
         addressType: selected.addressType,
         name: selected.name,
@@ -624,13 +843,29 @@ const handlePaymentFailure = async (req, res) => {
         altphone: selected.altphone,
       };
 
+      // Use pre-calculated pricing data if available, otherwise fall back to calculated values
+      const finalAmount = Number(calculatedFinalAmount) || Number(totalPrice) || 0;
+      const originalAmount = Number(calculatedOriginalTotal) || totalOriginalPrice;
+      const offerDiscount = Number(calculatedSaveAmount) || calculatedDiscount;
+      const couponDiscount = Number(calculatedCouponDiscount) || 0;
+      const deliveryChargeNum = Number(calculatedDeliveryCharge) || Number(deliveryCharge) || 0;
+
+      console.log('Using pricing data for failed cart order:');
+      console.log('- finalAmount:', finalAmount);
+      console.log('- originalAmount:', originalAmount);
+      console.log('- offerDiscount:', offerDiscount);
+      console.log('- couponDiscount:', couponDiscount);
+      console.log('- deliveryCharge:', deliveryChargeNum);
+
       newOrder = new Order({
         orderId: generateOrderId(),
         user: userId,
         orderedItems: orderItems,
-        totalPrice: totalOriginalPrice,
-        discount: totalDiscount || calculatedDiscount,
-        finalAmount: totalPrice,
+        totalPrice: originalAmount,
+        offerDiscount: offerDiscount,
+        couponDiscount: couponDiscount,
+        discount: offerDiscount + couponDiscount,
+        finalAmount: finalAmount,
         address,
         invoiceDate: new Date(),
         status: 'payment_failed',
@@ -643,7 +878,7 @@ const handlePaymentFailure = async (req, res) => {
         paymentFailureReason: `${error_code}: ${error_description}`,
         retryAttempts: 0,
         lastPaymentAttempt: new Date(),
-        deliveryCharge: deliveryCharge || 0
+        deliveryCharge: deliveryChargeNum
       });
 
     } else {

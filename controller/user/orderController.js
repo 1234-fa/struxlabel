@@ -57,9 +57,32 @@ const getOrderPage = async (req, res) => {
       });
     }
 
+    // Calculate pricing using centralized utility for split coupon discount
+    let appliedCoupon = null;
+    // Check for coupon in query params, session, or request body
+    if (req.query.couponId) {
+      appliedCoupon = await Coupon.findById(req.query.couponId);
+    } else if (req.session.appliedCoupon && req.session.appliedCoupon.id) {
+      appliedCoupon = await Coupon.findById(req.session.appliedCoupon.id);
+    }
+    
+    const orderItemsForPricing = cartItems.map(item => ({
+      product: item.product,
+      quantity: item.quantity,
+      variant: item.variant
+    }));
+    
+    const pricingResult = PricingCalculator.calculateOrderPricing(orderItemsForPricing, appliedCoupon);
+    
+    // Attach couponDiscount to each cartItem
+    cartItems = cartItems.map((item, idx) => ({
+      ...item,
+      couponDiscount: pricingResult.items[idx]?.couponDiscount || 0,
+      netPaid: (item.totalPrice) - (pricingResult.items[idx]?.couponDiscount || 0)
+    }));
 
     const userAddress = await Address.findOne({ userId });
-      const addresses = userAddress ? userAddress.address : [];
+    const addresses = userAddress ? userAddress.address : [];
 
     res.render('ordercart', {
       cartItems,
@@ -67,7 +90,9 @@ const getOrderPage = async (req, res) => {
       user,
       addresses,
       coupons,
-      isLoggedIn: true
+      isLoggedIn: true,
+      appliedCoupon: appliedCoupon,
+      pricingResult: pricingResult
     });
 
   } catch (error) {
@@ -105,12 +130,30 @@ const getSingleOrderPage = async (req, res) => {
         
         const totalPrice = product.salePrice * parseInt(quantity);
         
+        // Calculate pricing using centralized utility for split coupon discount
+        let appliedCoupon = null;
+        if (req.query.couponId) {
+          appliedCoupon = await Coupon.findById(req.query.couponId);
+        } else if (req.session.appliedCoupon && req.session.appliedCoupon.id) {
+          appliedCoupon = await Coupon.findById(req.session.appliedCoupon.id);
+        }
+        
+        const orderItemsForPricing = [{
+          product: product,
+          quantity: parseInt(quantity),
+          variant: { size: variant || null }
+        }];
+        
+        const pricingResult = PricingCalculator.calculateOrderPricing(orderItemsForPricing, appliedCoupon);
+        
         const item = {
             product,
             variant,
             quantity: parseInt(quantity),
             availableStock: parseInt(variantStock),
             totalPrice,
+            couponDiscount: pricingResult.items[0]?.couponDiscount || 0,
+            netPaid: totalPrice - (pricingResult.items[0]?.couponDiscount || 0)
         };
         
         const userAddress = await Address.findOne({ userId });
@@ -122,6 +165,8 @@ const getSingleOrderPage = async (req, res) => {
             addresses,
             coupons,
             isLoggedIn: true,
+            appliedCoupon: appliedCoupon,
+            pricingResult: pricingResult
         });
         
     } catch (error) {
@@ -192,6 +237,10 @@ const getSingleOrderPage = async (req, res) => {
         appliedCoupon = await Coupon.findById(couponId);
       }
 
+      // Ensure deliveryCharge is a number
+      const deliveryChargeNum = Number(deliveryCharge) || 0;
+      console.log('Delivery charge from request:', deliveryCharge, 'Converted to:', deliveryChargeNum);
+
       // Calculate pricing using centralized utility
       const orderItems = [{
         product: product,
@@ -202,10 +251,12 @@ const getSingleOrderPage = async (req, res) => {
       const pricingResult = PricingCalculator.calculateOrderPricing(
         orderItems,
         appliedCoupon,
-        deliveryCharge
+        deliveryChargeNum
       );
 
       console.log('Pricing calculation result:', pricingResult);
+      console.log('Final amount includes delivery charge:', pricingResult.totals.finalAmount);
+      console.log('Delivery charge calculated:', pricingResult.totals.deliveryCharge);
 
       // Create ordered item with complete pricing info
       const orderedItem = {
@@ -215,6 +266,7 @@ const getSingleOrderPage = async (req, res) => {
         regularPrice: product.regularPrice,
         salePrice: product.salePrice,
         offerDiscount: pricingResult.items[0].pricing.unitOfferDiscount,
+        couponDiscount: pricingResult.items[0].couponDiscount || 0,
         variant: { size: variant || null },
         status: 'processing'
       };
@@ -247,6 +299,12 @@ const getSingleOrderPage = async (req, res) => {
         paymentMethod: paymentMethod,
         deliveryCharge: pricingResult.totals.deliveryCharge
       });
+      
+      console.log('Order being saved with:');
+      console.log('- totalPrice:', newOrder.totalPrice);
+      console.log('- deliveryCharge:', newOrder.deliveryCharge);
+      console.log('- finalAmount:', newOrder.finalAmount);
+      console.log('- Expected total (totalPrice + deliveryCharge):', newOrder.totalPrice + newOrder.deliveryCharge);
       
       // Save the order
       await newOrder.save();
@@ -346,49 +404,101 @@ const getSingleOrderPage = async (req, res) => {
       
       if (!product) return res.redirect('/shop');
       
-      // Initialize variables for price calculation
-      let originalPrice = product.regularPrice * quantity;
-      let salePrice = product.salePrice * quantity;
-      let finalTotal = totalPrice; // This is the price after any coupon discount
-      let discountAmount = originalPrice - salePrice;
-      let couponDiscount = 0;
+      // Calculate pricing using centralized utility for split coupon discount
       let appliedCoupon = null;
-      
-      // Check if coupon was applied
       if (couponId) {
         appliedCoupon = await Coupon.findById(couponId);
-        if (appliedCoupon) {
-          couponDiscount = (salePrice * appliedCoupon.discount / 100);
-          finalTotal = salePrice - couponDiscount;
-        }
-      } else if (req.session.appliedCoupon) {
-        // Fallback to session coupon if exists
-        appliedCoupon = req.session.appliedCoupon;
-        couponDiscount = salePrice - req.session.appliedCoupon.newTotal;
-        finalTotal = req.session.appliedCoupon.newTotal;
       }
-      const deliveryCharge = Number(finalTotal <= 2000 ? 54 :0);
-
-      finalTotal=Number(finalTotal)+deliveryCharge;
-
+      
+      const orderItemsForPricing = [{
+        product: product,
+        quantity: parseInt(quantity),
+        variant: { size: variant || null }
+      }];
+      
+      const pricingResult = PricingCalculator.calculateOrderPricing(orderItemsForPricing, appliedCoupon);
+      
+      // Initialize variables for price calculation
+      const quantityNum = Number(quantity);
+      let originalPrice = Number(product.regularPrice) * quantityNum;
+      let salePrice = Number(product.salePrice) * quantityNum;
+      let finalTotal = Number(totalPrice); // This is the price after any coupon discount
+      let discountAmount = originalPrice - salePrice;
+      let couponDiscount = pricingResult.items[0]?.couponDiscount || 0;
+      
+      // Use the delivery charge from PricingCalculator for consistency
+      const calculatedDeliveryCharge = pricingResult.totals.deliveryCharge;
+      
+      // Use the final amount from PricingCalculator to avoid string concatenation
+      const finalAmount = pricingResult.totals.finalAmount;
 
       console.log("Price details:", {
         originalPrice,
         salePrice,
         couponDiscount,
-        finalTotal,
-        deliveryCharge
+        finalAmount,
+        calculatedDeliveryCharge
       });
+
+      // Calculate wallet balance
+      let walletBalance = 0;
+      try {
+        // Handle both cases: userId could be the full user object or just the ID
+        let actualUserId = userId;
+        if (typeof userId === 'object' && userId !== null) {
+          if (userId._id) {
+            actualUserId = userId._id;
+          } else {
+            console.log("userId is object but no _id property found");
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Invalid user session');
+          }
+        }
+        
+        const userIdObj = typeof actualUserId === 'string' ? new mongoose.Types.ObjectId(actualUserId) : actualUserId;
+        
+        const totalWalletAmount = await Wallet.aggregate([
+          { 
+            $match: { 
+              status: 'success', 
+              userId: userIdObj
+            } 
+          },
+          {
+            $group: {
+              _id: "$userId", 
+              total: {
+                $sum: {
+                  $cond: {
+                    if: { $eq: ["$entryType", "CREDIT"] },  
+                    then: "$amount",  
+                    else: { $multiply: [-1, "$amount"] }
+                  }
+                }
+              }
+            }
+          }
+        ]);
+        
+        if (totalWalletAmount.length > 0) {
+          walletBalance = totalWalletAmount[0].total;
+        }
+        
+        console.log("Wallet balance:", walletBalance);
+      } catch (walletError) {
+        console.error("Error calculating wallet balance:", walletError);
+        walletBalance = 0;
+      }
       
       res.render('payment', {
         user,
         selected,
         razorpayKey: process.env.RAZORPAY_KEY_ID,
+        walletBalance: walletBalance,
         orderSummary: {
           productId,
-          quantity,
+          quantity: quantityNum,
           variant,
-          total: finalTotal,
+          total: finalAmount,
           productName: product.productName,
           productImages: product.productImages,
           price: product.salePrice,
@@ -399,7 +509,10 @@ const getSingleOrderPage = async (req, res) => {
           couponDiscount: couponDiscount,
           couponId: appliedCoupon ? appliedCoupon._id : null,
           couponName: appliedCoupon ? appliedCoupon.name : null,
-          deliveryCharge: deliveryCharge          
+          deliveryCharge: calculatedDeliveryCharge,
+          // Add split coupon discount data
+          itemCouponDiscount: pricingResult.items[0]?.couponDiscount || 0,
+          netPaid: (salePrice) - (pricingResult.items[0]?.couponDiscount || 0)
         }
       });
     } catch (error) {
@@ -530,7 +643,7 @@ const getSingleOrderPage = async (req, res) => {
         item.cancelReason = typeof reason === 'string' ? reason : 'No reason provided';
   
         // Refund per item
-        const currentItemRefundAmount = item.price * item.quantity;
+        const currentItemRefundAmount = (item.price * item.quantity) - (item.couponDiscount || 0);
         totalRefundAmount += currentItemRefundAmount;
       }
   
@@ -657,16 +770,16 @@ const getSingleOrderPage = async (req, res) => {
       item.cancelReason = reason;
       
       // Get the current item's refund amount
-      const currentItemRefundAmount = item.price * item.quantity;
+      const currentItemRefundAmount = (item.price * item.quantity) - (item.couponDiscount || 0);
       let refundAmount = currentItemRefundAmount;
       
       // Check if all items are now cancelled
       const allCancelled = order.orderedItems.every(i => i.status === 'cancelled');
       
       if (allCancelled) {
-        // If all items are cancelled, refund the entire finalAmount
+        // If all items are cancelled, refund the entire finalAmount minus delivery charge
         order.status = 'cancelled';
-        refundAmount = Number(order.finalAmount) || 0;
+        refundAmount = Number(order.finalAmount) - Number(order.deliveryCharge || 0);
       } else {
         // Check remaining active items (not cancelled or return requested)
         const activeItems = order.orderedItems.filter(i => 
@@ -870,6 +983,7 @@ const getSingleOrderPage = async (req, res) => {
           console.log("items total quantity in cart ",totaQuantity)
   
           return {
+            _id: item._id, // Preserve the original cart item ID
             product,
             quantity,
             variant,
@@ -915,16 +1029,82 @@ const getSingleOrderPage = async (req, res) => {
 
       console.log('Cart pricing calculation result:', pricingResult);
 
-      // console.log('cartItems :',cartItems)
+      // Attach couponDiscount to each cartItem
+      cartItems = cartItems.map((item, idx) => ({
+        ...item,
+        couponDiscount: pricingResult.items[idx]?.couponDiscount || 0,
+        netPaid: (item.totalPrice) - (pricingResult.items[idx]?.couponDiscount || 0)
+      }));
 
+      // Calculate wallet balance
+      let walletBalance = 0;
+      try {
+        // Handle both cases: userId could be the full user object or just the ID
+        let actualUserId = userId;
+        if (typeof userId === 'object' && userId !== null) {
+          if (userId._id) {
+            actualUserId = userId._id;
+          } else {
+            console.log("userId is object but no _id property found");
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).send('Invalid user session');
+          }
+        }
+        
+        const userIdObj = typeof actualUserId === 'string' ? new mongoose.Types.ObjectId(actualUserId) : actualUserId;
+        
+        const totalWalletAmount = await Wallet.aggregate([
+          { 
+            $match: { 
+              status: 'success', 
+              userId: userIdObj
+            } 
+          },
+          {
+            $group: {
+              _id: "$userId", 
+              total: {
+                $sum: {
+                  $cond: {
+                    if: { $eq: ["$entryType", "CREDIT"] },  
+                    then: "$amount",  
+                    else: { $multiply: [-1, "$amount"] }
+                  }
+                }
+              }
+            }
+          }
+        ]);
+        
+        if (totalWalletAmount.length > 0) {
+          walletBalance = totalWalletAmount[0].total;
+        }
+        
+        console.log("Wallet balance:", walletBalance);
+      } catch (walletError) {
+        console.error("Error calculating wallet balance:", walletError);
+        walletBalance = 0;
+      }
+
+      console.log('=== PAYMENT PAGE CART ITEMS DEBUG ===');
+      console.log('Cart items being passed to template:');
+      cartItems.forEach((item, index) => {
+        console.log(`Item ${index + 1}:`, {
+          _id: item._id,
+          productName: item.product?.productName,
+          quantity: item.quantity,
+          variant: item.variant
+        });
+      });
+      console.log('=====================================');
 
       res.render('paymentcart', {
         user,
         selected,
         razorpayKey: process.env.RAZORPAY_KEY_ID,
-        cartItems: cart.items,
+        walletBalance: walletBalance,
+        cartItems: cartItems,
         orderSummary: {
-          quantity: cartItems.reduce((acc, item) => acc + item.quantity, 0),
+          quantity: cartItems.reduce((acc, item) => acc + Number(item.quantity), 0),
           total: pricingResult.totals.finalAmount,
           originalTotal: pricingResult.totals.originalAmount,
           saleTotal: pricingResult.totals.saleAmount,
@@ -945,40 +1125,169 @@ const getSingleOrderPage = async (req, res) => {
 
   const placeOrderFromCart = async (req, res) => {
     try {
+      console.log('=== CART ORDER PLACEMENT DEBUG ===');
+      console.log('Raw request body:', req.body);
+      console.log('Request method:', req.method);
+      console.log('Content-Type:', req.headers['content-type']);
+      console.log('Form data keys:', Object.keys(req.body));
+      console.log('Cart items in request:', req.body.cartItems);
+      console.log('Cart items type:', typeof req.body.cartItems);
+      if (Array.isArray(req.body.cartItems)) {
+        console.log('Cart items array length:', req.body.cartItems.length);
+        console.log('Cart items array contents:', req.body.cartItems);
+      }
+      
       const userId = req.session.user?._id;
-      const { selected, couponId, paymentMethod, cartItems ,totalPrice ,totalDiscount,deliveryCharge} = req.body;
+      console.log('User ID from session:', userId);
+      
+      const { 
+        selected, 
+        couponId, 
+        paymentMethod, 
+        cartItems,
+        // Use the pre-calculated pricing data from the payment page
+        calculatedTotal,
+        calculatedOriginalTotal,
+        calculatedSaleTotal,
+        calculatedSaveAmount,
+        calculatedCouponDiscount,
+        calculatedDeliveryCharge,
+        calculatedFinalAmount
+      } = req.body;
   
-      if (!userId || !selected || !cartItems || cartItems.length === 0) {
+      // Normalize cartItems to handle both array and string formats
+      let normalizedCartItems = cartItems;
+      if (typeof cartItems === 'string') {
+        try {
+          normalizedCartItems = JSON.parse(cartItems);
+        } catch (e) {
+          // If it's not JSON, it might be a single item
+          normalizedCartItems = [cartItems];
+        }
+      } else if (!Array.isArray(cartItems)) {
+        // If it's not an array, make it an array
+        normalizedCartItems = cartItems ? [cartItems] : [];
+      }
+  
+      console.log('Extracted data:');
+      console.log('- selected:', selected);
+      console.log('- couponId:', couponId);
+      console.log('- paymentMethod:', paymentMethod);
+      console.log('- original cartItems:', cartItems);
+      console.log('- normalized cartItems:', normalizedCartItems);
+      console.log('- cartItems type:', typeof cartItems);
+      console.log('- normalized cartItems type:', typeof normalizedCartItems);
+      console.log('- normalized cartItems length:', normalizedCartItems ? normalizedCartItems.length : 'undefined');
+      console.log('Received pricing data from payment page:');
+      console.log('- calculatedTotal:', calculatedTotal);
+      console.log('- calculatedOriginalTotal:', calculatedOriginalTotal);
+      console.log('- calculatedSaleTotal:', calculatedSaleTotal);
+      console.log('- calculatedSaveAmount:', calculatedSaveAmount);
+      console.log('- calculatedCouponDiscount:', calculatedCouponDiscount);
+      console.log('- calculatedDeliveryCharge:', calculatedDeliveryCharge);
+      console.log('- calculatedFinalAmount:', calculatedFinalAmount);
+      console.log('=====================================');
+  
+      if (!userId || !selected || !normalizedCartItems || normalizedCartItems.length === 0) {
+        console.log('❌ Validation failed:');
+        console.log('- userId:', !!userId);
+        console.log('- selected:', !!selected);
+        console.log('- normalizedCartItems:', !!normalizedCartItems);
+        console.log('- normalizedCartItems length:', normalizedCartItems ? normalizedCartItems.length : 'undefined');
         return res.redirect("/cart");
       }
   
+      console.log('🔍 Looking for cart with userId:', userId);
       const cart = await Cart.findOne({ userId }).populate("items.productId");
       if (!cart) {
+        console.log('❌ Cart not found for user:', userId);
         return res.status(StatusCode.NOT_FOUND).json({ message: "Cart not found" });
       }
   
+      console.log('📦 Cart found with items:', cart.items.length);
+      console.log('🔍 Available cart items:', cart.items.map(item => ({
+        id: item._id,
+        productId: item.productId?._id,
+        productName: item.productId?.productName
+      })));
+      console.log('🔍 Looking for cart items:', normalizedCartItems);
+      console.log('🔍 Normalized cart items type:', typeof normalizedCartItems);
+      console.log('🔍 Normalized cart items length:', normalizedCartItems ? normalizedCartItems.length : 'undefined');
+      if (Array.isArray(normalizedCartItems)) {
+        console.log('🔍 Normalized cart items contents:', normalizedCartItems);
+      }
+      
+      console.log('🔍 Starting cart item filtering...');
       const orderedItems = cart.items
-        .filter(item => cartItems.includes(item._id.toString()))
+        .filter(item => {
+          const itemId = item._id.toString();
+          const isIncluded = normalizedCartItems.includes(itemId);
+          console.log(`🔍 Checking item ${itemId}: ${isIncluded ? '✅ INCLUDED' : '❌ NOT INCLUDED'}`);
+          return isIncluded;
+        })
         .filter(item => item.productId); 
   
+      console.log('✅ Found ordered items:', orderedItems.length);
+      console.log('📋 Ordered items details:', orderedItems.map(item => ({
+        id: item._id,
+        productId: item.productId?._id,
+        productName: item.productId?.productName,
+        quantity: item.quantity,
+        variant: item.variant
+      })));
+
       cart.items.forEach(item => {
-        if (cartItems.includes(item._id.toString()) && !item.productId) {
-          console.warn(` Missing product for cart item ID: ${item._id}`);
+        if (normalizedCartItems.includes(item._id.toString()) && !item.productId) {
+          console.warn(`⚠️ Missing product for cart item ID: ${item._id}`);
         }
       });
   
       if (orderedItems.length === 0) {
-        return res.status(StatusCode.BAD_REQUEST).json({ message: "Selected items are no longer available." });
+        console.log('❌ No valid products to order');
+        console.log('🔍 Available cart items:', cart.items.map(item => ({
+          id: item._id,
+          productId: item.productId?._id,
+          productName: item.productId?.productName
+        })));
+        console.log('🔍 Requested cart items:', normalizedCartItems);
+        return res.status(StatusCode.BAD_REQUEST).json({ 
+          success: false,
+          message: "Selected items are no longer available." 
+        });
       }
 
       // Validate stock for all items
+      console.log('🔍 Validating stock for ordered items...');
       for (const item of orderedItems) {
         const product = item.productId;
         const quantity = item.quantity;
+        const variant = item.variant?.size;
 
-        if (product.quantity < quantity) {
-          return res.status(StatusCode.BAD_REQUEST).json({ message: `Insufficient stock for ${product.name}` });
+        console.log(`📦 Checking stock for ${product.productName} (Size: ${variant || 'N/A'}) - Quantity: ${quantity}`);
+
+        let availableStock;
+        if (product.variants && variant) {
+          availableStock = product.variants.get(variant) || 0;
+          
+          if (availableStock < quantity) {
+            console.log(`❌ Insufficient stock for ${product.productName} (Size: ${variant}). Available: ${availableStock}, Required: ${quantity}`);
+            return res.status(StatusCode.BAD_REQUEST).json({ 
+              success: false,
+              message: `Insufficient stock for ${product.productName} (Size: ${variant}). Only ${availableStock} available.` 
+            });
+          }
+        } else {
+          availableStock = product.quantity || 0;
+          
+          if (availableStock < quantity) {
+            console.log(`❌ Insufficient stock for ${product.productName}. Available: ${availableStock}, Required: ${quantity}`);
+            return res.status(StatusCode.BAD_REQUEST).json({ 
+              success: false,
+              message: `Insufficient stock for ${product.productName}. Only ${availableStock} available.` 
+            });
+          }
         }
+        console.log(`✅ Stock sufficient for ${product.productName} - Available: ${availableStock}`);
       }
   
       // Get coupon if provided
@@ -987,7 +1296,23 @@ const getSingleOrderPage = async (req, res) => {
         appliedCoupon = await Coupon.findById(couponId);
       }
 
-      // Prepare items for pricing calculation
+      // Use the pre-calculated pricing data instead of recalculating
+      const finalAmount = Number(calculatedFinalAmount) || 0;
+      const originalAmount = Number(calculatedOriginalTotal) || 0;
+      const saleAmount = Number(calculatedSaleTotal) || 0;
+      const offerDiscount = Number(calculatedSaveAmount) || 0;
+      const couponDiscount = Number(calculatedCouponDiscount) || 0;
+      const deliveryCharge = Number(calculatedDeliveryCharge) || 0;
+
+      console.log('Using pre-calculated pricing:');
+      console.log('- finalAmount:', finalAmount);
+      console.log('- originalAmount:', originalAmount);
+      console.log('- saleAmount:', saleAmount);
+      console.log('- offerDiscount:', offerDiscount);
+      console.log('- couponDiscount:', couponDiscount);
+      console.log('- deliveryCharge:', deliveryCharge);
+
+      // Still need to calculate per-item coupon discounts for the order items
       const pricingOrderItems = orderedItems.map(item => {
         return {
           product: item.productId,
@@ -996,15 +1321,14 @@ const getSingleOrderPage = async (req, res) => {
         };
       });
 
-      // Calculate pricing using centralized utility
+      // Calculate per-item pricing for coupon discount distribution
       const pricingResult = PricingCalculator.calculateOrderPricing(
         pricingOrderItems,
-        appliedCoupon
+        appliedCoupon,
+        deliveryCharge
       );
 
-      console.log('Cart order pricing calculation result:', pricingResult);
-
-      console.log('delivery charge',deliveryCharge);
+      console.log('Per-item pricing calculation for coupon distribution:', pricingResult);
 
       const address = {
         addressType: selected.addressType,
@@ -1017,7 +1341,7 @@ const getSingleOrderPage = async (req, res) => {
         altphone: selected.altphone,
       };
 
-      // Create order items with complete pricing info
+      // Create order items with complete pricing info using pre-calculated totals
       const finalOrderItems = pricingResult.items.map((item) => {
         return {
           product: item.product._id,
@@ -1026,6 +1350,7 @@ const getSingleOrderPage = async (req, res) => {
           regularPrice: item.product.regularPrice,
           salePrice: item.product.salePrice,
           offerDiscount: item.pricing.unitOfferDiscount,
+          couponDiscount: item.couponDiscount || 0,
           variant: item.variant,
           status: 'processing'
         };
@@ -1045,11 +1370,11 @@ const getSingleOrderPage = async (req, res) => {
         orderId: generateOrderId(),
         user: userId,
         orderedItems: finalOrderItems,
-        totalPrice: pricingResult.totals.originalAmount,
-        offerDiscount: pricingResult.totals.offerDiscount,
-        couponDiscount: pricingResult.totals.couponDiscount,
-        discount: pricingResult.totals.offerDiscount + pricingResult.totals.couponDiscount,
-        finalAmount: pricingResult.totals.finalAmount,
+        totalPrice: originalAmount,
+        offerDiscount: offerDiscount,
+        couponDiscount: couponDiscount,
+        discount: offerDiscount + couponDiscount,
+        finalAmount: finalAmount,
         address,
         invoiceDate: new Date(),
         status: 'processing',
@@ -1057,8 +1382,14 @@ const getSingleOrderPage = async (req, res) => {
         coupon: couponId || null,
         couponApplied: pricingResult.coupon.isValid,
         paymentMethod,
-        deliveryCharge: pricingResult.totals.deliveryCharge
+        deliveryCharge: deliveryCharge
       });
+
+      console.log('Cart order being saved with pre-calculated values:');
+      console.log('- totalPrice:', newOrder.totalPrice);
+      console.log('- deliveryCharge:', newOrder.deliveryCharge);
+      console.log('- finalAmount:', newOrder.finalAmount);
+      console.log('- Expected total (totalPrice + deliveryCharge):', newOrder.totalPrice + newOrder.deliveryCharge);
   
       await newOrder.save();
   
@@ -1090,7 +1421,7 @@ const getSingleOrderPage = async (req, res) => {
   
       // Remove ordered items from cart
       cart.items = cart.items.filter(item =>
-        !cartItems.includes(item._id.toString())
+        !normalizedCartItems.includes(item._id.toString())
       );
       await cart.save();
   
@@ -1126,7 +1457,531 @@ const getSingleOrderPage = async (req, res) => {
     }
   };
 
+  // Wallet payment handler for single product orders
+  const processWalletPayment = async (req, res) => {
+    try {
+      console.log('=== SINGLE PRODUCT WALLET PAYMENT DEBUG ===');
+      console.log('Raw request body:', req.body);
+      console.log('Form data keys:', Object.keys(req.body));
+      
+      const {
+        productId,
+        quantity,
+        totalPrice,
+        selected,
+        couponId,
+        deliveryCharge,
+        variant
+      } = req.body;
+      
+      console.log('Extracted data:');
+      console.log('- productId:', productId);
+      console.log('- quantity:', quantity);
+      console.log('- totalPrice:', totalPrice);
+      console.log('- selected:', selected);
+      console.log('- couponId:', couponId);
+      console.log('- deliveryCharge:', deliveryCharge);
+      console.log('- variant:', variant);
+      console.log('==========================================');
+      
+      const userId = req.session.user?._id;
+      if (!userId) {
+        return res.status(StatusCode.UNAUTHORIZED).json({ message: 'User not logged in' });
+      }
 
+      // Handle both cases: userId could be the full user object or just the ID
+      let actualUserId = req.session.user;
+      if (typeof actualUserId === 'object' && actualUserId !== null) {
+        if (actualUserId._id) {
+          actualUserId = actualUserId._id;
+        } else {
+          return res.status(StatusCode.UNAUTHORIZED).json({ message: 'Invalid user session' });
+        }
+      }
+
+      // Calculate wallet balance
+      const userIdObj = typeof actualUserId === 'string' ? new mongoose.Types.ObjectId(actualUserId) : actualUserId;
+      const totalWalletAmount = await Wallet.aggregate([
+        { 
+          $match: { 
+            status: 'success', 
+            userId: userIdObj
+          } 
+        },
+        {
+          $group: {
+            _id: "$userId", 
+            total: {
+              $sum: {
+                $cond: {
+                  if: { $eq: ["$entryType", "CREDIT"] },  
+                  then: "$amount",  
+                  else: { $multiply: [-1, "$amount"] }
+                }
+              }
+            }
+          }
+        }
+      ]);
+      
+      let walletBalance = 0;
+      if (totalWalletAmount.length > 0) {
+        walletBalance = totalWalletAmount[0].total;
+      }
+
+      console.log('Wallet balance check:');
+      console.log('- walletBalance:', walletBalance);
+      console.log('- totalPrice:', totalPrice);
+      console.log('- totalPriceNum:', Number(totalPrice));
+
+      // Check if wallet balance is sufficient
+      const totalPriceNum = Number(totalPrice);
+      if (walletBalance < totalPriceNum) {
+        console.log('❌ Insufficient wallet balance');
+        return res.status(StatusCode.BAD_REQUEST).json({ 
+          message: 'Insufficient wallet balance' 
+        });
+      }
+      
+      console.log('✅ Wallet balance sufficient');
+
+      // Process the order similar to postPlaceOrder but with wallet payment
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(StatusCode.NOT_FOUND).json({ message: 'Product not found' });
+      }
+      
+      const orderQty = Number(quantity);
+      const availableStock = product.variants.get(variant) || 0;
+      
+      if (availableStock < orderQty) {
+        return res.status(StatusCode.BAD_REQUEST).json({ 
+          message: `Insufficient stock available for size ${variant}. Only ${availableStock} items left.` 
+        });
+      }
+
+      // Create address object
+      const address = {
+        addressType: selected.addressType,
+        name: selected.name,
+        city: selected.city,
+        landMark: selected.landMark,
+        state: selected.state,
+        pincode: selected.pincode,
+        phone: selected.phone,
+        altphone: selected.altphone,
+      };
+      
+      // Get coupon if provided
+      let appliedCoupon = null;
+      if (couponId) {
+        appliedCoupon = await Coupon.findById(couponId);
+      }
+
+      // Ensure deliveryCharge is a number
+      const deliveryChargeNum = Number(deliveryCharge) || 0;
+      console.log('Wallet payment - Delivery charge from request:', deliveryCharge, 'Converted to:', deliveryChargeNum);
+
+      // Calculate pricing using centralized utility
+      const orderItems = [{
+        product: product,
+        quantity: orderQty,
+        variant: { size: variant || null }
+      }];
+
+      const pricingResult = PricingCalculator.calculateOrderPricing(
+        orderItems,
+        appliedCoupon,
+        deliveryChargeNum
+      );
+
+      console.log('Wallet payment - Pricing calculation result:', pricingResult);
+      console.log('Wallet payment - Final amount includes delivery charge:', pricingResult.totals.finalAmount);
+
+      // Define finalAmount for wallet transaction
+      const finalAmount = pricingResult.totals.finalAmount;
+      console.log('Final amount for wallet transaction:', finalAmount);
+
+      // Create ordered item with complete pricing info
+      const orderedItem = {
+        product: product._id,
+        quantity: orderQty,
+        price: product.salePrice,
+        regularPrice: product.regularPrice,
+        salePrice: product.salePrice,
+        offerDiscount: pricingResult.items[0].pricing.unitOfferDiscount,
+        couponDiscount: pricingResult.items[0].couponDiscount || 0,
+        variant: { size: variant || null },
+        status: 'processing'
+      };
+
+      // Mark coupon as used if applicable
+      if (appliedCoupon && pricingResult.coupon.isValid) {
+        if (!appliedCoupon.usersUsed.includes(actualUserId)) {
+          await Coupon.findByIdAndUpdate(
+            couponId,
+            { $push: { usersUsed: actualUserId } }
+          );
+        }
+      }
+
+      const newOrder = new Order({
+        orderId: generateOrderId(),
+        user: actualUserId,
+        orderedItems: [orderedItem],
+        totalPrice: pricingResult.totals.originalAmount,
+        offerDiscount: pricingResult.totals.offerDiscount,
+        couponDiscount: pricingResult.totals.couponDiscount,
+        discount: pricingResult.totals.offerDiscount + pricingResult.totals.couponDiscount,
+        finalAmount: pricingResult.totals.finalAmount,
+        address: address,
+        invoiceDate: new Date(),
+        status: 'processing',
+        paymentStatus: 'Paid',
+        createdOn: new Date(),
+        coupon: couponId ? couponId : null,
+        couponApplied: pricingResult.coupon.isValid,
+        paymentMethod: 'wallet',
+        deliveryCharge: pricingResult.totals.deliveryCharge
+      });
+      
+      console.log('Wallet payment order being saved with:');
+      console.log('- totalPrice:', newOrder.totalPrice);
+      console.log('- deliveryCharge:', newOrder.deliveryCharge);
+      console.log('- finalAmount:', newOrder.finalAmount);
+      console.log('- Expected total (totalPrice + deliveryCharge):', newOrder.totalPrice + newOrder.deliveryCharge);
+      
+      // Save the order
+      await newOrder.save();
+
+      // Update product stock
+      await Product.findByIdAndUpdate(
+        productId,
+        { $inc: { [`variants.${variant}`]: -orderQty } },
+        { new: true }
+      );
+
+      // Create wallet transaction for payment
+      const walletTransaction = new Wallet({
+        userId: actualUserId,
+        orderId: newOrder._id,
+        transactionId: `WALLET_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        payment_type: 'wallet_payment',
+        amount: Number(finalAmount),
+        status: 'success',
+        entryType: 'DEBIT',
+        type: 'product_purchase'
+      });
+
+      await walletTransaction.save();
+
+      // Clear any coupon from session
+      if (req.session.appliedCoupon) {
+        delete req.session.appliedCoupon;
+      }
+      
+      return res.json({
+        success: true,
+        message: 'Order placed successfully using wallet',
+        orderId: newOrder.orderId,
+        redirect: `/order-success?orderId=${newOrder.orderId}`
+      });
+      
+    } catch (error) {
+      console.error('Error processing wallet payment:', error);
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Something went wrong while processing wallet payment',
+      });
+    }
+  };
+
+  // Wallet payment handler for cart orders
+  const processWalletPaymentCart = async (req, res) => {
+    try {
+      const { 
+        selected, 
+        couponId, 
+        cartItems, 
+        totalPrice, 
+        totalDiscount, 
+        deliveryCharge,
+        // Use the pre-calculated pricing data from the payment page
+        calculatedTotal,
+        calculatedOriginalTotal,
+        calculatedSaleTotal,
+        calculatedSaveAmount,
+        calculatedCouponDiscount,
+        calculatedDeliveryCharge,
+        calculatedFinalAmount
+      } = req.body;
+
+      // Normalize cartItems to handle both array and string formats
+      let normalizedCartItems = cartItems;
+      if (typeof cartItems === 'string') {
+        try {
+          normalizedCartItems = JSON.parse(cartItems);
+        } catch (e) {
+          // If it's not JSON, it might be a single item
+          normalizedCartItems = [cartItems];
+        }
+      } else if (!Array.isArray(cartItems)) {
+        // If it's not an array, make it an array
+        normalizedCartItems = cartItems ? [cartItems] : [];
+      }
+
+      console.log('=== CART WALLET PAYMENT DEBUG ===');
+      console.log('Raw request body:', req.body);
+      console.log('Form data keys:', Object.keys(req.body));
+      console.log('Original cartItems:', cartItems);
+      console.log('Original cartItems type:', typeof cartItems);
+      console.log('Normalized cartItems:', normalizedCartItems);
+      console.log('Normalized cartItems type:', typeof normalizedCartItems);
+      if (Array.isArray(normalizedCartItems)) {
+        console.log('Normalized cart items array length:', normalizedCartItems.length);
+        console.log('Normalized cart items array contents:', normalizedCartItems);
+      }
+      console.log('Received pricing data from payment page:');
+      console.log('- calculatedTotal:', calculatedTotal);
+      console.log('- calculatedOriginalTotal:', calculatedOriginalTotal);
+      console.log('- calculatedSaleTotal:', calculatedSaleTotal);
+      console.log('- calculatedSaveAmount:', calculatedSaveAmount);
+      console.log('- calculatedCouponDiscount:', calculatedCouponDiscount);
+      console.log('- calculatedDeliveryCharge:', calculatedDeliveryCharge);
+      console.log('- calculatedFinalAmount:', calculatedFinalAmount);
+      console.log('=====================================');
+
+      // Handle both cases: userId could be the full user object or just the ID
+      let actualUserId = req.session.user;
+      if (typeof actualUserId === 'object' && actualUserId !== null) {
+        if (actualUserId._id) {
+          actualUserId = actualUserId._id;
+        } else {
+          return res.status(StatusCode.UNAUTHORIZED).json({ message: 'Invalid user session' });
+        }
+      }
+
+      if (!actualUserId || !selected || !normalizedCartItems || normalizedCartItems.length === 0) {
+        return res.status(StatusCode.BAD_REQUEST).json({ message: "Invalid request data" });
+      }
+
+      // Calculate wallet balance
+      const userIdObj = typeof actualUserId === 'string' ? new mongoose.Types.ObjectId(actualUserId) : actualUserId;
+      const totalWalletAmount = await Wallet.aggregate([
+        { 
+          $match: { 
+            status: 'success', 
+            userId: userIdObj
+          } 
+        },
+        {
+          $group: {
+            _id: "$userId", 
+            total: {
+              $sum: {
+                $cond: {
+                  if: { $eq: ["$entryType", "CREDIT"] },  
+                  then: "$amount",  
+                  else: { $multiply: [-1, "$amount"] }
+                }
+              }
+            }
+          }
+        }
+      ]);
+      
+      let walletBalance = 0;
+      if (totalWalletAmount.length > 0) {
+        walletBalance = totalWalletAmount[0].total;
+      }
+
+      // Use the pre-calculated pricing data instead of recalculating
+      const finalAmount = Number(calculatedFinalAmount) || 0;
+      const originalAmount = Number(calculatedOriginalTotal) || 0;
+      const saleAmount = Number(calculatedSaleTotal) || 0;
+      const offerDiscount = Number(calculatedSaveAmount) || 0;
+      const couponDiscount = Number(calculatedCouponDiscount) || 0;
+      const deliveryChargeNum = Number(calculatedDeliveryCharge) || 0;
+
+      console.log('Using pre-calculated pricing for wallet payment:');
+      console.log('- finalAmount:', finalAmount);
+      console.log('- originalAmount:', originalAmount);
+      console.log('- saleAmount:', saleAmount);
+      console.log('- offerDiscount:', offerDiscount);
+      console.log('- couponDiscount:', couponDiscount);
+      console.log('- deliveryCharge:', deliveryChargeNum);
+
+      // Check if wallet balance is sufficient
+      if (walletBalance < finalAmount) {
+        return res.status(StatusCode.BAD_REQUEST).json({ 
+          message: 'Insufficient wallet balance' 
+        });
+      }
+
+      const cart = await Cart.findOne({ userId: actualUserId }).populate("items.productId");
+      if (!cart) {
+        return res.status(StatusCode.NOT_FOUND).json({ message: "Cart not found" });
+      }
+
+      const orderedItems = cart.items
+        .filter(item => normalizedCartItems.includes(item._id.toString()))
+        .filter(item => item.productId);
+
+      if (orderedItems.length === 0) {
+        return res.status(StatusCode.BAD_REQUEST).json({ message: "Selected items are no longer available." });
+      }
+
+      // Validate stock for all items
+      for (const item of orderedItems) {
+        const product = item.productId;
+        const quantity = item.quantity;
+
+        if (product.quantity < quantity) {
+          return res.status(StatusCode.BAD_REQUEST).json({ message: `Insufficient stock for ${product.name}` });
+        }
+      }
+
+      // Get coupon if provided
+      let appliedCoupon = null;
+      if (couponId) {
+        appliedCoupon = await Coupon.findById(couponId);
+      }
+
+      console.log('Cart wallet payment - Using pre-calculated delivery charge:', deliveryChargeNum);
+
+      // Prepare items for pricing calculation
+      const pricingOrderItems = orderedItems.map(item => {
+        return {
+          product: item.productId,
+          quantity: item.quantity,
+          variant: item.variant
+        };
+      });
+
+      // Still need to calculate per-item coupon discounts for the order items
+      const pricingResult = PricingCalculator.calculateOrderPricing(
+        pricingOrderItems,
+        appliedCoupon,
+        deliveryChargeNum
+      );
+
+      console.log('Per-item pricing calculation for coupon distribution:', pricingResult);
+
+      const address = {
+        addressType: selected.addressType,
+        name: selected.name,
+        city: selected.city,
+        landMark: selected.landMark,
+        state: selected.state,
+        pincode: selected.pincode,
+        phone: selected.phone,
+        altphone: selected.altphone,
+      };
+
+      // Create order items with complete pricing info
+      const finalOrderItems = pricingResult.items.map((item) => {
+        return {
+          product: item.product._id,
+          quantity: item.quantity,
+          price: item.product.salePrice,
+          regularPrice: item.product.regularPrice,
+          salePrice: item.product.salePrice,
+          offerDiscount: item.pricing.unitOfferDiscount,
+          couponDiscount: item.couponDiscount || 0,
+          variant: item.variant,
+          status: 'processing'
+        };
+      });
+
+      // Mark coupon as used if applicable
+      if (appliedCoupon && pricingResult.coupon.isValid) {
+        if (!appliedCoupon.usersUsed.includes(actualUserId)) {
+          await Coupon.findByIdAndUpdate(
+            couponId,
+            { $push: { usersUsed: actualUserId } }
+          );
+        }
+      }
+
+      const newOrder = new Order({
+        orderId: generateOrderId(),
+        user: actualUserId,
+        orderedItems: finalOrderItems,
+        totalPrice: originalAmount,
+        offerDiscount: offerDiscount,
+        couponDiscount: couponDiscount,
+        discount: offerDiscount + couponDiscount,
+        finalAmount: finalAmount,
+        address: address,
+        invoiceDate: new Date(),
+        status: 'processing',
+        paymentStatus: 'Paid',
+        createdOn: new Date(),
+        coupon: couponId ? couponId : null,
+        couponApplied: pricingResult.coupon.isValid,
+        paymentMethod: 'wallet',
+        deliveryCharge: deliveryChargeNum
+      });
+
+      console.log('Cart wallet payment order being saved with pre-calculated values:');
+      console.log('- totalPrice:', newOrder.totalPrice);
+      console.log('- deliveryCharge:', newOrder.deliveryCharge);
+      console.log('- finalAmount:', newOrder.finalAmount);
+      console.log('- Expected total (totalPrice + deliveryCharge):', newOrder.totalPrice + newOrder.deliveryCharge);
+  
+      await newOrder.save();
+
+      // Update product stock
+      for (const item of orderedItems) {
+        const product = item.productId;
+        const quantity = item.quantity;
+        const variant = item.variant?.size;
+
+        if (variant) {
+          await Product.findByIdAndUpdate(
+            product._id,
+            { $inc: { [`variants.${variant}`]: -quantity } },
+            { new: true }
+          );
+        }
+      }
+
+      // Create wallet transaction for payment
+      const walletTransaction = new Wallet({
+        userId: actualUserId,
+        orderId: newOrder._id,
+        transactionId: `WALLET_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        payment_type: 'wallet_payment',
+        amount: Number(finalAmount),
+        status: 'success',
+        entryType: 'DEBIT',
+        type: 'product_purchase'
+      });
+
+      await walletTransaction.save();
+
+      // Remove ordered items from cart
+      const updatedCartItems = cart.items.filter(item => 
+        !normalizedCartItems.includes(item._id.toString())
+      );
+      
+      await Cart.findByIdAndUpdate(cart._id, { items: updatedCartItems });
+
+      return res.json({
+        success: true,
+        message: 'Order placed successfully using wallet',
+        orderId: newOrder.orderId,
+        redirect: `/order-success-cart`
+      });
+
+    } catch (error) {
+      console.error('Error processing wallet payment for cart:', error);
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Something went wrong while processing wallet payment',
+      });
+    }
+  };
 
 module.exports = {
   getOrderPage,
@@ -1142,5 +1997,7 @@ module.exports = {
   loadPaymentPagecart,
   placeOrderFromCart,
   orderSuccessCart,
-  viewOrderDetails
+  viewOrderDetails,
+  processWalletPayment,
+  processWalletPaymentCart
 };
