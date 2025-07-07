@@ -15,8 +15,8 @@
 
   <form method="GET" action="/admin/salesReport">
     <label>Date Range:</label>
-    <input type="date" name="startDate" value="<%= startDate || '' %>">
-    <input type="date" name="endDate" value="<%= endDate || '' %>">
+    <input type="date" name="startDate" id="startDate" value="<%= startDate || '' %>" max="<%= new Date().toISOString().split('T')[0] %>">
+    <input type="date" name="endDate" id="endDate" value="<%= endDate || '' %>" max="<%= new Date().toISOString().split('T')[0] %>">
 
     <select name="filter">
       <option value="">Custom</option>
@@ -98,6 +98,11 @@
       errorElement.style.display = 'block';
     }
   });
+
+  // Disable future dates in date pickers
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').setAttribute('max', today);
+  document.getElementById('endDate').setAttribute('max', today);
 </script>
 
 <%- include("../../views/partials/admin/footer") %>

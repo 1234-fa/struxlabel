@@ -744,10 +744,6 @@ const getSingleOrderPage = async (req, res) => {
       const variant = item.variant.size;
       const quantity =item.quantity;
 
-      console.log('variant of the product to candel',variant);
-      console.log('Quantity of the product to candel',quantity);
-
-
       if (!item) {
         return res.status(StatusCode.NOT_FOUND).send('Product not found in order');
       }
@@ -757,73 +753,30 @@ const getSingleOrderPage = async (req, res) => {
             { $inc: { [`variants.${variant}`]: quantity } },
             { new: true }
         );
-        
-        if (!updatedProduct) {
-            console.error('Stock update failed.');
-        } else {
-            const remainingStock = updatedProduct.variants.get(variant);
-            console.log(`Stock updated for size ${variant}. Remaining: ${remainingStock}`);
-        }
+      
+      if (!updatedProduct) {
+        console.error('Stock update failed.');
+      }
       
       // Update the item status to cancelled
       item.status = 'cancelled';
       item.cancelReason = reason;
       
-      // Get the current item's refund amount
+      // Calculate refund for this product only
       const currentItemRefundAmount = (item.price * item.quantity) - (item.couponDiscount || 0);
       let refundAmount = currentItemRefundAmount;
       
-      // Check if all items are now cancelled
+      // Check if all items are now cancelled (after this cancellation)
       const allCancelled = order.orderedItems.every(i => i.status === 'cancelled');
       
+      // Only refund delivery charge if this is the last item being cancelled
+      let deliveryChargeRefund = 0;
       if (allCancelled) {
-        // If all items are cancelled, refund the entire finalAmount minus delivery charge
         order.status = 'cancelled';
-        refundAmount = Number(order.finalAmount) - Number(order.deliveryCharge || 0);
-      } else {
-        // Check remaining active items (not cancelled or return requested)
-        const activeItems = order.orderedItems.filter(i => 
-          i.status !== 'cancelled' && 
-          i.status !== 'return approved' && 
-          i.status !== 'return request'
-        );
-        
-        if (activeItems.length > 0) {
-          // Calculate total price of remaining active items
-          const remainingItemsPrice = activeItems.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-          
-          // Check if coupon is still valid for remaining items
-          let couponValid = false;
-          
-          if (order.coupon) {
-            // Retrieve coupon details
-            const coupon = await Coupon.findById(order.coupon);
-            
-            if (coupon) {
-              // Check minimum purchase requirement
-              if (remainingItemsPrice >= coupon.price) {
-                couponValid = true;
-              } else {
-                couponValid = false;
-              }
-            }
-          }
-          
-          if (couponValid) {
-            // If coupon is still valid, refund just the current item's price
-            refundAmount = currentItemRefundAmount;
-          } else {
-            // If coupon is no longer valid, refund the difference
-            const finalAmount = Number(order.finalAmount) || 0;
-            refundAmount = finalAmount - remainingItemsPrice;
-            
-            // Guard against negative refunds
-            if (isNaN(refundAmount) || refundAmount < 0) {
-              refundAmount = currentItemRefundAmount;
-            }
-          }
-        }
+        deliveryChargeRefund = Number(order.deliveryCharge) || 0;
       }
+      // Final refund for this action
+      refundAmount += deliveryChargeRefund;
       
       // Ensure refundAmount is a valid number
       refundAmount = Number(refundAmount);
@@ -831,7 +784,7 @@ const getSingleOrderPage = async (req, res) => {
         refundAmount = currentItemRefundAmount; // Fallback to item price if calculation fails
       }
       
-      // Process refund to wallet
+      // Process refund to wallet (one entry per product per cancellation)
       const existingWalletEntry = await Wallet.findOne({
         userId: order.user,
         orderId: order._id,
@@ -853,19 +806,9 @@ const getSingleOrderPage = async (req, res) => {
           type: 'cancel',
         });
         await walletEntry.save();
-        
         // Update refundAmount in the order
         order.refundAmount = (Number(order.refundAmount) || 0) + refundAmount;
       }
-      
-      // Add debugging information
-      console.log('Cancel refund details:', {
-        itemPrice: item.price,
-        quantity: item.quantity,
-        currentItemRefundAmount,
-        orderFinalAmount: order.finalAmount,
-        calculatedRefundAmount: refundAmount
-      });
       
       await order.save();
       

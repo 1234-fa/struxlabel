@@ -339,12 +339,8 @@ async function calculateRefundsAndTotals(order) {
     const validItems = [...deliveredItems, ...inProgressItems];
     
     // Items that are cancelled or returned
-    const cancelledItems = order.items.filter(item => 
-        ['cancelled', 'returned'].includes(item.status.toLowerCase())
-    );
-    const returnApprovedItems = order.items.filter(item => 
-        item.status.toLowerCase() === 'return approved'
-    );
+    const cancelledItems = order.items.filter(item => item.status.toLowerCase() === 'cancelled');
+    const returnApprovedItems = order.items.filter(item => item.status.toLowerCase() === 'return approved');
     
     // Calculate subtotals using the saved order data
     const displayItems = order.items.filter(item => [
@@ -371,25 +367,37 @@ async function calculateRefundsAndTotals(order) {
     const itemRefunds = {};
     let totalRefund = 0;
     
-    const refundableItems = [...cancelledItems, ...returnApprovedItems];
-    
-    for (const item of refundableItems) {
-        // Calculate refund based on what was actually paid (price - coupon discount)
-        const itemAmount = (item.price * item.quantity) - (item.couponDiscount || 0);
-        const refundAmount = Math.max(0, itemAmount);
-        
-        itemRefunds[item._id] = Math.round(refundAmount * 100) / 100;
-        totalRefund += refundAmount;
+    // Cancelled items: refund product price (minus coupon), add delivery charge if all items cancelled
+    if (cancelledItems.length > 0) {
+        for (const item of cancelledItems) {
+            // Calculate refund based on what was actually paid (price - coupon discount)
+            const itemAmount = (item.price * item.quantity) - (item.couponDiscount || 0);
+            const refundAmount = Math.max(0, itemAmount);
+            itemRefunds[item._id] = Math.round(refundAmount * 100) / 100;
+            totalRefund += refundAmount;
+        }
+        // If all items are cancelled, refund delivery charge ONCE
+        const allCancelled = order.items.every(item => item.status.toLowerCase() === 'cancelled');
+        if (allCancelled && order.deliveryCharge > 0) {
+            totalRefund += order.deliveryCharge;
+        }
     }
-    
+    // Return approved: refund only product(s), never delivery charge
+    if (returnApprovedItems.length > 0) {
+        for (const item of returnApprovedItems) {
+            const itemAmount = (item.price * item.quantity) - (item.couponDiscount || 0);
+            const refundAmount = Math.max(0, itemAmount);
+            itemRefunds[item._id] = Math.round(refundAmount * 100) / 100;
+            totalRefund += refundAmount;
+        }
+        // Never add delivery charge for returns
+    }
     // 7. Calculate final amount using the order's saved finalAmount
     let finalAmount = order.finalAmount;
-    
     // If there are refunds, adjust the final amount
     if (totalRefund > 0) {
         finalAmount = Math.max(0, finalAmount - totalRefund);
     }
-    
     return {
         subtotal: subtotal,
         originalPriceSubtotal,

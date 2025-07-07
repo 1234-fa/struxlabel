@@ -292,7 +292,7 @@
                       <p class="text-muted mb-1">Brand: <%= item.product.brand %></p>
                       <p class="text-muted mb-1">Qty: <%= item.quantity %> | Size: <%= item.variant?.size || 'Not selected' %></p>
                       <div class="d-flex align-items-center mb-1">
-                        <span class="price-text me-2">₹<%= item.totalPrice %></span>
+                        <span class="price-text me-2" data-original-sale-price="<%= item.product.salePrice %>" data-quantity="<%= item.quantity %>">₹<%= item.totalPrice %></span>
                         <del class="text-muted small">₹<%= item.product.regularPrice * item.quantity %></del>
                       </div>
                       <% if (item.couponDiscount && item.couponDiscount > 0) { %>
@@ -550,12 +550,14 @@ function updateProductPricesWithSplitDiscount(couponDiscount, cartTotal) {
 // Function to reset product prices to original
 function resetProductPrices() {
     const cartItems = document.querySelectorAll('.cart-item');
-    
     cartItems.forEach((item) => {
         const priceElement = item.querySelector('.price-text');
-        const originalPriceText = priceElement.getAttribute('data-original-price') || priceElement.textContent;
-        priceElement.textContent = originalPriceText;
-        
+        // Use the stored original sale price and quantity
+        const originalSalePrice = parseFloat(priceElement.getAttribute('data-original-sale-price'));
+        const quantity = parseInt(priceElement.getAttribute('data-quantity')) || 1;
+        if (!isNaN(originalSalePrice)) {
+            priceElement.textContent = `₹${(originalSalePrice * quantity).toFixed(2)}`;
+        }
         // Remove coupon discount display
         const discountElement = item.querySelector('.coupon-discount');
         if (discountElement) {

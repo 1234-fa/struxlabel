@@ -354,6 +354,9 @@ const totalRefundAmount = cancelledAmount + returnedAmount;
           <div class="text-danger mt-2">
             Refund Amount: ₹<%= order.refundAmount.toFixed(2) %>
           </div>
+          <div class="text-primary mt-2">
+            Balance After Refund: ₹<%= (order.finalAmount - order.refundAmount > 0 ? (order.finalAmount - order.refundAmount).toFixed(2) : '0.00') %>
+          </div>
         <% } %>
       </div>
     </div>
