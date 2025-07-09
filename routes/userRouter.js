@@ -50,10 +50,8 @@ router.get('/auth/google/callback',
     
     if (req.user && req.isAuthenticated()) {
         req.session.user = req.user;
-      console.log('✅ User authenticated, redirecting to home');
       res.redirect('/');
     } else {
-      console.log('❌ Authentication failed - no user in session');
       res.redirect('/signup');
     }
   }
@@ -107,11 +105,6 @@ router.post('/test-ajax', userAuth, (req, res) => {
                   req.headers['x-requested-with'] === 'XMLHttpRequest' ||
                   req.headers['content-type']?.indexOf('json') > -1 ||
                   req.headers['accept']?.includes('application/json');
-
-    console.log('Test AJAX detection:', {
-        isAjax,
-        headers: req.headers
-    });
 
     if (isAjax) {
         res.json({ success: true, message: 'AJAX detected successfully!' });
