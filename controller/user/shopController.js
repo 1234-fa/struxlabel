@@ -298,7 +298,7 @@ const loadNewArrivalPage = async (req, res) => {
             
             priceArray.forEach(range => {
                 const [min, max] = range.split('-').map(Number);
-                if (max === 100000) { // For ₹1500.00+ range
+                if (max === 100000) { 
                     priceConditions.push({ salePrice: { $gte: min } });
                 } else {
                     priceConditions.push({ salePrice: { $gte: min, $lte: max } });
@@ -435,7 +435,7 @@ const loadNewArrivalPage = async (req, res) => {
         };
 
         if (isAjaxRequest) {
-            return res.status(500).json({ success: false, ...errorData });
+            return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, ...errorData });
         }
 
         res.render("newArrivals", errorData);
