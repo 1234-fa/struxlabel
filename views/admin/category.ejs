@@ -383,6 +383,122 @@
         font-size: 10px;
       }
     }
+
+    .list-toggle-btn {
+      width: 70px;
+      min-width: 70px;
+      max-width: 70px;
+      text-align: center;
+    }
+    #customToastContainer {
+      position: fixed !important;
+      top: 20px !important;
+      right: 20px !important;
+      z-index: 99999 !important;
+      pointer-events: none !important;
+      width: auto !important;
+      max-width: none !important;
+    }
+    #customToastContainer .custom-toast {
+      background: white !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+      margin-bottom: 15px !important;
+      padding: 16px 20px !important;
+      min-width: 320px !important;
+      max-width: 400px !important;
+      border-left: 4px solid !important;
+      animation: customSlideIn 0.4s ease-out !important;
+      pointer-events: auto !important;
+      position: relative !important;
+      opacity: 1 !important;
+      transform: translateX(0) !important;
+      width: auto !important;
+      font-size: 14px !important;
+      background-color: white !important;
+      background-clip: unset !important;
+      border: none !important;
+      border-radius: 8px !important;
+    }
+    #customToastContainer .custom-toast.success {
+      border-left-color: #28a745 !important;
+      background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%) !important;
+    }
+    #customToastContainer .custom-toast.error {
+      border-left-color: #dc3545 !important;
+      background: linear-gradient(135deg, #fff8f8 0%, #ffffff 100%) !important;
+    }
+    #customToastContainer .custom-toast.warning {
+      border-left-color: #ffc107 !important;
+      background: linear-gradient(135deg, #fffef8 0%, #ffffff 100%) !important;
+    }
+    @keyframes customSlideIn {
+      from {
+        transform: translateX(100%) !important;
+        opacity: 0 !important;
+      }
+      to {
+        transform: translateX(0) !important;
+        opacity: 1 !important;
+      }
+    }
+    @keyframes customSlideOut {
+      from {
+        transform: translateX(0) !important;
+        opacity: 1 !important;
+      }
+      to {
+        transform: translateX(100%) !important;
+        opacity: 0 !important;
+      }
+    }
+    #customToastContainer .custom-toast.fade-out {
+      animation: customSlideOut 0.3s ease-in forwards !important;
+    }
+    #customToastContainer .custom-toast-header {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      margin-bottom: 8px !important;
+      padding: 0 !important;
+      background: none !important;
+      border: none !important;
+    }
+    #customToastContainer .custom-toast-title {
+      font-weight: 600 !important;
+      font-size: 15px !important;
+      color: #333 !important;
+    }
+    #customToastContainer .custom-toast-close {
+      background: none !important;
+      border: none !important;
+      font-size: 20px !important;
+      cursor: pointer !important;
+      color: #999 !important;
+      padding: 0 !important;
+      width: 24px !important;
+      height: 24px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 50% !important;
+      transition: all 0.2s ease !important;
+      margin: 0 !important;
+    }
+    #customToastContainer .custom-toast-close:hover {
+      background-color: #f0f0f0 !important;
+      color: #666 !important;
+    }
+    #customToastContainer .custom-toast-message {
+      font-size: 14px !important;
+      color: #555 !important;
+      line-height: 1.4 !important;
+      padding: 0 !important;
+      word-wrap: break-word !important;
+    }
+    #customToastContainer * {
+      box-sizing: border-box !important;
+    }
   </style>
 </head>
 
@@ -421,7 +537,7 @@
         </thead>
         <tbody>
           <%cat.reverse().forEach((category,index)=>{%>
-          <tr>
+          <tr data-category-id="<%=category._id%>">
             <td>
               <div class="category-name"><%=category.name%></div>
             </td>
@@ -453,13 +569,9 @@
                 <%}%>
                 
                 <%if(category.isListed){%>
-                <a href="/admin/listCategory?id=<%=category._id%>" class="btn btn-secondary btn-sm">
-                  Unlist
-                </a>
+                <button class="btn btn-secondary btn-sm list-toggle-btn" data-category-id="<%=category._id%>" data-category-listed="true">Unlist</button>
                 <%}else{%>
-                <a href="/admin/unlistCategory?id=<%=category._id%>" class="btn btn-success btn-sm">
-                  List
-                </a>
+                <button class="btn btn-success btn-sm list-toggle-btn" data-category-id="<%=category._id%>" data-category-listed="false">List</button>
                 <%}%>
                 
                 <button class="btn btn-primary btn-sm" onclick="openEditModal('<%=category._id%>', '<%=category.name%>', '<%=category.description%>')">
@@ -551,6 +663,8 @@
     </div>
   </div>
 
+  <!-- Custom Toast Container -->
+  <div id="customToastContainer"></div>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
   <script>
     function handleFormSubmit(event) {
@@ -684,9 +798,8 @@
           const data = await response.json();
 
           if (response.ok && data.status === true) {
-            Swal.fire("Offer Added", "The offer has been successfully added.", "success").then(() => {
-              location.reload();
-            });
+            Swal.fire("Offer Added", "The offer has been successfully added.", "success");
+            // TODO: Update the offer badge and buttons in-place here instead of reloading
           } else {
             Swal.fire("Failed", data.message || "Add offer failed", "error");
           }
@@ -711,9 +824,8 @@
         const data = await response.json();
 
         if (response.ok && data.status === true) {
-          Swal.fire("Offer removed", "The offer has been removed", "success").then(() => {
-            location.reload();
-          });
+          Swal.fire("Offer removed", "The offer has been removed", "success");
+          // TODO: Update the offer badge and buttons in-place here instead of reloading
         } else {
           Swal.fire("Failed", data.message || "Removing Offer failed", "error");
         }
@@ -797,6 +909,165 @@
           console.error("Edit error:", err);
           Swal.fire("Error", "Something went wrong", "error");
         });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Attach event delegation for list/unlist buttons
+      const tableBody = document.querySelector('.table tbody');
+      if (tableBody) {
+        tableBody.addEventListener('click', async function(event) {
+          const button = event.target.closest('.list-toggle-btn');
+          if (!button) return;
+          event.preventDefault();
+          const categoryId = button.getAttribute('data-category-id');
+          const isListed = button.getAttribute('data-category-listed') === 'true';
+          // Confirmation prompt
+          const actionText = isListed ? 'UNLIST' : 'LIST';
+          const confirmMsg = `Are you sure you want to ${actionText} this category?`;
+          if (!confirm(confirmMsg)) return;
+          button.disabled = true;
+          button.classList.add('btn-loading');
+          try {
+            const url = isListed ? '/admin/unlistCategoryAjax' : '/admin/listCategoryAjax';
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ categoryId })
+            });
+            const result = await response.json();
+            if (result.success) {
+              showToast(result.message, 'success');
+              // Update button in-place
+              if (isListed) {
+                button.textContent = 'List';
+                button.classList.remove('btn-secondary');
+                button.classList.add('btn-success');
+                button.setAttribute('data-category-listed', 'false');
+              } else {
+                button.textContent = 'Unlist';
+                button.classList.remove('btn-success');
+                button.classList.add('btn-secondary');
+                button.setAttribute('data-category-listed', 'true');
+              }
+              // Update status badge in the same row
+              const row = button.closest('tr');
+              const statusBadge = row.querySelector('.status-badge');
+              if (statusBadge) {
+                if (isListed) {
+                  statusBadge.textContent = 'Unlisted';
+                  statusBadge.classList.remove('status-listed');
+                  statusBadge.classList.add('status-unlisted');
+                } else {
+                  statusBadge.textContent = 'Listed';
+                  statusBadge.classList.remove('status-unlisted');
+                  statusBadge.classList.add('status-listed');
+                }
+              }
+            } else {
+              showToast(result.message || 'Action failed', 'error');
+            }
+          } catch (error) {
+            showToast('An error occurred. Please try again.', 'error');
+          } finally {
+            button.classList.remove('btn-loading');
+            button.disabled = false;
+          }
+        });
+      }
+
+      // Update the List/Unlist button and status badge after AJAX
+      function updateCategoryButton(categoryId, showUnlistButton) {
+        console.log('updateCategoryButton called for', categoryId, 'showUnlistButton:', showUnlistButton);
+        const row = document.querySelector(`tr[data-category-id="${categoryId}"]`);
+        if (!row) { console.log('Row not found for category', categoryId); return; }
+        // Update status badge
+        const statusCell = row.querySelector('td:nth-child(3) .status-badge');
+        if (statusCell) {
+          if (showUnlistButton) {
+            statusCell.textContent = 'Listed';
+            statusCell.classList.remove('status-unlisted');
+            statusCell.classList.add('status-listed');
+          } else {
+            statusCell.textContent = 'Unlisted';
+            statusCell.classList.remove('status-listed');
+            statusCell.classList.add('status-unlisted');
+          }
+        }
+        // Update action cell
+        const actionCell = row.querySelector('td:last-child .action-buttons');
+        if (actionCell) {
+          // Preserve offer/edit buttons, only replace List/Unlist
+          const offerBtn = actionCell.querySelector('[onclick^="addOffer"], [onclick^="removeOffer"]');
+          const editBtn = actionCell.querySelector('[onclick^="openEditModal"]');
+          let offerHtml = offerBtn ? offerBtn.outerHTML : '';
+          let editHtml = editBtn ? editBtn.outerHTML : '';
+          let listBtnHtml = '';
+          if (showUnlistButton) {
+            listBtnHtml = `<button class="btn btn-secondary btn-sm list-toggle-btn" data-category-id="${categoryId}" data-category-listed="true">Unlist</button>`;
+          } else {
+            listBtnHtml = `<button class="btn btn-success btn-sm list-toggle-btn" data-category-id="${categoryId}" data-category-listed="false">List</button>`;
+          }
+          actionCell.innerHTML = `${offerHtml} ${listBtnHtml} ${editHtml}`;
+          console.log('Updated action cell HTML:', actionCell.innerHTML);
+        } else {
+          console.log('Action cell not found for category', categoryId);
+        }
+      }
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+      console.log('⚠️ Page is reloading!');
+    });
+
+    document.addEventListener('submit', function(e) {
+      console.log('⚠️ Form submitted:', e.target);
+    });
+
+    // Custom Toast notification function
+    function showToast(message, type = 'success') {
+      let toastContainer = document.getElementById('customToastContainer');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'customToastContainer';
+        document.body.appendChild(toastContainer);
+      }
+      const toast = document.createElement('div');
+      toast.className = `custom-toast ${type}`;
+      const title = type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Warning';
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+      toast.innerHTML = `
+        <div class="custom-toast-header">
+          <span class="custom-toast-title">${icon} ${title}</span>
+          <button class="custom-toast-close" onclick="removeCustomToast(this.parentElement.parentElement)">&times;</button>
+        </div>
+        <div class="custom-toast-message">${message}</div>
+      `;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+      }, 10);
+      // Auto remove after 1 second
+      const autoRemoveTimer = setTimeout(() => {
+        removeCustomToast(toast);
+      }, 1000);
+      toast.autoRemoveTimer = autoRemoveTimer;
+      toast.addEventListener('mouseenter', () => {
+        clearTimeout(toast.autoRemoveTimer);
+      });
+      toast.addEventListener('mouseleave', () => {
+        toast.autoRemoveTimer = setTimeout(() => {
+          removeCustomToast(toast);
+        }, 5000);
+      });
+    }
+    function removeCustomToast(toast) {
+      if (!toast || !toast.parentElement) return;
+      if (toast.autoRemoveTimer) clearTimeout(toast.autoRemoveTimer);
+      toast.classList.add('fade-out');
+      setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+      }, 300);
     }
   </script>
 

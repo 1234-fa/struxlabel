@@ -310,10 +310,15 @@ const getSingleOrderPage = async (req, res) => {
       await newOrder.save();
       console.log('Saved order variant:', newOrder.orderedItems[0].variant);
         
-        const updatedProduct = await Product.findByIdAndUpdate(
-            productId,
-            { $inc: { [`variants.${variant}`]: -orderQty } },
-            { new: true }
+        // ATOMIC STOCK CHECK & DECREMENT
+        const stockField = `variants.${variant}`;
+        const updatedProduct = await Product.findOneAndUpdate(
+          {
+            _id: productId,
+            [stockField]: { $gte: orderQty }
+          },
+          { $inc: { [stockField]: -orderQty } },
+          { new: true }
         );
         
         if (!updatedProduct) {

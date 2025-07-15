@@ -165,7 +165,7 @@
               </thead>
               <tbody>
                 <%data.reverse().forEach((brand,index)=>{%>
-                <tr>
+                <tr data-brand-id="<%= brand._id %>">
                   <td class="text-start"><%=brand.brandName%></td>
                   <td class="text-start">
                     <div
@@ -202,20 +202,22 @@
                   </td>
                   <td class="text-start">
                     <%if(brand.isBlocked===false){%>
-                    <button class="btn btn-danger" style="width: 90px">
-                      <a
-                        href="/admin/blockBrand?id=<%=brand._id%>"
-                        class="text-white"
-                        >Block</a
-                      >
+                    <button 
+                      class="btn btn-danger block-brand-btn" 
+                      style="width: 90px"
+                      data-brand-id="<%=brand._id%>"
+                      data-brand-name="<%=brand.brandName%>"
+                    >
+                      <span class="text-white">Block</span>
                     </button>
                     <%}else{%>
-                    <button class="btn btn-success" style="width: 90px">
-                      <a
-                        href="/admin/unblockBrand?id=<%=brand._id%>"
-                        class="text-white"
-                        >Unblock</a
-                      >
+                    <button 
+                      class="btn btn-success unblock-brand-btn" 
+                      style="width: 90px"
+                      data-brand-id="<%=brand._id%>"
+                      data-brand-name="<%=brand.brandName%>"
+                    >
+                      <span class="text-white">Unblock</span>
                     </button>
                     <%}%>
                     <button
@@ -243,7 +245,443 @@
   <div class="pagination-container"></div>
 </section>
 
+<style>
+  /* Loading state styles */
+  .btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  .btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* Custom Toast notification styles - Override Bootstrap */
+  #customToastContainer {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  #customToastContainer .custom-toast {
+    background: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+    margin-bottom: 15px !important;
+    padding: 16px 20px !important;
+    min-width: 320px !important;
+    max-width: 400px !important;
+    border-left: 4px solid !important;
+    animation: customSlideIn 0.4s ease-out !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    width: auto !important;
+    font-size: 14px !important;
+    background-color: white !important;
+    background-clip: unset !important;
+    border: none !important;
+    border-radius: 8px !important;
+  }
+
+  #customToastContainer .custom-toast.success {
+    border-left-color: #28a745 !important;
+    background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%) !important;
+  }
+
+  #customToastContainer .custom-toast.error {
+    border-left-color: #dc3545 !important;
+    background: linear-gradient(135deg, #fff8f8 0%, #ffffff 100%) !important;
+  }
+
+  #customToastContainer .custom-toast.warning {
+    border-left-color: #ffc107 !important;
+    background: linear-gradient(135deg, #fffef8 0%, #ffffff 100%) !important;
+  }
+
+  @keyframes customSlideIn {
+    from {
+      transform: translateX(100%) !important;
+      opacity: 0 !important;
+    }
+    to {
+      transform: translateX(0) !important;
+      opacity: 1 !important;
+    }
+  }
+
+  @keyframes customSlideOut {
+    from {
+      transform: translateX(0) !important;
+      opacity: 1 !important;
+    }
+    to {
+      transform: translateX(100%) !important;
+      opacity: 0 !important;
+    }
+  }
+
+  #customToastContainer .custom-toast.fade-out {
+    animation: customSlideOut 0.3s ease-in forwards !important;
+  }
+
+  #customToastContainer .custom-toast-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+  }
+
+  #customToastContainer .custom-toast-title {
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    color: #333 !important;
+  }
+
+  #customToastContainer .custom-toast-close {
+    background: none !important;
+    border: none !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+    color: #999 !important;
+    padding: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+  }
+
+  #customToastContainer .custom-toast-close:hover {
+    background-color: #f0f0f0 !important;
+    color: #666 !important;
+  }
+
+  #customToastContainer .custom-toast-message {
+    font-size: 14px !important;
+    color: #555 !important;
+    line-height: 1.4 !important;
+    padding: 0 !important;
+    word-wrap: break-word !important;
+  }
+
+  /* Ensure toasts are always visible */
+  #customToastContainer * {
+    box-sizing: border-box !important;
+  }
+</style>
+
+<!-- Custom Toast Container -->
+<div id="customToastContainer"></div>
+
 <script>
+  // Initialize AJAX event handlers when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeBrandAjaxHandlers();
+  });
+
+  // Custom Toast notification function
+  function showToast(message, type = 'success') {
+    console.log(`🍞 Showing custom toast: ${type} - ${message}`);
+    
+    let toastContainer = document.getElementById('customToastContainer');
+    if (!toastContainer) {
+      console.log('📦 Creating custom toast container');
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'customToastContainer';
+      document.body.appendChild(toastContainer);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    
+    const title = type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Warning';
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+    
+    toast.innerHTML = `
+      <div class="custom-toast-header">
+        <span class="custom-toast-title">${icon} ${title}</span>
+        <button class="custom-toast-close" onclick="removeCustomToast(this.parentElement.parentElement)">&times;</button>
+      </div>
+      <div class="custom-toast-message">${message}</div>
+    `;
+    
+    // Add to container
+    toastContainer.appendChild(toast);
+    
+    console.log(`✅ Custom toast added to DOM. Total toasts: ${toastContainer.children.length}`);
+    
+    // Force immediate visibility
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Auto remove after 1 second (was 10 seconds)
+    const autoRemoveTimer = setTimeout(() => {
+      removeCustomToast(toast);
+    }, 1000);
+    
+    // Store timer reference for manual removal
+    toast.autoRemoveTimer = autoRemoveTimer;
+    
+    // Add hover pause functionality
+    toast.addEventListener('mouseenter', () => {
+      console.log('🖱️ Custom toast hovered - pausing auto-remove');
+      clearTimeout(toast.autoRemoveTimer);
+    });
+    
+    toast.addEventListener('mouseleave', () => {
+      console.log('🖱️ Custom toast unhovered - resuming auto-remove');
+      toast.autoRemoveTimer = setTimeout(() => {
+        removeCustomToast(toast);
+      }, 5000); // Give 5 more seconds after hover
+    });
+  }
+  
+  // Function to remove custom toast with animation
+  function removeCustomToast(toast) {
+    if (!toast || !toast.parentElement) {
+      console.log('❌ Custom toast already removed or invalid');
+      return;
+    }
+    
+    console.log('🗑️ Removing custom toast');
+    
+    // Clear any pending timers
+    if (toast.autoRemoveTimer) {
+      clearTimeout(toast.autoRemoveTimer);
+    }
+    
+    // Add fade-out animation
+    toast.classList.add('fade-out');
+    
+    // Remove from DOM after animation
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.remove();
+        console.log('✅ Custom toast removed from DOM');
+      }
+    }, 300);
+  }
+
+  // Initialize AJAX event handlers
+  function initializeBrandAjaxHandlers() {
+    // Block brand buttons
+    document.querySelectorAll('.block-brand-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const brandId = this.getAttribute('data-brand-id');
+        const brandName = this.getAttribute('data-brand-name');
+        
+        confirmBlockBrand(brandId, brandName);
+      });
+    });
+
+    // Unblock brand buttons
+    document.querySelectorAll('.unblock-brand-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const brandId = this.getAttribute('data-brand-id');
+        const brandName = this.getAttribute('data-brand-name');
+        
+        confirmUnblockBrand(brandId, brandName);
+      });
+    });
+  }
+
+  // Block brand function with AJAX
+  async function confirmBlockBrand(brandId, brandName) {
+    const message = `Are you sure you want to BLOCK this brand?\n\n` +
+                    `Brand: ${brandName}\n\n` +
+                    `This will prevent the brand from being displayed to customers.`;
+
+    if (confirm(message)) {
+      const button = document.querySelector(`[data-brand-id="${brandId}"].block-brand-btn`);
+      if (!button) return;
+
+      // Add loading state
+      button.classList.add('btn-loading');
+      button.disabled = true;
+
+      try {
+        const response = await fetch('/admin/blockBrand', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ brandId: brandId })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(result.message, 'success');
+          // Update the button to unblock
+          updateBrandButton(brandId, false);
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error blocking brand:', error);
+        showToast('An error occurred while blocking the brand. Please try again.', 'error');
+      } finally {
+        // Remove loading state
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+      }
+    }
+  }
+
+  // Unblock brand function with AJAX
+  async function confirmUnblockBrand(brandId, brandName) {
+    const message = `Are you sure you want to UNBLOCK this brand?\n\n` +
+                    `Brand: ${brandName}\n\n` +
+                    `This will restore the brand's visibility to customers.`;
+
+    if (confirm(message)) {
+      const button = document.querySelector(`[data-brand-id="${brandId}"].unblock-brand-btn`);
+      if (!button) return;
+
+      // Add loading state
+      button.classList.add('btn-loading');
+      button.disabled = true;
+
+      try {
+        const response = await fetch('/admin/unblockBrand', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ brandId: brandId })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(result.message, 'success');
+          // Update the button to block
+          updateBrandButton(brandId, true);
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error unblocking brand:', error);
+        showToast('An error occurred while unblocking the brand. Please try again.', 'error');
+      } finally {
+        // Remove loading state
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+      }
+    }
+  }
+
+  // Update brand button after successful action
+  function updateBrandButton(brandId, showBlockButton) {
+    const row = document.querySelector(`tr[data-brand-id="${brandId}"]`);
+    if (!row) {
+      console.error('Row not found for brand ID:', brandId);
+      return;
+    }
+
+    const actionCell = row.querySelector('td:last-child');
+    if (!actionCell) {
+      console.error('Action cell not found for brand ID:', brandId);
+      return;
+    }
+
+    const brandName = row.querySelector('td:first-child').textContent.trim();
+
+    if (showBlockButton) {
+      // Brand is now unblocked, show block button
+      actionCell.innerHTML = `
+        <button 
+          class="btn btn-danger block-brand-btn" 
+          style="width: 90px"
+          data-brand-id="${brandId}"
+          data-brand-name="${brandName}"
+        >
+          <span class="text-white">Block</span>
+        </button>
+        <button
+          class="btn btn-danger"
+          style="width: 90px"
+          onclick="return confirmDelete()"
+        >
+          <a
+            href="/admin/deleteBrand?id=${brandId}"
+            class="text-white"
+            >Delete</a
+          >
+        </button>
+      `;
+    } else {
+      // Brand is now blocked, show unblock button
+      actionCell.innerHTML = `
+        <button 
+          class="btn btn-success unblock-brand-btn" 
+          style="width: 90px"
+          data-brand-id="${brandId}"
+          data-brand-name="${brandName}"
+        >
+          <span class="text-white">Unblock</span>
+        </button>
+        <button
+          class="btn btn-danger"
+          style="width: 90px"
+          onclick="return confirmDelete()"
+        >
+          <a
+            href="/admin/deleteBrand?id=${brandId}"
+            class="text-white"
+            >Delete</a
+          >
+        </button>
+      `;
+    }
+
+    // Re-attach event listener to the new button
+    const newButton = actionCell.querySelector('.block-brand-btn, .unblock-brand-btn');
+    if (newButton) {
+      newButton.addEventListener('click', function() {
+        const brandId = this.getAttribute('data-brand-id');
+        const brandName = this.getAttribute('data-brand-name');
+        
+        if (this.classList.contains('block-brand-btn')) {
+          confirmBlockBrand(brandId, brandName);
+        } else {
+          confirmUnblockBrand(brandId, brandName);
+        }
+      });
+    }
+  }
+
   function toggleBrandForm() {
     const modal = document.getElementById("brandFormModal");
     const overlay = document.getElementById("overlay");

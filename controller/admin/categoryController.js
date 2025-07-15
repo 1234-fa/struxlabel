@@ -244,6 +244,48 @@ const editCategory = async (req, res) => {
   }
 };
 
+// AJAX-based unlist category function
+const unlistCategoryAjax = async (req, res) => {
+  try {
+    const categoryId = req.body.categoryId || req.query.id;
+    if (!categoryId) {
+      return res.status(400).json({ success: false, message: "Category ID is required" });
+    }
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ success: false, message: "Category not found" });
+    }
+    if (!category.isListed) {
+      return res.status(400).json({ success: false, message: "Category is already unlisted" });
+    }
+    await Category.updateOne({ _id: categoryId }, { $set: { isListed: false } });
+    res.json({ success: true, message: "Category unlisted successfully", category: { id: category._id, name: category.name, isListed: false } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error unlisting category. Please try again." });
+  }
+};
+
+// AJAX-based list category function
+const listCategoryAjax = async (req, res) => {
+  try {
+    const categoryId = req.body.categoryId || req.query.id;
+    if (!categoryId) {
+      return res.status(400).json({ success: false, message: "Category ID is required" });
+    }
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ success: false, message: "Category not found" });
+    }
+    if (category.isListed) {
+      return res.status(400).json({ success: false, message: "Category is already listed" });
+    }
+    await Category.updateOne({ _id: categoryId }, { $set: { isListed: true } });
+    res.json({ success: true, message: "Category listed successfully", category: { id: category._id, name: category.name, isListed: true } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error listing category. Please try again." });
+  }
+};
+
 module.exports = {
   categoryInfo,
   addCategory,
@@ -252,4 +294,6 @@ module.exports = {
   getlistCategory,
   getunlistCategory,
   editCategory,
+  listCategoryAjax,
+  unlistCategoryAjax,
 };

@@ -23,23 +23,25 @@ router.get('/logout', adminController.logout);
 
 
 router.get('/users', adminAuth, customerController.customerInfo);
-router.get('/blockCustomer',adminAuth, customerController.customerBlocked);
-router.get('/unblockCustomer',adminAuth,customerController.cutomerunBlocked);
+// AJAX routes for user management
+router.post('/blockCustomer',adminAuth, customerController.blockUserAjax);
+router.post('/unblockCustomer',adminAuth,customerController.unblockUserAjax);
 
 
 router.get('/category',adminAuth, categoryController.categoryInfo)
 router.post('/addCategory',adminAuth,categoryController.addCategory);
 router.post('/addCategoryOffer',adminAuth,categoryController.addCategoryOffer);
 router.post('/removeCategoryOffer',adminAuth,categoryController.removeCategoryOffer);
-router.get('/listCategory',adminAuth,categoryController.getlistCategory);
-router.get('/unlistCategory',adminAuth,categoryController.getunlistCategory);
 router.post('/editCategory/:id',adminAuth,categoryController.editCategory);
+router.post('/listCategoryAjax',adminAuth,categoryController.listCategoryAjax);
+router.post('/unlistCategoryAjax',adminAuth,categoryController.unlistCategoryAjax);
 
 
 router.get('/brands',adminAuth,brandController.getBrandPage);
 router.post('/addBrand',adminAuth,uploads.single("image"),brandController.addBrand);
-router.get('/blockBrand',adminAuth,brandController.blockBrand);
-router.get('/unblockBrand',adminAuth,brandController.unBlockBrand);
+// AJAX routes for brand management
+router.post('/blockBrand',adminAuth,brandController.blockBrandAjax);
+router.post('/unblockBrand',adminAuth,brandController.unblockBrandAjax);
 router.get('/deleteBrand',adminAuth,brandController.deleteBrand);
 
 
@@ -48,8 +50,9 @@ router.get('/addProducts',adminAuth,productController.getAddProduct);
 router.post('/addProducts',adminAuth,uploads.array("images",10),productController.addProducts);
 router.post('/addProductOffer',adminAuth,productController.addProductOffer);
 router.post('/removeProductOffer',adminAuth,productController.removeProductOffer)
-router.get('/blockProduct',adminAuth,productController.blockProduct);
-router.get('/unblockProduct',adminAuth,productController.unblockProduct);
+// AJAX routes for product management
+router.post('/blockProduct',adminAuth,productController.blockProductAjax);
+router.post('/unblockProduct',adminAuth,productController.unblockProductAjax);
 router.get('/editProduct',adminAuth,productController.getEditProduct);
 router.post('/editProduct/:id', adminAuth, uploads.array('images', 10), productController.editProduct);
 

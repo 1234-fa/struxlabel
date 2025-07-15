@@ -29,18 +29,10 @@ const customerInfo = async (req, res) => {
 
     const totalPages = Math.ceil(count / limit);
 
-    // Get messages from URL parameters
-    const errorMessage = req.query.error || null;
-    const successMessage = req.query.success || null;
-    const warningMessage = req.query.warning || null;
-
     res.render("customers", {
       data: userData,
       totalPages,
-      currentPage: page,
-      errorMessage,
-      successMessage,
-      warningMessage
+      currentPage: page
     });
   } catch (error) {
     console.error("Error fetching customer data:", error);
@@ -48,74 +40,122 @@ const customerInfo = async (req, res) => {
   }
 };
 
-const customerBlocked = async (req, res) => {
+// AJAX-based block user function
+const blockUserAjax = async (req, res) => {
   try {
-    const userId = req.query.id;
+    const userId = req.body.userId || req.query.id;
 
     // Validate user ID
     if (!userId) {
       console.error("Block user error: User ID is required");
-      return res.redirect("/admin/users?error=User ID is required");
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
     }
 
     // Find user first to get details for logging
     const user = await User.findById(userId);
     if (!user) {
       console.error("Block user error: User not found with ID:", userId);
-      return res.redirect("/admin/users?error=User not found");
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
     }
 
     // Check if user is already blocked
     if (user.isBlocked) {
       console.log("Block user warning: User already blocked -", user.email);
-      return res.redirect("/admin/users?warning=User is already blocked");
+      return res.status(400).json({
+        success: false,
+        message: "User is already blocked"
+      });
     }
 
     // Block the user
     await User.updateOne({ _id: userId }, { $set: { isBlocked: true } });
 
     console.log(`User blocked successfully: ${user.name} (${user.email}) - ID: ${userId}`);
-    res.redirect("/admin/users?success=User blocked successfully");
+    res.json({
+      success: true,
+      message: "User blocked successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isBlocked: true
+      }
+    });
 
   } catch (error) {
     console.error("Error blocking user:", error);
-    res.redirect("/admin/users?error=Error blocking user. Please try again.");
+    res.status(500).json({
+      success: false,
+      message: "Error blocking user. Please try again."
+    });
   }
 };
 
-const cutomerunBlocked = async (req, res) => {
+// AJAX-based unblock user function
+const unblockUserAjax = async (req, res) => {
   try {
-    const userId = req.query.id;
+    const userId = req.body.userId || req.query.id;
 
     // Validate user ID
     if (!userId) {
       console.error("Unblock user error: User ID is required");
-      return res.redirect("/admin/users?error=User ID is required");
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
     }
 
     // Find user first to get details for logging
     const user = await User.findById(userId);
     if (!user) {
       console.error("Unblock user error: User not found with ID:", userId);
-      return res.redirect("/admin/users?error=User not found");
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
     }
 
     // Check if user is already unblocked
     if (!user.isBlocked) {
       console.log("Unblock user warning: User already active -", user.email);
-      return res.redirect("/admin/users?warning=User is already active");
+      return res.status(400).json({
+        success: false,
+        message: "User is already active"
+      });
     }
 
     // Unblock the user
     await User.updateOne({ _id: userId }, { $set: { isBlocked: false } });
 
     console.log(`User unblocked successfully: ${user.name} (${user.email}) - ID: ${userId}`);
-    res.redirect("/admin/users?success=User unblocked successfully");
+    res.json({
+      success: true,
+      message: "User unblocked successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isBlocked: false
+      }
+    });
 
   } catch (error) {
     console.error("Error unblocking user:", error);
-    res.redirect("/admin/users?error=Error unblocking user. Please try again.");
+    res.status(500).json({
+      success: false,
+      message: "Error unblocking user. Please try again."
+    });
   }
 };
 
-module.exports = { customerInfo, customerBlocked, cutomerunBlocked };
+module.exports = { 
+  customerInfo, 
+  blockUserAjax,
+  unblockUserAjax
+};

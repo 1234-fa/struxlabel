@@ -304,7 +304,7 @@
     </thead>
     <tbody>
       <% for (let i = 0; i < data.length; i++) { %>
-      <tr>
+      <tr data-product-id="<%= data[i]._id %>">
         <td>
           <img
             src="<%= data[i].productImages[0] %>"
@@ -360,22 +360,22 @@
         </td>
         <td>
           <%if(data[i].isBlocked===false){%>
-          <button class="btn btn-danger" style="width: 70px">
-            <a
-              href="/admin/blockProduct?id=<%=data[i]._id%>"
-              class="text-white"
-              style="text-decoration: none"
-              >Block</a
-            >
+          <button 
+            class="btn btn-danger block-product-btn" 
+            style="width: 70px"
+            data-product-id="<%=data[i]._id%>"
+            data-product-name="<%=data[i].productName%>"
+          >
+            <span class="text-white">Block</span>
           </button>
           <%}else{%>
-          <button class="btn btn-success" style="width: 70px">
-            <a
-              href="/admin/unblockProduct?id=<%=data[i]._id%>"
-              class="text-white"
-              style="text-decoration: none"
-              >Unblock</a
-            >
+          <button 
+            class="btn btn-success unblock-product-btn" 
+            style="width: 70px"
+            data-product-id="<%=data[i]._id%>"
+            data-product-name="<%=data[i].productName%>"
+          >
+            <span class="text-white">Unblock</span>
           </button>
           <%}%>
         </td>
@@ -413,7 +413,421 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
+<style>
+  /* Loading state styles */
+  .btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  .btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin: auto;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* Custom Toast notification styles - Override Bootstrap */
+  #customToastContainer {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  #customToastContainer .custom-toast {
+    background: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+    margin-bottom: 15px !important;
+    padding: 16px 20px !important;
+    min-width: 320px !important;
+    max-width: 400px !important;
+    border-left: 4px solid !important;
+    animation: customSlideIn 0.4s ease-out !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    width: auto !important;
+    font-size: 14px !important;
+    background-color: white !important;
+    background-clip: unset !important;
+    border: none !important;
+    border-radius: 8px !important;
+  }
+
+  #customToastContainer .custom-toast.success {
+    border-left-color: #28a745 !important;
+    background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%) !important;
+  }
+
+  #customToastContainer .custom-toast.error {
+    border-left-color: #dc3545 !important;
+    background: linear-gradient(135deg, #fff8f8 0%, #ffffff 100%) !important;
+  }
+
+  #customToastContainer .custom-toast.warning {
+    border-left-color: #ffc107 !important;
+    background: linear-gradient(135deg, #fffef8 0%, #ffffff 100%) !important;
+  }
+
+  @keyframes customSlideIn {
+    from {
+      transform: translateX(100%) !important;
+      opacity: 0 !important;
+    }
+    to {
+      transform: translateX(0) !important;
+      opacity: 1 !important;
+    }
+  }
+
+  @keyframes customSlideOut {
+    from {
+      transform: translateX(0) !important;
+      opacity: 1 !important;
+    }
+    to {
+      transform: translateX(100%) !important;
+      opacity: 0 !important;
+    }
+  }
+
+  #customToastContainer .custom-toast.fade-out {
+    animation: customSlideOut 0.3s ease-in forwards !important;
+  }
+
+  #customToastContainer .custom-toast-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+  }
+
+  #customToastContainer .custom-toast-title {
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    color: #333 !important;
+  }
+
+  #customToastContainer .custom-toast-close {
+    background: none !important;
+    border: none !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+    color: #999 !important;
+    padding: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+  }
+
+  #customToastContainer .custom-toast-close:hover {
+    background-color: #f0f0f0 !important;
+    color: #666 !important;
+  }
+
+  #customToastContainer .custom-toast-message {
+    font-size: 14px !important;
+    color: #555 !important;
+    line-height: 1.4 !important;
+    padding: 0 !important;
+    word-wrap: break-word !important;
+  }
+
+  /* Ensure toasts are always visible */
+  #customToastContainer * {
+    box-sizing: border-box !important;
+  }
+</style>
+
+<!-- Custom Toast Container -->
+<div id="customToastContainer"></div>
+
 <script>
+  // Initialize AJAX event handlers when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeProductAjaxHandlers();
+  });
+
+  // Custom Toast notification function
+  function showToast(message, type = 'success') {
+    console.log(`🍞 Showing custom toast: ${type} - ${message}`);
+    
+    let toastContainer = document.getElementById('customToastContainer');
+    if (!toastContainer) {
+      console.log('📦 Creating custom toast container');
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'customToastContainer';
+      document.body.appendChild(toastContainer);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    
+    const title = type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Warning';
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+    
+    toast.innerHTML = `
+      <div class="custom-toast-header">
+        <span class="custom-toast-title">${icon} ${title}</span>
+        <button class="custom-toast-close" onclick="removeCustomToast(this.parentElement.parentElement)">&times;</button>
+      </div>
+      <div class="custom-toast-message">${message}</div>
+    `;
+    
+    // Add to container
+    toastContainer.appendChild(toast);
+    
+    console.log(`✅ Custom toast added to DOM. Total toasts: ${toastContainer.children.length}`);
+    
+    // Force immediate visibility
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Auto remove after 10 seconds (increased for better visibility)
+    const autoRemoveTimer = setTimeout(() => {
+      removeCustomToast(toast);
+    }, 10000);
+    
+    // Store timer reference for manual removal
+    toast.autoRemoveTimer = autoRemoveTimer;
+    
+    // Add hover pause functionality
+    toast.addEventListener('mouseenter', () => {
+      console.log('🖱️ Custom toast hovered - pausing auto-remove');
+      clearTimeout(toast.autoRemoveTimer);
+    });
+    
+    toast.addEventListener('mouseleave', () => {
+      console.log('🖱️ Custom toast unhovered - resuming auto-remove');
+      toast.autoRemoveTimer = setTimeout(() => {
+        removeCustomToast(toast);
+      }, 5000); // Give 5 more seconds after hover
+    });
+  }
+  
+  // Function to remove custom toast with animation
+  function removeCustomToast(toast) {
+    if (!toast || !toast.parentElement) {
+      console.log('❌ Custom toast already removed or invalid');
+      return;
+    }
+    
+    console.log('🗑️ Removing custom toast');
+    
+    // Clear any pending timers
+    if (toast.autoRemoveTimer) {
+      clearTimeout(toast.autoRemoveTimer);
+    }
+    
+    // Add fade-out animation
+    toast.classList.add('fade-out');
+    
+    // Remove from DOM after animation
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.remove();
+        console.log('✅ Custom toast removed from DOM');
+      }
+    }, 300);
+  }
+
+  // Initialize AJAX event handlers
+  function initializeProductAjaxHandlers() {
+    // Block product buttons
+    document.querySelectorAll('.block-product-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const productId = this.getAttribute('data-product-id');
+        const productName = this.getAttribute('data-product-name');
+        
+        confirmBlockProduct(productId, productName);
+      });
+    });
+
+    // Unblock product buttons
+    document.querySelectorAll('.unblock-product-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const productId = this.getAttribute('data-product-id');
+        const productName = this.getAttribute('data-product-name');
+        
+        confirmUnblockProduct(productId, productName);
+      });
+    });
+  }
+
+  // Block product function with AJAX
+  async function confirmBlockProduct(productId, productName) {
+    const message = `Are you sure you want to BLOCK this product?\n\n` +
+                    `Product: ${productName}\n\n` +
+                    `This will prevent the product from being displayed to customers.`;
+
+    if (confirm(message)) {
+      const button = document.querySelector(`[data-product-id="${productId}"].block-product-btn`);
+      if (!button) return;
+
+      // Add loading state
+      button.classList.add('btn-loading');
+      button.disabled = true;
+
+      try {
+        const response = await fetch('/admin/blockProduct', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId: productId })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(result.message, 'success');
+          // Update the button to unblock
+          updateProductButton(productId, false);
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error blocking product:', error);
+        showToast('An error occurred while blocking the product. Please try again.', 'error');
+      } finally {
+        // Remove loading state
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+      }
+    }
+  }
+
+  // Unblock product function with AJAX
+  async function confirmUnblockProduct(productId, productName) {
+    const message = `Are you sure you want to UNBLOCK this product?\n\n` +
+                    `Product: ${productName}\n\n` +
+                    `This will restore the product's visibility to customers.`;
+
+    if (confirm(message)) {
+      const button = document.querySelector(`[data-product-id="${productId}"].unblock-product-btn`);
+      if (!button) return;
+
+      // Add loading state
+      button.classList.add('btn-loading');
+      button.disabled = true;
+
+      try {
+        const response = await fetch('/admin/unblockProduct', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId: productId })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(result.message, 'success');
+          // Update the button to block
+          updateProductButton(productId, true);
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error unblocking product:', error);
+        showToast('An error occurred while unblocking the product. Please try again.', 'error');
+      } finally {
+        // Remove loading state
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+      }
+    }
+  }
+
+  // Update product button after successful action
+  function updateProductButton(productId, showBlockButton) {
+    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+    if (!row) {
+      console.error('Row not found for product ID:', productId);
+      return;
+    }
+
+    const actionCell = row.querySelector('td:nth-last-child(2)'); // Action column
+    if (!actionCell) {
+      console.error('Action cell not found for product ID:', productId);
+      return;
+    }
+
+    const productName = row.querySelector('.product-name').textContent.trim();
+
+    if (showBlockButton) {
+      // Product is now unblocked, show block button
+      actionCell.innerHTML = `
+        <button 
+          class="btn btn-danger block-product-btn" 
+          style="width: 70px"
+          data-product-id="${productId}"
+          data-product-name="${productName}"
+        >
+          <span class="text-white">Block</span>
+        </button>
+      `;
+    } else {
+      // Product is now blocked, show unblock button
+      actionCell.innerHTML = `
+        <button 
+          class="btn btn-success unblock-product-btn" 
+          style="width: 70px"
+          data-product-id="${productId}"
+          data-product-name="${productName}"
+        >
+          <span class="text-white">Unblock</span>
+        </button>
+      `;
+    }
+
+    // Re-attach event listener to the new button
+    const newButton = actionCell.querySelector('button');
+    if (newButton) {
+      newButton.addEventListener('click', function() {
+        const productId = this.getAttribute('data-product-id');
+        const productName = this.getAttribute('data-product-name');
+        
+        if (this.classList.contains('block-product-btn')) {
+          confirmBlockProduct(productId, productName);
+        } else {
+          confirmUnblockProduct(productId, productName);
+        }
+      });
+    }
+  }
+
   async function addOffer(productId) {
     const { value: amount } = await Swal.fire({
       title: "Offer in percentage",

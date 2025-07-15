@@ -271,61 +271,193 @@ const addProducts = async (req, res) => {
 
 const addProductOffer = async (req, res) => {
   try {
-    const { productId, percentage } = req.body;
-    const findProduct = await Product.findOne({ _id: productId });
-    const findCategory = await Category.findOne({ _id: findProduct.category });
-    if (findCategory.categoryOffer > percentage) {
-      return res.json({
+    const { percentage, productId } = req.body;
+
+    if (!percentage || !productId) {
+      return res.status(400).json({
         status: false,
-        message: "This product category already has a category offer",
+        message: "Percentage and product ID are required",
       });
     }
-    findProduct.salePrice = Math.floor(
-      findProduct.regularPrice - findProduct.regularPrice * (percentage / 100)
-    );
-    findProduct.productOffer = parseInt(percentage);
-    await findProduct.save();
-    findCategory.categoryOffer = 0;
-    await findCategory.save();
-    return res.json({ status: true });
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        status: false,
+        message: "Product not found",
+      });
+    }
+
+    // Calculate new sale price
+    const discountAmount = (product.regularPrice * percentage) / 100;
+    const newSalePrice = product.regularPrice - discountAmount;
+
+    // Update product with offer
+    await Product.findByIdAndUpdate(productId, {
+      productOffer: percentage,
+      salePrice: newSalePrice,
+    });
+
+    res.json({
+      status: true,
+      message: "Product offer added successfully",
+    });
   } catch (error) {
-    res.redirect("/pageerror");
+    console.error("Error adding product offer:", error);
+    res.status(500).json({
+      status: false,
+      message: "Error adding product offer",
+    });
   }
 };
 
 const removeProductOffer = async (req, res) => {
   try {
     const { productId } = req.body;
-    const findProduct = await Product.findOne({ _id: productId });
-    const percentage = findProduct.productOffer;
-    findProduct.salePrice = Math.floor(
-      findProduct.regularPrice - findProduct.regularPrice * (percentage / 100)
-    );
-    findProduct.productOffer = 0;
-    await findProduct.save();
-    return res.json({ status: true });
+
+    if (!productId) {
+      return res.status(400).json({
+        status: false,
+        message: "Product ID is required",
+      });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        status: false,
+        message: "Product not found",
+      });
+    }
+
+    // Reset sale price to regular price and remove offer
+    await Product.findByIdAndUpdate(productId, {
+      productOffer: 0,
+      salePrice: product.regularPrice,
+    });
+
+    res.json({
+      status: true,
+      message: "Product offer removed successfully",
+    });
   } catch (error) {
-    res.redirect("/pageerror");
+    console.error("Error removing product offer:", error);
+    res.status(500).json({
+      status: false,
+      message: "Error removing product offer",
+    });
   }
 };
 
-const blockProduct = async (req, res) => {
+// AJAX-based block product function
+const blockProductAjax = async (req, res) => {
   try {
-    let productId = req.query.id;
+    const productId = req.body.productId || req.query.id;
+
+    // Validate product ID
+    if (!productId) {
+      console.error("Block product error: Product ID is required");
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required"
+      });
+    }
+
+    // Find product first to get details for logging
+    const product = await Product.findById(productId);
+    if (!product) {
+      console.error("Block product error: Product not found with ID:", productId);
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    // Check if product is already blocked
+    if (product.isBlocked) {
+      console.log("Block product warning: Product already blocked -", product.productName);
+      return res.status(400).json({
+        success: false,
+        message: "Product is already blocked"
+      });
+    }
+
+    // Block the product
     await Product.updateOne({ _id: productId }, { $set: { isBlocked: true } });
-    res.redirect("/admin/products");
+
+    console.log(`Product blocked successfully: ${product.productName} - ID: ${productId}`);
+    res.json({
+      success: true,
+      message: "Product blocked successfully",
+      product: {
+        id: product._id,
+        name: product.productName,
+        isBlocked: true
+      }
+    });
+
   } catch (error) {
-    res.redirect("/pageerror");
+    console.error("Error blocking product:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error blocking product. Please try again."
+    });
   }
 };
 
-const unblockProduct = async (req, res) => {
+// AJAX-based unblock product function
+const unblockProductAjax = async (req, res) => {
   try {
-    let productId = req.query.id;
+    const productId = req.body.productId || req.query.id;
+
+    // Validate product ID
+    if (!productId) {
+      console.error("Unblock product error: Product ID is required");
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required"
+      });
+    }
+
+    // Find product first to get details for logging
+    const product = await Product.findById(productId);
+    if (!product) {
+      console.error("Unblock product error: Product not found with ID:", productId);
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    // Check if product is already unblocked
+    if (!product.isBlocked) {
+      console.log("Unblock product warning: Product already active -", product.productName);
+      return res.status(400).json({
+        success: false,
+        message: "Product is already active"
+      });
+    }
+
+    // Unblock the product
     await Product.updateOne({ _id: productId }, { $set: { isBlocked: false } });
-    res.redirect("/admin/products");
+
+    console.log(`Product unblocked successfully: ${product.productName} - ID: ${productId}`);
+    res.json({
+      success: true,
+      message: "Product unblocked successfully",
+      product: {
+        id: product._id,
+        name: product.productName,
+        isBlocked: false
+      }
+    });
+
   } catch (error) {
-    res.redirect("/pageerror");
+    console.error("Error unblocking product:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error unblocking product. Please try again."
+    });
   }
 };
 
@@ -679,8 +811,8 @@ module.exports = {
   addProducts,
   addProductOffer,
   removeProductOffer,
-  blockProduct,
-  unblockProduct,
+  blockProductAjax,
+  unblockProductAjax,
   getEditProduct,
   editProduct,
 };

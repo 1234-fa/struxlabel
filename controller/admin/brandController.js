@@ -36,91 +36,42 @@ const getBrandPage = async (req, res) => {
 
 const addBrand = async (req, res) => {
   try {
-    const brandName = req.body.name;
+    const { name } = req.body;
+    const image = req.file;
 
-    // Validate input
-    if (!brandName) {
-      console.log("Brand validation error: Brand name is required");
-      return res.redirect("/admin/brands?error=Brand name is required");
+    if (!name || !image) {
+      return res.status(400).json({
+        success: false,
+        message: "Brand name and image are required"
+      });
     }
 
-    // Trim and validate brand name
-    const trimmedBrandName = brandName.trim();
-    if (trimmedBrandName.length === 0) {
-      console.log("Brand validation error: Brand name cannot be empty");
-      return res.redirect("/admin/brands?error=Brand name cannot be empty or just spaces");
-    }
-
-    // Validate image upload
-    if (!req.file) {
-      console.log("Brand validation error: Brand image is required");
-      return res.redirect("/admin/brands?error=Brand image is required");
-    }
-
-    // Check for existing brand (case-insensitive)
-    const existingBrand = await Brand.findOne({
-      brandName: { $regex: new RegExp(`^${trimmedBrandName}$`, 'i') }
-    });
-
+    // Check if brand already exists
+    const existingBrand = await Brand.findOne({ brandName: name });
     if (existingBrand) {
-      console.log("Brand validation error: Brand already exists -", trimmedBrandName);
-      return res.redirect("/admin/brands?error=Brand with this name already exists");
+      return res.status(400).json({
+        success: false,
+        message: "Brand with this name already exists"
+      });
     }
 
-    // Create new brand
-    const image = req.file.filename;
-    const newBrand = new Brand({
-      brandName: trimmedBrandName,
-      brandImage: image,
+    const brand = new Brand({
+      brandName: name,
+      brandImage: [image.filename]
     });
 
-    await newBrand.save();
-    console.log("Brand added successfully:", trimmedBrandName);
-    res.redirect("/admin/brands?success=Brand added successfully");
+    await brand.save();
 
+    res.json({
+      success: true,
+      message: "Brand added successfully"
+    });
   } catch (error) {
-    console.error("Error while adding brand:", error);
-
-    // Handle MongoDB duplicate key error
-    if (error.code === 11000) {
-      console.log("MongoDB duplicate key error for brand:", brandName);
-      return res.redirect("/admin/brands?error=Brand with this name already exists");
-    }
-
-    console.log("General error adding brand:", error.message);
-    res.redirect("/admin/brands?error=Error adding brand. Please try again.");
-  }
-};
-
-const blockBrand = async (req, res) => {
-  try {
-    const brandId = req.query.id;
-
-    if (!brandId) {
-      return res.redirect("/pageerror"); // Validation for missing ID
-    }
-
-    await Brand.updateOne({ _id: brandId }, { $set: { isBlocked: true } });
-    res.redirect("/admin/brands");
-  } catch (error) {
-    console.error("Error blocking brand:", error);
-    res.redirect("/pageerror");
-  }
-};
-
-const unBlockBrand = async (req, res) => {
-  try {
-    const brandId = req.query.id;
-
-    if (!brandId) {
-      return res.redirect("/pageerror"); // Validation for missing ID
-    }
-
-    await Brand.updateOne({ _id: brandId }, { $set: { isBlocked: false } });
-    res.redirect("/admin/brands");
-  } catch (error) {
-    console.error("Error unblocking brand:", error);
-    res.redirect("/pageerror");
+    console.error("Error adding brand:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error adding brand. Please try again."
+    });
   }
 };
 
@@ -147,10 +98,123 @@ const deleteBrand = async (req, res) => {
     res.redirect("/pageerror");
   }
 };
+
+// AJAX-based block brand function
+const blockBrandAjax = async (req, res) => {
+  try {
+    const brandId = req.body.brandId || req.query.id;
+
+    // Validate brand ID
+    if (!brandId) {
+      console.error("Block brand error: Brand ID is required");
+      return res.status(400).json({
+        success: false,
+        message: "Brand ID is required"
+      });
+    }
+
+    // Find brand first to get details for logging
+    const brand = await Brand.findById(brandId);
+    if (!brand) {
+      console.error("Block brand error: Brand not found with ID:", brandId);
+      return res.status(404).json({
+        success: false,
+        message: "Brand not found"
+      });
+    }
+
+    // Check if brand is already blocked
+    if (brand.isBlocked) {
+      console.log("Block brand warning: Brand already blocked -", brand.brandName);
+      return res.status(400).json({
+        success: false,
+        message: "Brand is already blocked"
+      });
+    }
+
+    // Block the brand
+    await Brand.updateOne({ _id: brandId }, { $set: { isBlocked: true } });
+
+    console.log(`Brand blocked successfully: ${brand.brandName} - ID: ${brandId}`);
+    res.json({
+      success: true,
+      message: "Brand blocked successfully",
+      brand: {
+        id: brand._id,
+        name: brand.brandName,
+        isBlocked: true
+      }
+    });
+
+  } catch (error) {
+    console.error("Error blocking brand:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error blocking brand. Please try again."
+    });
+  }
+};
+
+// AJAX-based unblock brand function
+const unblockBrandAjax = async (req, res) => {
+  try {
+    const brandId = req.body.brandId || req.query.id;
+
+    // Validate brand ID
+    if (!brandId) {
+      console.error("Unblock brand error: Brand ID is required");
+      return res.status(400).json({
+        success: false,
+        message: "Brand ID is required"
+      });
+    }
+
+    // Find brand first to get details for logging
+    const brand = await Brand.findById(brandId);
+    if (!brand) {
+      console.error("Unblock brand error: Brand not found with ID:", brandId);
+      return res.status(404).json({
+        success: false,
+        message: "Brand not found"
+      });
+    }
+
+    // Check if brand is already unblocked
+    if (!brand.isBlocked) {
+      console.log("Unblock brand warning: Brand already active -", brand.brandName);
+      return res.status(400).json({
+        success: false,
+        message: "Brand is already active"
+      });
+    }
+
+    // Unblock the brand
+    await Brand.updateOne({ _id: brandId }, { $set: { isBlocked: false } });
+
+    console.log(`Brand unblocked successfully: ${brand.brandName} - ID: ${brandId}`);
+    res.json({
+      success: true,
+      message: "Brand unblocked successfully",
+      brand: {
+        id: brand._id,
+        name: brand.brandName,
+        isBlocked: false
+      }
+    });
+
+  } catch (error) {
+    console.error("Error unblocking brand:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error unblocking brand. Please try again."
+    });
+  }
+};
+
 module.exports = {
   getBrandPage,
   addBrand,
-  blockBrand,
-  unBlockBrand,
+  blockBrandAjax,
+  unblockBrandAjax,
   deleteBrand,
 };
