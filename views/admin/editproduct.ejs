@@ -665,38 +665,6 @@ document.getElementById('cropModal').addEventListener('hidden.bs.modal', functio
     currentImageFile = null;
 });
 
-// Debug function to check form data before submission
-function debugFormData() {
-    console.log('=== FORM DEBUG INFO ===');
-    console.log('Deleted Images:', deletedImages);
-    console.log('Cropped Images Count:', croppedImages.length);
-    console.log('Cropped Images Data (first 100 chars of each):');
-    croppedImages.forEach((img, i) => {
-        console.log(`Image ${i}:`, img.substring(0, 100) + '...');
-    });
-    
-    // Check hidden inputs
-    const deletedInputs = document.querySelectorAll('input[name="deletedImages"]');
-    const croppedInputs = document.querySelectorAll('input[name="croppedImages"]');
-    console.log('Hidden inputs - Deleted:', deletedInputs.length, 'Cropped:', croppedInputs.length);
-    
-    console.log('=== END DEBUG INFO ===');
-}
-
-// Add debug button (optional - remove in production)
-document.addEventListener('DOMContentLoaded', function() {
-    const debugBtn = document.createElement('button');
-    debugBtn.type = 'button';
-    debugBtn.className = 'btn btn-info btn-sm';
-    debugBtn.textContent = 'Debug Form Data';
-    debugBtn.onclick = debugFormData;
-    debugBtn.style.position = 'fixed';
-    debugBtn.style.bottom = '20px';
-    debugBtn.style.right = '20px';
-    debugBtn.style.zIndex = '9999';
-    document.body.appendChild(debugBtn);
-});
-
 // Initialize
 updateImageCount();
     </script>
