@@ -1,5 +1,6 @@
 const Brand = require("../../models/brandSchema");
 const Product = require("../../models/productSchema");
+const { StatusCode } = require("../../config/statuscode");
 
 const getBrandPage = async (req, res) => {
   try {
@@ -40,7 +41,7 @@ const addBrand = async (req, res) => {
     const image = req.file;
 
     if (!name || !image) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Brand name and image are required"
       });
@@ -49,7 +50,7 @@ const addBrand = async (req, res) => {
     // Check if brand already exists
     const existingBrand = await Brand.findOne({ brandName: name });
     if (existingBrand) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Brand with this name already exists"
       });
@@ -68,7 +69,7 @@ const addBrand = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding brand:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error adding brand. Please try again."
     });
@@ -107,7 +108,7 @@ const blockBrandAjax = async (req, res) => {
     // Validate brand ID
     if (!brandId) {
       console.error("Block brand error: Brand ID is required");
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Brand ID is required"
       });
@@ -117,7 +118,7 @@ const blockBrandAjax = async (req, res) => {
     const brand = await Brand.findById(brandId);
     if (!brand) {
       console.error("Block brand error: Brand not found with ID:", brandId);
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         success: false,
         message: "Brand not found"
       });
@@ -126,7 +127,7 @@ const blockBrandAjax = async (req, res) => {
     // Check if brand is already blocked
     if (brand.isBlocked) {
       console.log("Block brand warning: Brand already blocked -", brand.brandName);
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Brand is already blocked"
       });
@@ -148,7 +149,7 @@ const blockBrandAjax = async (req, res) => {
 
   } catch (error) {
     console.error("Error blocking brand:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error blocking brand. Please try again."
     });
@@ -163,7 +164,7 @@ const unblockBrandAjax = async (req, res) => {
     // Validate brand ID
     if (!brandId) {
       console.error("Unblock brand error: Brand ID is required");
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Brand ID is required"
       });
@@ -173,7 +174,7 @@ const unblockBrandAjax = async (req, res) => {
     const brand = await Brand.findById(brandId);
     if (!brand) {
       console.error("Unblock brand error: Brand not found with ID:", brandId);
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         success: false,
         message: "Brand not found"
       });
@@ -182,7 +183,7 @@ const unblockBrandAjax = async (req, res) => {
     // Check if brand is already unblocked
     if (!brand.isBlocked) {
       console.log("Unblock brand warning: Brand already active -", brand.brandName);
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Brand is already active"
       });
@@ -204,7 +205,7 @@ const unblockBrandAjax = async (req, res) => {
 
   } catch (error) {
     console.error("Error unblocking brand:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error unblocking brand. Please try again."
     });

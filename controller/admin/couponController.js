@@ -70,7 +70,7 @@ const addCoupons = async (req, res) => {
   } catch (error) {
     console.error("Error adding coupon:", error);
     if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.status(500).json({ success: false, message: 'Server error' });
+      return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
     }
     res.redirect("/pageerror");
   }

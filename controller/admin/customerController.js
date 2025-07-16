@@ -48,7 +48,7 @@ const blockUserAjax = async (req, res) => {
     // Validate user ID
     if (!userId) {
       console.error("Block user error: User ID is required");
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "User ID is required"
       });
@@ -58,7 +58,7 @@ const blockUserAjax = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       console.error("Block user error: User not found with ID:", userId);
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         success: false,
         message: "User not found"
       });
@@ -67,7 +67,7 @@ const blockUserAjax = async (req, res) => {
     // Check if user is already blocked
     if (user.isBlocked) {
       console.log("Block user warning: User already blocked -", user.email);
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "User is already blocked"
       });
@@ -90,7 +90,7 @@ const blockUserAjax = async (req, res) => {
 
   } catch (error) {
     console.error("Error blocking user:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error blocking user. Please try again."
     });
@@ -105,7 +105,7 @@ const unblockUserAjax = async (req, res) => {
     // Validate user ID
     if (!userId) {
       console.error("Unblock user error: User ID is required");
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "User ID is required"
       });
@@ -115,7 +115,7 @@ const unblockUserAjax = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       console.error("Unblock user error: User not found with ID:", userId);
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         success: false,
         message: "User not found"
       });
@@ -124,7 +124,7 @@ const unblockUserAjax = async (req, res) => {
     // Check if user is already unblocked
     if (!user.isBlocked) {
       console.log("Unblock user warning: User already active -", user.email);
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "User is already active"
       });
@@ -147,7 +147,7 @@ const unblockUserAjax = async (req, res) => {
 
   } catch (error) {
     console.error("Error unblocking user:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error unblocking user. Please try again."
     });

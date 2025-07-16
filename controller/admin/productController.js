@@ -274,7 +274,7 @@ const addProductOffer = async (req, res) => {
     const { percentage, productId } = req.body;
 
     if (!percentage || !productId) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         status: false,
         message: "Percentage and product ID are required",
       });
@@ -283,7 +283,7 @@ const addProductOffer = async (req, res) => {
     // Validate percentage
     const percentNum = Number(percentage);
     if (isNaN(percentNum) || percentNum < 1 || percentNum > 100) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         status: false,
         message: "Offer percentage must be a number between 1 and 100.",
       });
@@ -291,7 +291,7 @@ const addProductOffer = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         status: false,
         message: "Product not found",
       });
@@ -313,7 +313,7 @@ const addProductOffer = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding product offer:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: error.message || "Error adding product offer",
     });
@@ -325,7 +325,7 @@ const removeProductOffer = async (req, res) => {
     const { productId } = req.body;
 
     if (!productId) {
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         status: false,
         message: "Product ID is required",
       });
@@ -333,7 +333,7 @@ const removeProductOffer = async (req, res) => {
 
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         status: false,
         message: "Product not found",
       });
@@ -351,7 +351,7 @@ const removeProductOffer = async (req, res) => {
     });
   } catch (error) {
     console.error("Error removing product offer:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       status: false,
       message: "Error removing product offer",
     });
@@ -366,7 +366,7 @@ const blockProductAjax = async (req, res) => {
     // Validate product ID
     if (!productId) {
       console.error("Block product error: Product ID is required");
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Product ID is required"
       });
@@ -376,7 +376,7 @@ const blockProductAjax = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) {
       console.error("Block product error: Product not found with ID:", productId);
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         success: false,
         message: "Product not found"
       });
@@ -385,7 +385,7 @@ const blockProductAjax = async (req, res) => {
     // Check if product is already blocked
     if (product.isBlocked) {
       console.log("Block product warning: Product already blocked -", product.productName);
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Product is already blocked"
       });
@@ -407,7 +407,7 @@ const blockProductAjax = async (req, res) => {
 
   } catch (error) {
     console.error("Error blocking product:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error blocking product. Please try again."
     });
@@ -422,7 +422,7 @@ const unblockProductAjax = async (req, res) => {
     // Validate product ID
     if (!productId) {
       console.error("Unblock product error: Product ID is required");
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Product ID is required"
       });
@@ -432,7 +432,7 @@ const unblockProductAjax = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) {
       console.error("Unblock product error: Product not found with ID:", productId);
-      return res.status(404).json({
+      return res.status(StatusCode.NOT_FOUND).json({
         success: false,
         message: "Product not found"
       });
@@ -441,7 +441,7 @@ const unblockProductAjax = async (req, res) => {
     // Check if product is already unblocked
     if (!product.isBlocked) {
       console.log("Unblock product warning: Product already active -", product.productName);
-      return res.status(400).json({
+      return res.status(StatusCode.BAD_REQUEST).json({
         success: false,
         message: "Product is already active"
       });
@@ -463,7 +463,7 @@ const unblockProductAjax = async (req, res) => {
 
   } catch (error) {
     console.error("Error unblocking product:", error);
-    res.status(500).json({
+    res.status(StatusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error unblocking product. Please try again."
     });

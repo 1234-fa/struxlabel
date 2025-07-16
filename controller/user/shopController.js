@@ -87,7 +87,7 @@ const loadShoppingPage = async (req, res) => {
             
             priceArray.forEach(range => {
                 const [min, max] = range.split('-').map(Number);
-                if (max === 100000) { // For ₹1500.00+ range
+                if (max === 100000) {
                     priceConditions.push({ salePrice: { $gte: min } });
                 } else {
                     priceConditions.push({ salePrice: { $gte: min, $lte: max } });
