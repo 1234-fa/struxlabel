@@ -376,7 +376,8 @@
   const addCouponForm = document.getElementById("couponForm");
   
   if (addCouponForm) {
-    addCouponForm.addEventListener("submit", function(e) {
+    addCouponForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
       let isValid = true;
       const form = e.target;
       
@@ -446,7 +447,32 @@
       }
       
       if (!isValid) {
-        e.preventDefault(); // Prevent form submission if invalid
+        return;
+      }
+      // AJAX submit
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      try {
+        const response = await fetch('/admin/add-coupon', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: new URLSearchParams(data)
+        });
+        if (response.status === 409) {
+          const result = await response.json();
+          const nameErrorEl = document.getElementById("nameError");
+          nameErrorEl.textContent = result.message || 'Coupon already exists';
+          nameErrorEl.classList.remove("d-none");
+          return;
+        }
+        if (response.ok) {
+          // Success: reload page to show new coupon
+          window.location.reload();
+        } else {
+          alert('Failed to add coupon. Please try again.');
+        }
+      } catch (err) {
+        alert('Server error. Please try again.');
       }
     });
   }

@@ -628,7 +628,7 @@ rel="stylesheet">
                                         if (filters && filters.selectedPriceRanges) filters.selectedPriceRanges.forEach(price => prevParams.append('price', price));
                                         prevParams.set('page', currentPage - 1);
                                     %>
-                                    <a href="/shop?<%= prevParams.toString() %>"><</a>
+                                    <a href="/newArrivals?<%= prevParams.toString() %>"><</a>
                                 <% } %>
                                 
                                 <% for (let i = 1; i <= totalPages; i++) { %>
@@ -642,9 +642,9 @@ rel="stylesheet">
                                         pageParams.set('page', i);
                                     %>
                                     <% if (currentPage === i) { %>
-                                        <a class="active" href="/shop?<%= pageParams.toString() %>"><%= i %></a>
+                                        <a class="active" href="/newArrivals?<%= pageParams.toString() %>"><%= i %></a>
                                     <% } else { %>
-                                        <a href="/shop?<%= pageParams.toString() %>"><%= i %></a>
+                                        <a href="/newArrivals?<%= pageParams.toString() %>"><%= i %></a>
                                     <% } %>
                                 <% } %>
                                 
@@ -658,7 +658,7 @@ rel="stylesheet">
                                         if (filters && filters.selectedPriceRanges) filters.selectedPriceRanges.forEach(price => nextParams.append('price', price));
                                         nextParams.set('page', currentPage + 1);
                                     %>
-                                    <a href="/shop?<%= nextParams.toString() %>">></a>
+                                    <a href="/newArrivals?<%= nextParams.toString() %>">></a>
                                 <% } %>
                             </div>
                         </div>

@@ -436,8 +436,7 @@
   async function confirmUnblockUser(userId, userName, userEmail) {
     const message = `Are you sure you want to UNBLOCK this user?\n\n` +
                     `Name: ${userName}\n` +
-                    `Email: ${userEmail}\n\n` +
-                    `This will restore the user's access to their account.`;
+                    `Email: ${userEmail}\n\n`;
 
     if (confirm(message)) {
       const button = document.querySelector(`[data-user-id="${userId}"].unblock-user-btn`);

@@ -210,8 +210,8 @@
       flex-wrap: wrap;
     }
 
-    /* Modal Styles */
-    .modal {
+    /* REMOVE old custom modal styles to avoid Bootstrap modal conflict */
+    /* .modal {
       display: none;
       position: fixed;
       z-index: 1000;
@@ -237,7 +237,7 @@
       margin: 0 0 20px 0;
       font-size: 18px;
       font-weight: 600;
-    }
+    } */
 
     .form-group {
       margin-bottom: 16px;
@@ -508,14 +508,9 @@
     <div class="header">
       <h1>Category Management</h1>
       <div class="controls">
-        <form action="/admin/category/" method="get" class="search-form">
-          <input
-            type="text"
-            class="search-input"
-            placeholder="Search categories..."
-            name="search"
-          />
-          <button class="btn btn-primary" type="submit">Search</button>
+        <form method="get" action="/admin/category" class="input-group mb-4" style="max-width:400px;">
+          <input type="text" class="form-control" placeholder="Search Category..." id="searchInput" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
+          <button class="btn btn-outline-secondary" type="submit">Search</button>
         </form>
         <button class="btn btn-success" onclick="openModal()">
           Add Category
@@ -559,7 +554,7 @@
             <td>
               <div class="action-buttons">
                 <%if(!category.categoryOffer || category.categoryOffer === 0){%>
-                <button class="btn btn-info btn-sm" onclick="addOffer('<%=category._id%>')">
+                <button class="btn btn-info btn-sm" onclick="openCategoryOfferModal('<%=category._id%>', '<%=category.name%>')">
                   Add Offer
                 </button>
                 <%}else{%>
@@ -663,9 +658,39 @@
     </div>
   </div>
 
+  <!-- Add Category Offer Modal (Bootstrap style, like products.ejs) -->
+<div class="modal fade" id="addCategoryOfferModal" tabindex="-1" aria-labelledby="addCategoryOfferModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCategoryOfferModalLabel">Add Offer to Category</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addCategoryOfferForm">
+          <input type="hidden" id="offerCategoryId" name="categoryId">
+          <div class="mb-3">
+            <label for="offerCategoryName" class="form-label">Category</label>
+            <input type="text" class="form-control" id="offerCategoryName" readonly>
+          </div>
+          <div class="mb-3">
+            <label for="categoryOfferPercentage" class="form-label">Offer Percentage (%)</label>
+            <input type="number" class="form-control" id="categoryOfferPercentage" name="percentage" min="1" max="100" required>
+            <div id="categoryOfferError" class="text-danger mt-1" style="display:none;"></div>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Offer</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
   <!-- Custom Toast Container -->
   <div id="customToastContainer"></div>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+  <!-- Add jQuery for modal and AJAX support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     function handleFormSubmit(event) {
       event.preventDefault();
@@ -825,7 +850,25 @@
 
         if (response.ok && data.status === true) {
           Swal.fire("Offer removed", "The offer has been removed", "success");
-          // TODO: Update the offer badge and buttons in-place here instead of reloading
+          // Update the offer badge and buttons in-place
+          const row = document.querySelector(`tr[data-category-id='${categoryId}']`);
+          if (row) {
+            // Update offer badge
+            const offerCell = row.querySelector(".offer-percentage");
+            if (offerCell) {
+              offerCell.textContent = "0%";
+            }
+            // Update action buttons
+            const actionDiv = row.querySelector(".action-buttons");
+            if (actionDiv) {
+              // Replace Remove Offer with Add Offer button
+              actionDiv.querySelectorAll("button").forEach(btn => {
+                if (btn.textContent.trim() === "Remove Offer") {
+                  btn.outerHTML = `<button class='btn btn-info btn-sm' onclick="openCategoryOfferModal('${categoryId}', '${row.querySelector('.category-name').textContent.trim()}')">Add Offer</button>`;
+                }
+              });
+            }
+          }
         } else {
           Swal.fire("Failed", data.message || "Removing Offer failed", "error");
         }
@@ -997,7 +1040,7 @@
         const actionCell = row.querySelector('td:last-child .action-buttons');
         if (actionCell) {
           // Preserve offer/edit buttons, only replace List/Unlist
-          const offerBtn = actionCell.querySelector('[onclick^="addOffer"], [onclick^="removeOffer"]');
+          const offerBtn = actionCell.querySelector('[onclick^="openCategoryOfferModal"], [onclick^="removeOffer"]');
           const editBtn = actionCell.querySelector('[onclick^="openEditModal"]');
           let offerHtml = offerBtn ? offerBtn.outerHTML : '';
           let editHtml = editBtn ? editBtn.outerHTML : '';
@@ -1013,6 +1056,58 @@
           console.log('Action cell not found for category', categoryId);
         }
       }
+    });
+
+    $(document).ready(function() {
+      // Add Category Offer Modal logic
+      window.openCategoryOfferModal = function(categoryId, categoryName) {
+        $('#offerCategoryId').val(categoryId);
+        $('#offerCategoryName').val(categoryName);
+        $('#categoryOfferPercentage').val('');
+        $('#categoryOfferError').text('').hide();
+        $('#categoryOfferPercentage').removeClass('is-invalid');
+        const modal = new bootstrap.Modal(document.getElementById('addCategoryOfferModal'));
+        modal.show();
+      };
+
+      $('#addCategoryOfferForm').on('submit', function(e) {
+        e.preventDefault();
+        const categoryId = $('#offerCategoryId').val();
+        const percentage = $('#categoryOfferPercentage').val();
+        $('#categoryOfferError').text('').hide();
+        $('#categoryOfferPercentage').removeClass('is-invalid');
+        if (!percentage || isNaN(percentage) || percentage < 1 || percentage > 100) {
+          $('#categoryOfferError').text('Please enter a valid offer percentage between 1 and 100.').show();
+          $('#categoryOfferPercentage').addClass('is-invalid');
+          return;
+        }
+        $.ajax({
+          url: '/admin/addCategoryOffer',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ categoryId, percentage }),
+          success: function(response) {
+            if (response.status === true) {
+              const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryOfferModal'));
+              modal.hide();
+              Swal.fire('Offer Added', 'The offer has been successfully added.', 'success').then(() => location.reload());
+            } else {
+              $('#categoryOfferError').text(response.message || 'Unable to add offer. Please try again.').show();
+              $('#categoryOfferError').addClass('text-danger');
+              $('#categoryOfferPercentage').addClass('is-invalid');
+            }
+          },
+          error: function(xhr) {
+            let msg = 'Something went wrong while adding the offer. Please try again.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              msg = xhr.responseJSON.message;
+            }
+            $('#categoryOfferError').text(msg).show();
+            $('#categoryOfferError').addClass('text-danger');
+            $('#categoryOfferPercentage').addClass('is-invalid');
+          }
+        });
+      });
     });
 
     window.addEventListener('beforeunload', function(e) {

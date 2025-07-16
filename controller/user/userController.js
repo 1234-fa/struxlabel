@@ -217,7 +217,8 @@ const verifyOtp = async (req, res) => {
                 codeUser = await User.findOne({ referralCode: user.referralCode });
             
                 if (codeUser) {
-                    const walletEntry = new Wallet({
+                    // Credit ₹100 to the referrer
+                    const walletEntryReferrer = new Wallet({
                         userId: codeUser._id,  
                         transactionId: uuidv4(),
                         amount: 100,
@@ -226,8 +227,7 @@ const verifyOtp = async (req, res) => {
                         entryType: 'CREDIT',
                         type: 'referral',  
                     });
-            
-                    await walletEntry.save();
+                    await walletEntryReferrer.save();
                 } else {
                     console.log("Referral code does not belong to any user.");
                 }
@@ -242,8 +242,21 @@ const verifyOtp = async (req, res) => {
             });
 
             await newUser.save();
-            req.session.user = newUser._id;
 
+            // If the new user used a valid referral code, credit ₹100 to their wallet as well
+            if (user.referralCode && codeUser) {
+                const walletEntryNewUser = new Wallet({
+                    userId: newUser._id,
+                    transactionId: uuidv4(),
+                    amount: 100,
+                    payment_type: 'referral',
+                    status: 'success',
+                    entryType: 'CREDIT',
+                    type: 'referral',
+                });
+                await walletEntryNewUser.save();
+            }
+            // Do not log in the user after signup; redirect to login page
             return res.json({ success: true, redirectUrl: "/login" });
         }
 

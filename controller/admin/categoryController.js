@@ -9,13 +9,19 @@ const categoryInfo = async (req, res) => {
       : parseInt(req.query.page);
     const limit = 6;
     const skip = (page - 1) * limit;
+    const search = req.query.search || "";
 
-    const categoryData = await Category.find({})
+    // Filter by search if provided
+    const query = search
+      ? { name: { $regex: new RegExp(search, "i") } }
+      : {};
+
+    const categoryData = await Category.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const totalCategories = await Category.countDocuments();
+    const totalCategories = await Category.countDocuments(query);
     const totalPages = Math.max(1, Math.ceil(totalCategories / limit));
 
     res.render("category", {
@@ -23,6 +29,7 @@ const categoryInfo = async (req, res) => {
       currentPage: page,
       totalPages: totalPages,
       totalCategories: totalCategories,
+      search, // Pass search value to view
     });
   } catch (error) {
     console.error("Error in categoryInfo:", error);

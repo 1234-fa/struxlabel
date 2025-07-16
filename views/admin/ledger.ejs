@@ -195,6 +195,13 @@
 </div>
 
 <script>
+  // Disable future dates in date inputs
+  document.addEventListener('DOMContentLoaded', function() {
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').setAttribute('max', today);
+    document.getElementById('endDate').setAttribute('max', today);
+  });
+
   // Print Ledger
   document.getElementById("printLedger").addEventListener("click", function () {
     const printContents = document.getElementById("ledgerTable").innerHTML;

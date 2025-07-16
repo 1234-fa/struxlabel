@@ -280,6 +280,15 @@ const addProductOffer = async (req, res) => {
       });
     }
 
+    // Validate percentage
+    const percentNum = Number(percentage);
+    if (isNaN(percentNum) || percentNum < 1 || percentNum > 100) {
+      return res.status(400).json({
+        status: false,
+        message: "Offer percentage must be a number between 1 and 100.",
+      });
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({
@@ -289,12 +298,12 @@ const addProductOffer = async (req, res) => {
     }
 
     // Calculate new sale price
-    const discountAmount = (product.regularPrice * percentage) / 100;
+    const discountAmount = (product.regularPrice * percentNum) / 100;
     const newSalePrice = product.regularPrice - discountAmount;
 
     // Update product with offer
     await Product.findByIdAndUpdate(productId, {
-      productOffer: percentage,
+      productOffer: percentNum,
       salePrice: newSalePrice,
     });
 
@@ -306,7 +315,7 @@ const addProductOffer = async (req, res) => {
     console.error("Error adding product offer:", error);
     res.status(500).json({
       status: false,
-      message: "Error adding product offer",
+      message: error.message || "Error adding product offer",
     });
   }
 };

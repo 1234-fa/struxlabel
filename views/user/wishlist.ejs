@@ -429,21 +429,16 @@
         });
 
         variantModal.show();
-      });
-    });
 
-    // ====================== WISHLIST CART BUTTON CLICK HANDLER ======================
-    // Find the submit button and attach a direct click handler
-    setTimeout(() => {
-      const submitButton = document.querySelector('#wishlistCartForm button[type="submit"]');
-      if (submitButton && !submitButton.dataset.handlerAttached) {
-        submitButton.dataset.handlerAttached = 'true';
+        // --- Fix: Always re-attach the submit handler ---
+        const submitButton = document.querySelector('#wishlistCartForm button[type="submit"]');
+        const newButton = submitButton.cloneNode(true);
+        submitButton.parentNode.replaceChild(newButton, submitButton);
 
-        submitButton.addEventListener('click', function(e) {
+        newButton.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopImmediatePropagation();
 
-          // Prevent multiple clicks
           if (this.disabled || window.simpleWishlistCartSubmissionInProgress) {
             return false;
           }
@@ -465,7 +460,6 @@
           this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
           this.disabled = true;
 
-          // Make AJAX request
           fetch('/add-to-cart', {
             method: 'POST',
             headers: {
@@ -479,7 +473,6 @@
           .then(data => {
             if (data && data.success === true) {
               showWishlistSuccessMessage(data.message || 'Added to cart!');
-
               // Close modal
               try {
                 const modalElement = document.getElementById('variantModal');
@@ -487,25 +480,9 @@
                   const modal = bootstrap.Modal.getInstance(modalElement);
                   if (modal) {
                     modal.hide();
-                  } else {
-                    modalElement.style.display = 'none';
-                    modalElement.classList.remove('show');
-                    document.body.classList.remove('modal-open');
-                    const backdrop = document.querySelector('.modal-backdrop');
-                    if (backdrop) backdrop.remove();
                   }
                 }
-              } catch (modalError) {
-                const modalElement = document.getElementById('variantModal');
-                if (modalElement) {
-                  modalElement.style.display = 'none';
-                  modalElement.classList.remove('show');
-                  document.body.classList.remove('modal-open');
-                  const backdrop = document.querySelector('.modal-backdrop');
-                  if (backdrop) backdrop.remove();
-                }
-              }
-
+              } catch (modalError) {}
               updateWishlistCartButton(data.productId || productId);
             } else {
               alert(data.message || 'Failed to add to cart');
@@ -522,8 +499,9 @@
 
           return false;
         });
-      }
-    }, 500);
+        // --- End fix ---
+      });
+    });
 
     // Function to show success message for wishlist
     function showWishlistSuccessMessage(message) {

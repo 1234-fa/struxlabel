@@ -339,21 +339,27 @@ const loadNewArrivalPage = async (req, res) => {
         console.log('Sort Query:', sortQuery);
         console.log('Has Filters:', hasFilters);
 
+        // Count total products with filters applied
+        let totalProducts = 0;
+        if (!hasFilters && !sort) {
+            // For new arrivals with no filters, count all products
+            totalProducts = await Product.countDocuments({ isBlocked: false, category: { $in: categoryIds } });
+        } else {
+            totalProducts = await Product.countDocuments(query);
+        }
+        const totalPages = Math.ceil(totalProducts / limit);
+
         // Execute query with filters and sorting
         let products;
-        
         if (!hasFilters && !sort) {
             // For new arrivals with no filters, get all products and shuffle them
             const allProducts = await Product.find({
                 isBlocked: false,
                 category: { $in: categoryIds }
             }).populate('category').lean();
-            
             // Shuffle using the preferred technique
-            products = [...allProducts]
-                .sort(() => 0.5 - Math.random())
-                .slice(skip, skip + limit);
-                
+            const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
+            products = shuffled.slice(skip, skip + limit);
             console.log('🔀 Products shuffled using sort(() => 0.5 - Math.random())');
         } else {
             // For filtered results, use normal find with pagination
@@ -364,10 +370,6 @@ const loadNewArrivalPage = async (req, res) => {
                 .limit(limit)
                 .lean();
         }
-
-        // Count total products with filters applied
-        const totalProducts = products.length;
-        const totalPages = Math.ceil(totalProducts / limit);
 
         // Prepare categories and brands with IDs
         const categoriesWithIds = categories.map(category => ({
@@ -415,7 +417,6 @@ const loadNewArrivalPage = async (req, res) => {
 
     } catch (error) {
         console.error('Error in loadNewArrivalPage:', error);
-        
         const errorData = {
             user: null,
             products: [],
@@ -433,11 +434,9 @@ const loadNewArrivalPage = async (req, res) => {
             },
             error: 'Error loading products. Please try again later.'
         };
-
         if (isAjaxRequest) {
             return res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ success: false, ...errorData });
         }
-
         res.render("newArrivals", errorData);
     }
 };

@@ -194,7 +194,7 @@
             <div class="divider">_____________ or _____________</div>
             <form id="signupForm" action="/signup" method="POST">
                 <div class="input-box">
-                    <input type="text" placeholder="Enter your name" id="username" name="name">
+                    <input type="text" placeholder="Enter your name" id="username" name="name" >
                     <span class="error" id="nameError"></span>
                 </div>
                 <div class="input-box">
@@ -246,6 +246,9 @@
             let name = document.getElementById("username").value.trim();
             if (name === "") {
                 document.getElementById("nameError").innerText = "Name is required.";
+                isValid = false;
+            } else if (!/^[A-Za-z]+$/.test(name)) {
+                document.getElementById("nameError").innerText = "Name must contain only alphabets.";
                 isValid = false;
             }
     

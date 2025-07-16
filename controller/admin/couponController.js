@@ -42,6 +42,9 @@ const addCoupons = async (req, res) => {
 
     const existingCoupon = await Coupon.findOne({ name });
     if (existingCoupon) {
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(409).json({ success: false, message: 'Coupon already exists' });
+      }
       const coupons = await Coupon.find();
       return res.render("coupon", {
         coupons,
@@ -66,6 +69,9 @@ const addCoupons = async (req, res) => {
     res.redirect("/admin/coupon");
   } catch (error) {
     console.error("Error adding coupon:", error);
+    if (req.xhr || req.headers.accept?.includes('json')) {
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
     res.redirect("/pageerror");
   }
 };

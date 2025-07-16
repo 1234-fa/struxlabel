@@ -421,9 +421,9 @@ function changeQty(id, delta) {
     newQty = stock;
   }
 
-  if (newQty > 10) {
-    message = `Maximum allowed quantity is 10.`;
-    newQty = 10;
+  if (newQty > 5) {
+    message = `Maximum allowed quantity is 5.`;
+    newQty = 5;
   }
 
   input.value = newQty;
@@ -431,7 +431,7 @@ function changeQty(id, delta) {
   errorMsg.classList.toggle('d-none', !message);
 
   // Update button states based on variant stock
-  plusBtn.disabled = newQty >= Math.min(stock, 10);
+  plusBtn.disabled = newQty >= Math.min(stock, 5);
   minusBtn.disabled = newQty <= 1;
 
   updateCartQtyAjax(id, newQty);
@@ -520,7 +520,7 @@ function updateQuantityControlsForVariant(itemId) {
     let newQty = currentQty;
 
     // Update button states
-    plusBtn.disabled = newQty >= Math.min(variantStock, 10) || variantStock === 0;
+    plusBtn.disabled = newQty >= Math.min(variantStock, 5) || variantStock === 0;
     minusBtn.disabled = newQty <= 1;
 
     // Show/hide error message

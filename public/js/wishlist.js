@@ -66,6 +66,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => {
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers.get('content-type'));
+            if (response.status === 401) {
+                // Not logged in, redirect to login page
+                window.location.href = '/login';
+                return Promise.reject('Redirecting to login');
+            }
             return response.json();
         })
         .then(data => {
@@ -93,9 +98,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error adding to wishlist:', error);
-            showWishlistMessage('Failed to add product to wishlist. Please try again.', 'danger');
-            // Restore button
+            if (error === 'Redirecting to login') return;
+            window.location.href = '/login';
             buttonElement.innerHTML = originalContent;
             buttonElement.style.pointerEvents = 'auto';
         });
